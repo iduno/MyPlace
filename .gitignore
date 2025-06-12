@@ -1,0 +1,21 @@
+# Ignore build output directories
+target/
+*/target/
+
+# Ignore Java1 compiled files
+*.class
+*.java1
+
+# Ignore log files and temp files
+*.log
+*.tmp
+
+
+# Ignore non-Java and non-config files
+!*.java
+!*.xml
+!*.yml
+!*.yaml
+!*.properties
+!*.conf
+!*.config
