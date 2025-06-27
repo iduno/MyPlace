@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug MYAIR Application",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5005,
+      "preLaunchTask": "Start MyPlace MYAIR in Debug Mode"
+    },
+    {
+      "type": "java",
+      "name": "Debug CB Application",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5006,
+      "preLaunchTask": "Start MyPlace CB in Debug Mode"
+    }
+  ]
+}

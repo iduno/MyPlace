@@ -15,7 +15,7 @@ public class ParserTest {
     @Test
     public void testParseValidMessage() {
         // Simulate a valid input stream with a message
-        byte[] inputData = "<U>Ping</U=db> ".getBytes();
+        byte[] inputData = "<U>CAN2 in use</U=95> ".getBytes();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(inputData);
 
         Parser parser = new Parser(inputStream);

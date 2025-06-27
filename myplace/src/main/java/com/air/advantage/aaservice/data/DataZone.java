@@ -53,13 +53,13 @@ public class DataZone {
     @SerializedName("following")
     public Integer following;
 
-    @Nullable
     @JsonExporter(saveThis = false)
+    @Nullable
     @SerializedName("maxDamper")
     public Integer maxDamper;
 
-    @Nullable
     @JsonExporter(saveThis = false)
+    @Nullable
     @SerializedName("measuredTemp")
     public Float measuredTemp;
 
@@ -110,4 +110,28 @@ public class DataZone {
     /* renamed from: d */
     @SerializedName("value")
     public Integer value;
+
+    public void copyFrom(DataZone other) {
+        if (other == null) return;
+        if (other.error != null) this.error = other.error;
+        if (other.followers != null) {
+            if (this.followers == null) this.followers = new java.util.ArrayList<>();
+            this.followers.clear();
+            this.followers.addAll(other.followers);
+        }
+        if (other.following != null) this.following = other.following;
+        if (other.maxDamper != null) this.maxDamper = other.maxDamper;
+        if (other.measuredTemp != null) this.measuredTemp = other.measuredTemp;
+        if (other.minDamper != null) this.minDamper = other.minDamper;
+        if (other.motion != null) this.motion = other.motion;
+        if (other.motionConfig != null) this.motionConfig = other.motionConfig;
+        if (other.name != null) this.name = other.name;
+        if (other.number != null) this.number = other.number;
+        if (other.rssi != null) this.rssi = other.rssi;
+        if (other.sensorMajorRev != null) this.sensorMajorRev = other.sensorMajorRev;
+        if (other.sensorUid != null) this.sensorUid = other.sensorUid;
+        if (other.setTemp != null) this.setTemp = other.setTemp;
+        if (other.state != null) this.state = other.state;
+        if (other.value != null) this.value = other.value;
+    }
 }

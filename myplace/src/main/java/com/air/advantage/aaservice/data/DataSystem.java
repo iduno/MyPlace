@@ -163,4 +163,25 @@ public class DataSystem {
     public DataSystem(String str) {
         this.name = str;
     }
+
+    public void copyFrom(DataSystem other) {
+        if (other == null) return;
+        if (other.dealerPhoneNumber != null) this.dealerPhoneNumber = other.dealerPhoneNumber;
+        if (other.hasAircons != null) this.hasAircons = other.hasAircons;
+        if (other.hasLights != null) this.hasLights = other.hasLights;
+        if (other.needsUpdate != null) this.needsUpdate = other.needsUpdate;
+        if (other.logoPIN != null) this.logoPIN = other.logoPIN;
+        if (other.mid != null) this.mid = other.mid;
+        if (other.myAppRev != null) this.myAppRev = other.myAppRev;
+        if (other.name != null) this.name = other.name;
+        if (other.noOfAircons != null) this.noOfAircons = other.noOfAircons;
+        if (other.noOfSnapshots != null) this.noOfSnapshots = other.noOfSnapshots;
+        if (other.rid != null) this.rid = other.rid;
+        if (other.sysType != null) this.sysType = other.sysType;
+        if (other.deviceIds != null) this.deviceIds = new java.util.ArrayList<>(other.deviceIds);
+        if (other.postCode != null) this.postCode = other.postCode;
+        if (other.country != null) this.country = other.country;
+        if (other.latitude != null) this.latitude = other.latitude;
+        if (other.longitude != null) this.longitude = other.longitude;
+    }
 }

@@ -1,8 +1,14 @@
 package com.air.advantage.canhandler;
 
+import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 
+import jakarta.inject.Inject;
+
 public abstract class Handler {
+    @Inject
+    protected MyMasterData myMasterData;
+
     public abstract void process(CANMessage message);
 
     public static void dispatch(CANMessage message) {

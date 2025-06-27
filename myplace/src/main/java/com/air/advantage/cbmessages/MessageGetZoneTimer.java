@@ -8,4 +8,11 @@ public class MessageGetZoneTimer extends Message {
     public static MessageGetZoneTimer deserialize(byte[] data) {
         return new MessageGetZoneTimer();
     }
+
+    @Override
+    protected int serializeBody(byte[] data, int offset) {
+        String messageTypeString = this.messageType.getValue();
+        System.arraycopy(messageTypeString.getBytes(), 0, data, offset, messageTypeString.length());
+        return messageTypeString.length();
+    }
 }

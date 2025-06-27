@@ -8,4 +8,11 @@ public class MessageNak extends Message {
     public static MessageNak deserialize(byte[] data) {
         return new MessageNak();
     }
+
+    @Override
+    protected int serializeBody(byte[] data, int offset) {
+        String messageTypeString = this.messageType.getValue();
+        System.arraycopy(messageTypeString.getBytes(), 0, data, offset, messageTypeString.length());
+        return messageTypeString.length();
+    }
 }

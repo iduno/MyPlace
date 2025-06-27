@@ -7,6 +7,15 @@ public class MessageCAN extends Message {
     private List<CANMessage> messageCANBaseList;
     public MessageCAN() {
         this.messageType = MessageType.GET_CAN; // or SET_CAN based on context
+        this.messageCANBaseList = new ArrayList<>();
+    }
+    public MessageCAN(MessageType messageType) {
+        this.messageType = messageType;
+        this.messageCANBaseList = new ArrayList<>();
+    }
+
+    public List<CANMessage> getMessageCANBaseList() {
+        return messageCANBaseList;
     }
     private static int findEndOfMessageOffset(byte[] data, int offset) {
         if (offset >= data.length) {
@@ -42,5 +51,24 @@ public class MessageCAN extends Message {
 
 
         return message;
+    }
+
+    @Override
+    protected int serializeBody(byte[] data, int offset) {
+        if (data == null || data.length < offset + 25) {
+            throw new IllegalArgumentException("Data array too small for serialization");
+        }
+        int currentOffset = offset;
+        // Serialize the message type
+        String messageTypeString = this.messageType.getValue();
+        System.arraycopy(messageTypeString.getBytes(), 0, data, currentOffset, messageTypeString.length());
+        currentOffset += messageTypeString.length();
+
+        // Serialize each CANMessage in the list
+        for (CANMessage canMessage : messageCANBaseList) {
+            currentOffset = canMessage.serialize(data, currentOffset);
+            data[currentOffset++] = ' '; // Add space between messages
+        }
+        return currentOffset - offset;
     }
 }

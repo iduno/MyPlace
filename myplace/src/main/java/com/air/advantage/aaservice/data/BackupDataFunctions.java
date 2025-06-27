@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 
 import org.jboss.logmanager.Level;
 
+import com.air.advantage.aaservice.data.DataAircon.FanStatus;
 import com.air.advantage.libraryairconlightjson.AirconMode;
-import com.air.advantage.libraryairconlightjson.FanMode;
 import com.air.advantage.libraryairconlightjson.SystemState;
 import com.air.advantage.libraryairconlightjson.ZoneState;
 import com.air.advantage.libraryairconlightjson.backup.BackupAirconV1;
@@ -86,7 +86,7 @@ public class BackupDataFunctions {
                 DataAirconInfo dataAirconInfo = dataAircon2.airconInfo;
                 Integer num4 = dataAirconInfo.myZone;
                 AirconMode airconMode = dataAirconInfo.mode;
-                FanMode fanMode = dataAirconInfo.fan;
+                FanStatus fanMode = dataAirconInfo.fan;
                 Float f2 = dataAirconInfo.setTemp;
                 SystemState systemState = dataAirconInfo.state;
                 dataAirconInfo.freshAirStatus.getValue();

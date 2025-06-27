@@ -19,6 +19,7 @@ public class Message {
         GET_ZONE_DATA_ZONE("getZoneData"),
         GET_ZONE_TIMER("getZoneTimer"),
         GET_SCHEDULE_DATA_SCHEDULE("getScheduleData"),
+        CAN2_IN_USE("CAN2 in use"),
         UNKNOWN("Unknown");
 
         private final String value;
@@ -77,9 +78,11 @@ public class Message {
                 return MessageNak.deserialize(data);
             case GET_CAN:
             case SET_CAN:
+            case ACK_CAN:
                 return MessageCAN.deserialize(data,messageType);
             case GET_SYSTEM_DATA:
-                return MessageGetSystemData.deserialize(data);
+            case CAN2_IN_USE:
+                return MessageGetSystemData.deserialize(data,messageType);
             case GET_CLOCK:
                 return MessageGetClock.deserialize(data);
             case GET_ZONE_DATA_ZONE:
@@ -92,4 +95,50 @@ public class Message {
                 return new Message(new String(data));
         }
     }
+    public int serialize(byte[] data, int offset) {
+        if (data == null) {
+            return 0;
+        }
+        
+        // Write <U> start tag
+        byte[] startTag = "<U>".getBytes();
+        System.arraycopy(startTag, 0, data, offset, startTag.length);
+        int currentOffset = offset + startTag.length;
+        
+        // Write message body data
+        int bytesWritten = serializeBody(data, currentOffset);
+        if (bytesWritten == 0) {
+            return 0;
+        }
+        currentOffset += bytesWritten;
+        
+        // Calculate CRC8 for the body data
+        int crc = CalculateCRC8.calculateCRC8FromBytes(offset + startTag.length, currentOffset, data);
+        
+        // Write </U= tag
+        byte[] endTag = "</U=".getBytes();
+        System.arraycopy(endTag, 0, data, currentOffset, endTag.length);
+        currentOffset += endTag.length;
+        
+        // Write CRC8 hex value
+        ByteArray.toHexDigits(crc, data, currentOffset);
+        currentOffset += 2;
+        
+        // Write closing >
+        data[currentOffset++] = '>';
+        data[currentOffset++] = ' ';
+        
+        return currentOffset - offset;
+    }
+
+    // Protected method for subclasses to implement their specific serialization
+    protected int serializeBody(byte[] data, int offset) {
+        if (this.data != null) {
+            byte[] bodyData = this.data.getBytes();
+            System.arraycopy(bodyData, 0, data, offset, bodyData.length);
+            return bodyData.length;
+        }
+        return 0;
+    }
+
 }

@@ -1,7 +1,8 @@
 package com.air.advantage.aaservice.data;
 
-import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
+
+import com.google.gson.annotations.SerializedName;
 
 /* compiled from: DataGroup.java */
 /* renamed from: com.air.advantage.aaservice.o.d */
@@ -19,4 +20,12 @@ public class DataGroup {
     /* renamed from: c */
     @SerializedName("name")
     public String name;
+
+    public void copyFrom(DataGroup other) {
+        if (other == null) return;
+        this.lightsOrder.clear();
+        if (other.lightsOrder != null) this.lightsOrder.addAll(other.lightsOrder);
+        if (other.id != null) this.id = other.id;
+        if (other.name != null) this.name = other.name;
+    }
 }

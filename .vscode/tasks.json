@@ -1,0 +1,57 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start MyPlace MYAIR in Debug Mode",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Ddebug=5005 -Dquarkus.http.port=8081 -Dsuspend=true",
+      "options": {
+				"cwd": "myplace"
+			},
+      "isBackground": true,
+      "problemMatcher": {
+        "fileLocation": [
+						"relative",
+						"${workspaceFolder}/src/main/resources/templates"
+					],
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Listening for transport dt_socket at address.*$",
+          "endsPattern": "^.*Listening for transport dt_socket at address.*$"
+        }
+      }
+    },
+    {
+      "label": "Start MyPlace CB in Debug Mode",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Ddebug=5006 -Dquarkus.http.port=8082 -Dsuspend=true -Dquarkus.profile=cb" ,
+      "options": {
+				"cwd": "myplace"
+			},
+      "isBackground": true,
+      "problemMatcher": {
+        "fileLocation": [
+						"relative",
+						"${workspaceFolder}/src/main/resources/templates"
+					],
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Listening for transport dt_socket at address.*$",
+          "endsPattern": "^.*Listening for transport dt_socket at address.*$"
+        }
+      }
+    }
+  ]
+}
