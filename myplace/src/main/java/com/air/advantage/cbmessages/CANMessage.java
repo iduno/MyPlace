@@ -9,6 +9,7 @@ public class CANMessage {
         UNKNOWN("00");
 
         private final String value;
+        private String rawText = null;
         
         SystemType(String value) {
             this.value = value;
@@ -16,13 +17,18 @@ public class CANMessage {
         public String getValue() {
             return value;
         }
+        public String getRawText() {
+            return rawText != null ? rawText : value;
+        }
         public static SystemType fromString(String text) {
             for (SystemType type : SystemType.values()) {
-                if (text.startsWith(type.getValue())) {
+                if (!type.equals(UNKNOWN) && text.startsWith(type.getValue())) {
                     return type;
                 }
             }
-            return null; // or throw an exception if preferred
+            SystemType unknown = UNKNOWN;
+            unknown.rawText = text;
+            return unknown;
         }
         public static SystemType fromBytes(byte[] data, int offset) {
             return fromString(new String(data, offset, 2));
@@ -36,6 +42,7 @@ public class CANMessage {
         AIRCON_2("04");
 
         private final String value;
+        private String rawText = null;
         
         DeviceType(String value) {
             this.value = value;
@@ -43,13 +50,18 @@ public class CANMessage {
         public String getValue() {
             return value;
         }
+        public String getRawText() {
+            return rawText != null ? rawText : value;
+        }
         public static DeviceType fromString(String text) {
             for (DeviceType type : DeviceType.values()) {
-                if (text.startsWith(type.getValue())) {
+                if (!type.equals(UNKNOWN) && text.startsWith(type.getValue())) {
                     return type;
                 }
             }
-            return null; // or throw an exception if preferred
+            DeviceType unknown = UNKNOWN;
+            unknown.rawText = text;
+            return unknown;
         }
         public static DeviceType fromBytes(byte[] data, int offset) {
             return fromString(new String(data, offset, 2));
@@ -59,6 +71,7 @@ public class CANMessage {
     protected SystemType systemType;
     protected DeviceType deviceType;
     protected String uid;
+    protected byte[] payload;
 
     // Getters and setters
     public SystemType getSystemType() {
@@ -85,28 +98,53 @@ public class CANMessage {
         this.uid = uid;
     }
 
+    public byte[] getPayload() {
+        return payload;
+    }
 
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
 
     public static CANMessage deserialize(byte[] data, int offset) {
-        CANMessage message = null;
+        // Parse systemType (2 bytes)
         SystemType systemType = SystemType.fromBytes(data, offset);
-        DeviceType deviceType = DeviceType.fromBytes(data, offset + 2);
-        String uid = new String(data, offset + 4, 5); // UID is 5 bytes long
+        offset += 2;
+        // Parse deviceType (2 bytes)
+        DeviceType deviceType = DeviceType.fromBytes(data, offset);
+        offset += 2;
+        // Parse uid (5 bytes as string)
+        String uid = new String(data, offset, 5);
+        offset += 5;
+        // Parse payload (remaining bytes) as hex values
+        int payloadLength = 8;
+        byte[] payload = new byte[payloadLength];
+        for (int i = 0; i < payloadLength; i++) {
+            int hexIndex = offset + (i * 2);
+            if (hexIndex + 1 < data.length) {
+                payload[i] = (byte) ByteArray.parseHexValue(hexIndex, data);
+            }
+        }
 
+        CANMessage message = null;
         switch (systemType) {
             case LIGHTING:
-                message = CANMessageLighting.deserialize(data, offset + 9);
+                message = CANMessageLighting.deserialize(data, offset);
                 break;
             case RF:
             case AIRCON:
-                message = CANMessageAircon.deserialize(data, offset + 9);
+                message = CANMessageAircon.deserialize(data, offset);
                 break;
             default:
-                return null; // or throw an exception if preferred
+                message = new CANMessage();
+                break;
         }
-        message.setSystemType(systemType);
-        message.setDeviceType(deviceType);
-        message.setUid(uid);
+        if (message != null) {
+            message.setSystemType(systemType);
+            message.setDeviceType(deviceType);
+            message.setUid(uid);
+            message.setPayload(payload);
+        }
         return message;
     }
 
@@ -123,21 +161,22 @@ public class CANMessage {
         for (int i = offset; i < offset + 25; i++) {
             data[i] = '0';
         }
-        // Write systemType
+        // Write systemType (2 bytes)
         if (systemType != null) {
             byte[] sysTypeBytes = systemType.getValue().getBytes();
             System.arraycopy(sysTypeBytes, 0, data, offset, Math.min(2, sysTypeBytes.length));
         }
-        // Write deviceType
+        // Write deviceType (2 bytes)
         if (deviceType != null) {
             byte[] devTypeBytes = deviceType.getValue().getBytes();
             System.arraycopy(devTypeBytes, 0, data, offset + 2, Math.min(2, devTypeBytes.length));
         }
-        // Write uid
+        // Write uid (5 bytes)
         if (uid != null) {
             byte[] uidBytes = uid.getBytes();
             System.arraycopy(uidBytes, 0, data, offset + 4, Math.min(5, uidBytes.length));
         }
+
         return offset + 9;
     }
 }

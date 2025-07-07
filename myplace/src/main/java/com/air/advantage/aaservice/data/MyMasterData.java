@@ -24,10 +24,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 public class MyMasterData {
     public final MasterData masterData = new MasterData();
 
-    @ConfigProperty(name = "myplace.config.path", defaultValue = "/data/config.json")
+    @ConfigProperty(name = "myplace.config.path", defaultValue = "config.json")
     String configPath;
 
-    @ConfigProperty(name = "myplace.save.delay.minutes", defaultValue = "5")
+    @ConfigProperty(name = "myplace.save.delay.minutes", defaultValue = "1")
     long saveDelayMinutes;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();

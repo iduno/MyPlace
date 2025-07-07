@@ -129,7 +129,7 @@ public class CANMessageAircon05AirconState extends CANMessageAircon {
         ByteArray.toHexDigits(systemState != null ? systemState.getValue() : 0, data, offset);
         ByteArray.toHexDigits(systemMode != null ? systemMode.getValue() : 0, data, offset + 2);
         ByteArray.toHexDigits(systemFan != null ? systemFan.getValue() : 0, data, offset + 4);
-        ByteArray.toHexDigits((int)(setTemp * 2), data, offset + 6);
+        ByteArray.toHexDigits((int)(setTemp * 2.0f), data, offset + 6);
         ByteArray.toHexDigits(myZoneId, data, offset + 8);
         ByteArray.toHexDigits(freshAirStatus != null ? freshAirStatus.getValue() : 0, data, offset + 10);
         ByteArray.toHexDigits(rfSysId, data, offset + 12);

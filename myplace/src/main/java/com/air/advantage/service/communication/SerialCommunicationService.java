@@ -1,6 +1,5 @@
 package com.air.advantage.service.communication;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,11 +22,13 @@ public class SerialCommunicationService implements CommunicationService {
     private final Vertx vertx;
     private final EventBus eventBus;
     private final CommunicationConfig.SerialConfig config;
+    private Parser parser;
     
     public SerialCommunicationService(Vertx vertx, EventBus eventBus, CommunicationConfig config) {
         this.vertx = vertx;
         this.eventBus = eventBus;
         this.config = config.serial();
+        this.parser = new Parser();
     }
     
     @Override
@@ -68,14 +69,17 @@ public class SerialCommunicationService implements CommunicationService {
             boolean opened = serialPort.openPort();
             if (opened) {
                 LOG.info("Successfully opened port: " + config.port());
+                eventBus.publish("communication-status", "connected");
                 setupMessageListener();
                 return true;
             } else {
                 LOG.error("Failed to open port: " + config.port());
+                eventBus.publish("communication-status", "disconnected");
                 return false;
             }
         } catch (Exception e) {
             LOG.error("Error opening port: " + e.getMessage(), e);
+            eventBus.publish("communication-status", "disconnected");
             return false;
         }
     }
@@ -84,7 +88,7 @@ public class SerialCommunicationService implements CommunicationService {
         serialPort.addDataListener(new SerialPortMessageListener() {
             @Override
             public byte[] getMessageDelimiter() {
-                return new byte[] { '\n' }; // Using newline as message delimiter
+                return new byte[] { ' ' }; // Using newline as message delimiter
             }
             
             @Override
@@ -106,11 +110,15 @@ public class SerialCommunicationService implements CommunicationService {
                 }
                 
                 byte[] data = event.getReceivedData();
-                String message = new String(data, StandardCharsets.UTF_8).trim();
-                LOG.info("Received message from serial port: " + message);
-                
-                // Publish the message to the event bus
-                eventBus.publish("communication-data", message);
+                if (data == null || data.length == 0) return;
+                io.vertx.mutiny.core.buffer.Buffer buffer = io.vertx.mutiny.core.buffer.Buffer.buffer(data);
+                parser.parse(buffer);
+                Message message = parser.pollMessage();
+                while (message != null) {
+                    LOG.info("Received message from serial port: " + message.data);
+                    eventBus.publish("communication-data", message);
+                    message = parser.pollMessage();
+                }
             }
         });
     }
@@ -119,10 +127,11 @@ public class SerialCommunicationService implements CommunicationService {
     public boolean send(Message data) {
         if (serialPort != null && serialPort.isOpen()) {
             try {
-                byte[] bytes = (data + "\n").getBytes(StandardCharsets.UTF_8);
-                int written = serialPort.writeBytes(bytes, bytes.length);
+                byte[] bytes = new byte[4096];
+                int writtenLen = data.serialize(bytes, 0);
+                int written = serialPort.writeBytes(bytes, writtenLen);
                 LOG.info("Sent " + written + " bytes to serial port");
-                return written == bytes.length;
+                return written == writtenLen;
             } catch (Exception e) {
                 LOG.error("Error writing to serial port: " + e.getMessage(), e);
                 return false;
@@ -139,6 +148,7 @@ public class SerialCommunicationService implements CommunicationService {
             boolean closed = serialPort.closePort();
             if (closed) {
                 LOG.info("Successfully closed serial port");
+                eventBus.publish("communication-status", "disconnected");
             } else {
                 LOG.error("Failed to close serial port");
             }

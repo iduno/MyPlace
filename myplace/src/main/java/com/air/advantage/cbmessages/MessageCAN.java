@@ -4,13 +4,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MessageCAN extends Message {
+    public enum AckType {
+        ACK("1"),
+        NACK("0");
+
+        private final String value;
+
+        AckType(String value) {
+            this.value = value;
+        }
+        public String getValue() {
+            return value;
+        }
+        public static AckType fromString(String text) {
+            for (AckType type : AckType.values()) {
+                if (text.equals(type.getValue())) {
+                    return type;
+                }
+            }
+            return null;
+        }
+        public static AckType fromBytes(byte[] data, int offset) {
+            return fromString(new String(data, offset, 1));
+        }
+    }
+
     private List<CANMessage> messageCANBaseList;
+    private AckType ackType;
     public MessageCAN() {
         this.messageType = MessageType.GET_CAN; // or SET_CAN based on context
+        this.ackType = null; 
         this.messageCANBaseList = new ArrayList<>();
     }
     public MessageCAN(MessageType messageType) {
+        this(messageType, null);
+    }
+    public MessageCAN(MessageType messageType,AckType ackType) {
         this.messageType = messageType;
+        this.ackType = ackType;
         this.messageCANBaseList = new ArrayList<>();
     }
 
@@ -35,10 +66,17 @@ public class MessageCAN extends Message {
         message.data = new String(data);
         message.messageCANBaseList = new ArrayList<>();
         int offset = 0; 
+
         while (offset < data.length) {
             int messageLength = findEndOfMessageOffset(data, offset) - offset;
             if (messageLength <= 0) {
                 break;
+            }
+            else if (messageLength == 1) {
+                message.ackType = AckType.fromBytes(data, offset);
+                offset += messageLength + 1; // +1 for the space character
+                continue;
+
             }
             else if (messageLength < 25) {
                 offset += messageLength + 1;
@@ -63,6 +101,18 @@ public class MessageCAN extends Message {
         String messageTypeString = this.messageType.getValue();
         System.arraycopy(messageTypeString.getBytes(), 0, data, currentOffset, messageTypeString.length());
         currentOffset += messageTypeString.length();
+
+        switch (this.messageType) {
+            case ACK_CAN:
+            case GET_CAN:
+                if (ackType != null) {
+                    data[currentOffset++] = ackType.getValue().getBytes()[0];
+                    data[currentOffset++] = ' '; // Add space between messages
+                } else {
+                    throw new IllegalArgumentException("AckType must be set for ACK_CAN message");
+                }
+                break;
+        }
 
         // Serialize each CANMessage in the list
         for (CANMessage canMessage : messageCANBaseList) {

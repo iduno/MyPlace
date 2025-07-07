@@ -68,7 +68,7 @@ public class TcpCommunicationService implements CommunicationService {
                 this.parser.parse(buffer);
                 Message message = this.parser.pollMessage();
                 while (message != null) {
-                    LOG.info("Received message from client: " + message);
+                    LOG.info("Received message from client: " + message.data);
                     eventBus.publish("communication-data", message);
                     message = this.parser.pollMessage();
                 }

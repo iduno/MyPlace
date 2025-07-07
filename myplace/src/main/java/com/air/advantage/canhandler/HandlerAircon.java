@@ -118,9 +118,8 @@ public class HandlerAircon extends Handler {
 
     // Helper to get or create DataAircon (implement as needed)
     private DataAircon getOrCreateDataAircon(String uid) {
-        // TODO: Implement lookup or creation logic for DataAircon by UID
-        // Use DataAircon.create() if available, otherwise adjust as needed
-        return DataAircon.create();
+        return myMasterData.masterData.aircons.putIfAbsent(uid, DataAircon.create());
+
     }
 
     // Validation logic based on your ZoneMessage function

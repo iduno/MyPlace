@@ -28,19 +28,36 @@ public class CANMessageLighting extends CANMessage{
             return null;
         }
         public static MessageType fromBytes(byte[] data, int offset) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = offset; i < offset + 2; i++) {
-                sb.append(String.format("%02x", data[i]));
-            }
-            return fromString(sb.toString());
+            return fromString(new String(data, offset, 2));
         }
     }
 
     protected MessageType messageType;
 
     public static CANMessage deserialize(byte[] data, int offset) {
-        // Implement logic for base class if needed
-        return null;
+        CANMessage message = null;
+        MessageType messageType = MessageType.fromBytes(data, offset);
+        switch (messageType) {
+            case LM_UPDATE_LIGHT:
+                message = CANMessageLighting00LmUpdateLight.deserialize(data, offset + 2);
+                break;
+            case LM_UPDATE_BRIGHTNESS_LEVEL:
+                message = CANMessageLighting01LmUpdateBrightnessLevel.deserialize(data, offset + 2);
+                break;
+            case LM_UPDATE_LIGHT_WITH_ACK:
+                message = CANMessageLighting02LmUpdateLightWithAck.deserialize(data, offset + 2);
+                break;
+            case RM2_THING_STATE:
+                message = CANMessageLighting15Rm2ThingState.deserialize(data, offset + 2);
+                break;
+            case RM2_DIP_THING:
+                message = CANMessageLighting16Rm2DipThing.deserialize(data, offset + 2);
+                break;
+            default:
+                message = CANMessageLighting00LmUpdateLight.deserialize(data, offset + 2); // fallback to a default handler
+                break;
+        }
+        return message;
     }
     @Override
     public int serialize(byte[] data, int offset) {

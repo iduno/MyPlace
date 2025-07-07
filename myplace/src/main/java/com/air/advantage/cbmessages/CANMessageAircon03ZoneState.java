@@ -5,7 +5,7 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
     private ZoneState zoneState;
     private int zonePercent;
     private int zoneType;
-    private int setTemp;
+    private float setTemp;
     private float measuredTemp;
 
     public enum ZoneState {
@@ -35,10 +35,10 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
         if (data.length >= offset + 12) {
             msg.zoneNumber = ByteArray.parseHexValue(offset, data);
             int stateByte = ByteArray.parseHexValue(offset + 2, data);
-            msg.zoneState = ZoneState.fromValue(stateByte & 0x80);
+            msg.zoneState = ZoneState.fromValue((stateByte & 0x80) >> 7);
             msg.zonePercent = stateByte & 0x7F;
             msg.zoneType = ByteArray.parseHexValue(offset + 4, data);
-            msg.setTemp = ByteArray.parseHexValue(offset + 6, data);
+            msg.setTemp = ByteArray.parseHexValue(offset + 6, data) / 2.0f;
             // Measured temperature is in the format of xx.yy
             int measuredTempInt = ByteArray.parseHexValue(offset + 8, data);
             int measuredTempDec = ByteArray.parseHexValue(offset + 10, data);
@@ -52,10 +52,10 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
         offset = super.serialize(data, offset);
         
         ByteArray.toHexDigits(zoneNumber, data, offset);
-        int stateByte = ((zoneState != null ? zoneState.getValue() : 0) & 0x80) | (zonePercent & 0x7F);
+        int stateByte = (zoneState != null ? zoneState.getValue() <<7 : 0) | (zonePercent & 0x7F);
         ByteArray.toHexDigits(stateByte, data, offset + 2);
         ByteArray.toHexDigits(zoneType, data, offset + 4);
-        ByteArray.toHexDigits(setTemp, data, offset + 6);
+        ByteArray.toHexDigits((int)(setTemp * 2.0f), data, offset + 6);
         int measuredTempInt = (int) measuredTemp;
         int measuredTempDec = (int) ((measuredTemp - measuredTempInt) * 100);
         ByteArray.toHexDigits(measuredTempInt, data, offset + 8);
@@ -67,6 +67,6 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
     public ZoneState getZoneState() { return zoneState; }
     public int getZonePercent() { return zonePercent; }
     public int getZoneType() { return zoneType; }
-    public int getSetTemp() { return setTemp; }
+    public float getSetTemp() { return setTemp; }
     public float getMeasuredTemp() { return measuredTemp; }
 }

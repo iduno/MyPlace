@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 
 import com.air.advantage.canhandler.Handler;
 import com.air.advantage.cbmessages.CANMessage;
+import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
 import com.air.advantage.cbmessages.Message;
 import com.air.advantage.cbmessages.Message.MessageType;
 import com.air.advantage.cbmessages.MessageCAN;
@@ -72,7 +73,7 @@ public class CommunicationDataHandler {
             connect();
         }
         if (config.runMode() == CommunicationConfig.RunMode.CB) {
-            pingTimerId = vertx.setPeriodic(1000, id -> pingTimer());
+            pingTimerId = vertx.setPeriodic(10000, id -> pingTimer());
         }
     }
     
@@ -113,6 +114,13 @@ public class CommunicationDataHandler {
         if (success) {
             LOG.info("Successfully connected to: ");
             isConnected.set(true);
+            if (config.runMode() == CommunicationConfig.RunMode.MYAIR) {
+                // Send initial ping message if in MYAIR mode
+                MessageCAN canMessage = new MessageCAN(MessageType.SET_CAN);
+                CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
+                canMessage.getMessageCANBaseList().add(airconStatus);
+                sendMessage(canMessage);
+            }
         } else {
             LOG.warn("Failed to connect to: ");
             handleDisconnection();
@@ -187,7 +195,7 @@ public class CommunicationDataHandler {
                 if (sendAck) {
                     sendAck = false;
                     LOG.info("Received ping message, sending ACK");
-                    MessageCAN canMessage = new MessageCAN(MessageType.ACK_CAN);
+                    MessageCAN canMessage = new MessageCAN(MessageType.ACK_CAN,MessageCAN.AckType.ACK);
                     communicationManager.send(canMessage);
                 } else {
                     LOG.info("Received ping message, but not sending ACK");
@@ -237,14 +245,13 @@ public class CommunicationDataHandler {
                 communicationManager.send(canMessage);
             } else {
                 if (data.getMessageType() == MessageType.SET_CAN) {
-                    canMessage = new MessageCAN(MessageType.GET_CAN);
+                    canMessage = new MessageCAN(MessageType.GET_CAN,MessageCAN.AckType.ACK);
                     communicationManager.send(canMessage);
                 }
             }
             // Message pingMessage = new MessagePing();
             // communicationManager.send(pingMessage);
             
-            lastMessageTime.set(System.currentTimeMillis());
         }
         // Process your data here
         // For example, parse XML or JSON responses from your device

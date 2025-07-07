@@ -4,7 +4,7 @@ public class Message {
 
     MessageType messageType;
     Boolean crcValid;
-    String data;
+    public String data;
 
     public enum MessageType {
         PING("Ping"),
