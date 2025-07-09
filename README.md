@@ -1,11 +1,12 @@
 # Parent Project
 
 This is the parent project that contains two submodules: **myplace** and **myplace_cb_demo**.
+The code is not currently fully functional and work in progress.
 
 ## Project Structure
 
 - **myplace**: This module contains the main application logic and resources.
-- **myplace_cb_demo**: This module serves as a demonstration for the capabilities of the **myplace** module.
+- **myplace_cb_demo**: Not in use. to be deleted.
 
 ## Setup Instructions
 
@@ -26,14 +27,14 @@ This is the parent project that contains two submodules: **myplace** and **mypla
 
 ## Usage
 
-- To run the **myplace** module, navigate to the **myplace** directory and execute:
+To run the **myplace** module, navigate to the **myplace** directory and execute:
+- The following for the Control Board mock app
   ```
-  mvn spring-boot:run
+  mvn quarkus:dev -Dquarkus.profile=cb
   ```
-
-- To run the **myplace_cb_demo** module, navigate to the **myplace_cb_demo** directory and execute:
+- The following for the My Place app
   ```
-  mvn spring-boot:run
+  mvn quarkus:dev -Dquarkus.profile=dev
   ```
 
 ## Contributing
