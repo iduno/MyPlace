@@ -4,11 +4,12 @@ package com.air.advantage.cbmessages;
 public class CANMessageLighting extends CANMessage{
 
     public enum MessageType {
-        LM_UPDATE_LIGHT("00"),
+        LM_SETUP_OLD("00"),
         LM_UPDATE_BRIGHTNESS_LEVEL("01"),
-        LM_UPDATE_LIGHT_WITH_ACK("02"),
+        LM_SETUP("02"),
         RM2_THING_STATE("15"),
-        RM2_DIP_THING("16");
+        RM2_DIP_THING("16"),
+        RM2_STATUS_ADD_DEVICE("17");
         
 
         private final String value;
@@ -34,27 +35,37 @@ public class CANMessageLighting extends CANMessage{
 
     protected MessageType messageType;
 
+    public CANMessageLighting() {
+        super();
+        this.systemType = SystemType.LIGHTING;
+        this.deviceType = DeviceType.UNKNOWN; // Default device type
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessage message = null;
         MessageType messageType = MessageType.fromBytes(data, offset);
+        offset += 2;
         switch (messageType) {
-            case LM_UPDATE_LIGHT:
-                message = CANMessageLighting00LmUpdateLight.deserialize(data, offset + 2);
+            case LM_SETUP_OLD:
+                message = CANMessageLighting00LmStatusMessageOld.deserialize(data, offset);
                 break;
             case LM_UPDATE_BRIGHTNESS_LEVEL:
-                message = CANMessageLighting01LmUpdateBrightnessLevel.deserialize(data, offset + 2);
+                message = CANMessageLighting01LmControlMessage.deserialize(data, offset);
                 break;
-            case LM_UPDATE_LIGHT_WITH_ACK:
-                message = CANMessageLighting02LmUpdateLightWithAck.deserialize(data, offset + 2);
+            case LM_SETUP:
+                message = CANMessageLighting02LmStatusMessage.deserialize(data, offset);
                 break;
             case RM2_THING_STATE:
-                message = CANMessageLighting15Rm2ThingState.deserialize(data, offset + 2);
+                message = CANMessageLighting15Rm2ControlMessage.deserialize(data, offset);
                 break;
             case RM2_DIP_THING:
-                message = CANMessageLighting16Rm2DipThing.deserialize(data, offset + 2);
+                message = CANMessageLighting16Rm2StatusMessage.deserialize(data, offset);
+                break;
+            case RM2_STATUS_ADD_DEVICE:
+                message = CANMessageLighting17Rm2AddDevice.deserialize(data, offset);
                 break;
             default:
-                message = CANMessageLighting00LmUpdateLight.deserialize(data, offset + 2); // fallback to a default handler
+                message = CANMessageLighting00LmStatusMessageOld.deserialize(data, offset); // fallback to a default handler
                 break;
         }
         return message;

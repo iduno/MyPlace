@@ -3,31 +3,40 @@ package com.air.advantage.aaservice.data;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.gson.annotations.SerializedName;
 
 /* compiled from: DataLightsAll.java */
 /* renamed from: com.air.advantage.aaservice.o.h */
 /* loaded from: classes.dex */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataLightsAll {
 
-    /* renamed from: a */
     @SerializedName("lights")
+    @JsonProperty("lights")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataLight> lights = new TreeMap<>();
 
-    /* renamed from: b */
     @SerializedName("groups")
+    @JsonProperty("groups")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataGroup> groups;
 
-    /* renamed from: c */
     @SerializedName("groupsOrder")
+    @JsonProperty("groupsOrder")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> groupsOrder;
 
-    /* renamed from: d */
     @SerializedName("scenes")
+    @JsonProperty("scenes")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataScene> scenes;
 
-    /* renamed from: e */
     @SerializedName("scenesOrder")
+    @JsonProperty("scenesOrder")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> scenesOrder;
 
     /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */

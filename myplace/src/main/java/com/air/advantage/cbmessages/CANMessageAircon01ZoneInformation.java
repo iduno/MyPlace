@@ -34,6 +34,18 @@ public class CANMessageAircon01ZoneInformation extends CANMessageAircon {
     private int constantZone2;
     private int constantZone3;
     private int filterCleanStatus;
+    
+    public CANMessageAircon01ZoneInformation() {
+        super();
+        this.messageType = MessageType.ZONE_INFORMATION;
+        this.destination = 0;
+        this.numZones = 0;
+        this.numConstantZones = 0;
+        this.constantZone1 = 0;
+        this.constantZone2 = 0;
+        this.constantZone3 = 0;
+        this.filterCleanStatus = 0;
+    }
 
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon01ZoneInformation msg = new CANMessageAircon01ZoneInformation();

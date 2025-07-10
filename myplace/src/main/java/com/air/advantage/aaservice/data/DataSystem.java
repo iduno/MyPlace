@@ -1,84 +1,227 @@
 package com.air.advantage.aaservice.data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.gson.annotations.SerializedName;
 
 /* compiled from: DataSystem.java */
 /* renamed from: com.air.advantage.aaservice.o.k */
 /* loaded from: classes.dex */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataSystem {
 
-    /* renamed from: a */
     @SerializedName("dealerPhoneNumber")
+    @JsonProperty("dealerPhoneNumber")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String dealerPhoneNumber;
 
-    /* renamed from: b */
     @SerializedName("hasAircons")
+    @JsonProperty("hasAircons")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean hasAircons;
 
-    /* renamed from: c */
     @SerializedName("hasLights")
+    @JsonProperty("hasLights")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean hasLights;
 
-    /* renamed from: d */
     @SerializedName("needsUpdate")
+    @JsonProperty("needsUpdate")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean needsUpdate;
 
-    /* renamed from: e */
     @SerializedName("logoPIN")
+    @JsonProperty("logoPIN")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String logoPIN;
 
-    /* renamed from: f */
     @SerializedName("mid")
+    @JsonProperty("mid")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String mid;
 
-    /* renamed from: g */
     @SerializedName("myAppRev")
+    @JsonProperty("myAppRev")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String myAppRev;
 
-    /* renamed from: h */
     @SerializedName("name")
+    @JsonProperty("name")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String name;
 
-    /* renamed from: i */
     @SerializedName("noOfAircons")
+    @JsonProperty("noOfAircons")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer noOfAircons;
 
-    /* renamed from: j */
     @SerializedName("noOfSnapshots")
+    @JsonProperty("noOfSnapshots")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer noOfSnapshots;
 
-    /* renamed from: k */
     @SerializedName("rid")
+    @JsonProperty("rid")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String rid;
 
-    /* renamed from: l */
     @SerializedName("sysType")
+    @JsonProperty("sysType")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String sysType;
 
-    /* renamed from: m */
     @SerializedName("deviceIds")
+    @JsonProperty("deviceIds")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> deviceIds;
 
-    /* renamed from: n */
     @SerializedName("postCode")
+    @JsonProperty("postCode")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String postCode;
 
-    /* renamed from: o */
     @SerializedName("country")
+    @JsonProperty("country")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String country;
 
-    /* renamed from: p */
     @SerializedName("latitude")
+    @JsonProperty("latitude")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Double latitude;
 
-    /* renamed from: q */
     @SerializedName("longitude")
+    @JsonProperty("longitude")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Double longitude;
+
+    @SerializedName("aaServiceRev")
+    @JsonProperty("aaServiceRev")
+    public String aaServiceRev;
+    
+    @SerializedName("allTspErrorCodes")
+    @JsonProperty("allTspErrorCodes")
+    public HashMap<String, String> allTspErrorCodes;
+    
+    @SerializedName("backupId")
+    @JsonProperty("backupId")
+    public String backupId;
+    
+    @SerializedName("deletedDevices")
+    @JsonProperty("deletedDevices")
+    public HashMap<String, Long> deletedDevices;
+    
+    @SerializedName("deviceIdsV2")
+    @JsonProperty("deviceIdsV2")
+    public HashMap<String, String> deviceIdsV2;
+    
+    @SerializedName("deviceNames")
+    @JsonProperty("deviceNames")
+    public HashMap<String, String> deviceNames;
+    
+    @SerializedName("deviceNotificationVersion")
+    @JsonProperty("deviceNotificationVersion")
+    public HashMap<String, String> deviceNotificationVersion;
+    
+    @SerializedName("drawLightsTab")
+    @JsonProperty("drawLightsTab")
+    public Boolean drawLightsTab;
+    
+    @SerializedName("drawThingsTab")
+    @JsonProperty("drawThingsTab")
+    public Boolean drawThingsTab;
+    
+    @SerializedName("garageDoorReminderWaitTime")
+    @JsonProperty("garageDoorReminderWaitTime")
+    public Integer garageDoorReminderWaitTime;
+    
+    @SerializedName("garageDoorSecurityPin")
+    @JsonProperty("garageDoorSecurityPin")
+    public String garageDoorSecurityPin;
+    
+    @SerializedName("garageDoorSecurityPinEnabled")
+    @JsonProperty("garageDoorSecurityPinEnabled")
+    public Boolean garageDoorSecurityPinEnabled;
+    
+    @SerializedName("hasLocks")
+    @JsonProperty("hasLocks")
+    public Boolean hasLocks;
+    
+    @SerializedName("hasSensors")
+    @JsonProperty("hasSensors")
+    public Boolean hasSensors;
+    
+    @SerializedName("hasThings")
+    @JsonProperty("hasThings")
+    public Boolean hasThings;
+    
+    @SerializedName("hasThingsBOG")
+    @JsonProperty("hasThingsBOG")
+    public Boolean hasThingsBOG;
+    
+    @SerializedName("hasThingsLight")
+    @JsonProperty("hasThingsLight")
+    public Boolean hasThingsLight;
+    
+    @SerializedName("isValidSuburbTemp")
+    @JsonProperty("isValidSuburbTemp")
+    public Boolean isValidSuburbTemp;
+    
+    @SerializedName("lockDoorReminderWaitTime")
+    @JsonProperty("lockDoorReminderWaitTime")
+    public Integer lockDoorReminderWaitTime;
+    
+    @SerializedName("membershipStatus")
+    @JsonProperty("membershipStatus")
+    public String membershipStatus;
+    
+    @SerializedName("myLightsDealerPhoneNumber")
+    @JsonProperty("myLightsDealerPhoneNumber")
+    public String myLightsDealerPhoneNumber;
+    
+    @SerializedName("myLightsLogoPIN")
+    @JsonProperty("myLightsLogoPIN")
+    public String myLightsLogoPIN;
+    
+    @SerializedName("myPlaceDealerPhoneNumber")
+    @JsonProperty("myPlaceDealerPhoneNumber")
+    public String myPlaceDealerPhoneNumber;
+    
+    @SerializedName("myPlaceLogoPIN")
+    @JsonProperty("myPlaceLogoPIN")
+    public String myPlaceLogoPIN;
+    
+    @SerializedName("remoteAccessPairingEnabled")
+    @JsonProperty("remoteAccessPairingEnabled")
+    public Boolean remoteAccessPairingEnabled;
+    
+    @SerializedName("showMeasuredTemp")
+    @JsonProperty("showMeasuredTemp")
+    public Boolean showMeasuredTemp;
+    
+    @SerializedName("splitTypeSystem")
+    @JsonProperty("splitTypeSystem")
+    public Boolean splitTypeSystem;
+    
+    @SerializedName("suburbTemp")
+    @JsonProperty("suburbTemp")
+    public Double suburbTemp;
+    
+    @SerializedName("tspIp")
+    @JsonProperty("tspIp")
+    public String tspIp;
+    
+    @SerializedName("tspModel")
+    @JsonProperty("tspModel")
+    public String tspModel;
 
     /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
     DataSystem() {
+        this.allTspErrorCodes = new HashMap<>();
     }
 
     /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
@@ -155,6 +298,138 @@ public class DataSystem {
             this.longitude = dataSystem.longitude;
             changed = true;
         }
+        
+        // New fields
+        if (dataSystem.aaServiceRev != null && !dataSystem.aaServiceRev.equals(this.aaServiceRev)) {
+            this.aaServiceRev = dataSystem.aaServiceRev;
+            changed = true;
+        }
+        if (dataSystem.allTspErrorCodes != null) {
+            if (this.allTspErrorCodes == null || !this.allTspErrorCodes.equals(dataSystem.allTspErrorCodes)) {
+                this.allTspErrorCodes = new HashMap<>(dataSystem.allTspErrorCodes);
+                changed = true;
+            }
+        }
+        if (dataSystem.backupId != null && !dataSystem.backupId.equals(this.backupId)) {
+            this.backupId = dataSystem.backupId;
+            changed = true;
+        }
+        if (dataSystem.deletedDevices != null) {
+            if (this.deletedDevices == null || !this.deletedDevices.equals(dataSystem.deletedDevices)) {
+                this.deletedDevices = new HashMap<>(dataSystem.deletedDevices);
+                changed = true;
+            }
+        }
+        if (dataSystem.deviceIdsV2 != null) {
+            if (this.deviceIdsV2 == null || !this.deviceIdsV2.equals(dataSystem.deviceIdsV2)) {
+                this.deviceIdsV2 = new HashMap<>(dataSystem.deviceIdsV2);
+                changed = true;
+            }
+        }
+        if (dataSystem.deviceNames != null) {
+            if (this.deviceNames == null || !this.deviceNames.equals(dataSystem.deviceNames)) {
+                this.deviceNames = new HashMap<>(dataSystem.deviceNames);
+                changed = true;
+            }
+        }
+        if (dataSystem.deviceNotificationVersion != null) {
+            if (this.deviceNotificationVersion == null || !this.deviceNotificationVersion.equals(dataSystem.deviceNotificationVersion)) {
+                this.deviceNotificationVersion = new HashMap<>(dataSystem.deviceNotificationVersion);
+                changed = true;
+            }
+        }
+        if (dataSystem.drawLightsTab != null && !dataSystem.drawLightsTab.equals(this.drawLightsTab)) {
+            this.drawLightsTab = dataSystem.drawLightsTab;
+            changed = true;
+        }
+        if (dataSystem.drawThingsTab != null && !dataSystem.drawThingsTab.equals(this.drawThingsTab)) {
+            this.drawThingsTab = dataSystem.drawThingsTab;
+            changed = true;
+        }
+        if (dataSystem.garageDoorReminderWaitTime != null && !dataSystem.garageDoorReminderWaitTime.equals(this.garageDoorReminderWaitTime)) {
+            this.garageDoorReminderWaitTime = dataSystem.garageDoorReminderWaitTime;
+            changed = true;
+        }
+        if (dataSystem.garageDoorSecurityPin != null && !dataSystem.garageDoorSecurityPin.equals(this.garageDoorSecurityPin)) {
+            this.garageDoorSecurityPin = dataSystem.garageDoorSecurityPin;
+            changed = true;
+        }
+        if (dataSystem.garageDoorSecurityPinEnabled != null && !dataSystem.garageDoorSecurityPinEnabled.equals(this.garageDoorSecurityPinEnabled)) {
+            this.garageDoorSecurityPinEnabled = dataSystem.garageDoorSecurityPinEnabled;
+            changed = true;
+        }
+        if (dataSystem.hasLocks != null && !dataSystem.hasLocks.equals(this.hasLocks)) {
+            this.hasLocks = dataSystem.hasLocks;
+            changed = true;
+        }
+        if (dataSystem.hasSensors != null && !dataSystem.hasSensors.equals(this.hasSensors)) {
+            this.hasSensors = dataSystem.hasSensors;
+            changed = true;
+        }
+        if (dataSystem.hasThings != null && !dataSystem.hasThings.equals(this.hasThings)) {
+            this.hasThings = dataSystem.hasThings;
+            changed = true;
+        }
+        if (dataSystem.hasThingsBOG != null && !dataSystem.hasThingsBOG.equals(this.hasThingsBOG)) {
+            this.hasThingsBOG = dataSystem.hasThingsBOG;
+            changed = true;
+        }
+        if (dataSystem.hasThingsLight != null && !dataSystem.hasThingsLight.equals(this.hasThingsLight)) {
+            this.hasThingsLight = dataSystem.hasThingsLight;
+            changed = true;
+        }
+        if (dataSystem.isValidSuburbTemp != null && !dataSystem.isValidSuburbTemp.equals(this.isValidSuburbTemp)) {
+            this.isValidSuburbTemp = dataSystem.isValidSuburbTemp;
+            changed = true;
+        }
+        if (dataSystem.lockDoorReminderWaitTime != null && !dataSystem.lockDoorReminderWaitTime.equals(this.lockDoorReminderWaitTime)) {
+            this.lockDoorReminderWaitTime = dataSystem.lockDoorReminderWaitTime;
+            changed = true;
+        }
+        if (dataSystem.membershipStatus != null && !dataSystem.membershipStatus.equals(this.membershipStatus)) {
+            this.membershipStatus = dataSystem.membershipStatus;
+            changed = true;
+        }
+        if (dataSystem.myLightsDealerPhoneNumber != null && !dataSystem.myLightsDealerPhoneNumber.equals(this.myLightsDealerPhoneNumber)) {
+            this.myLightsDealerPhoneNumber = dataSystem.myLightsDealerPhoneNumber;
+            changed = true;
+        }
+        if (dataSystem.myLightsLogoPIN != null && !dataSystem.myLightsLogoPIN.equals(this.myLightsLogoPIN)) {
+            this.myLightsLogoPIN = dataSystem.myLightsLogoPIN;
+            changed = true;
+        }
+        if (dataSystem.myPlaceDealerPhoneNumber != null && !dataSystem.myPlaceDealerPhoneNumber.equals(this.myPlaceDealerPhoneNumber)) {
+            this.myPlaceDealerPhoneNumber = dataSystem.myPlaceDealerPhoneNumber;
+            changed = true;
+        }
+        if (dataSystem.myPlaceLogoPIN != null && !dataSystem.myPlaceLogoPIN.equals(this.myPlaceLogoPIN)) {
+            this.myPlaceLogoPIN = dataSystem.myPlaceLogoPIN;
+            changed = true;
+        }
+        if (dataSystem.remoteAccessPairingEnabled != null && !dataSystem.remoteAccessPairingEnabled.equals(this.remoteAccessPairingEnabled)) {
+            this.remoteAccessPairingEnabled = dataSystem.remoteAccessPairingEnabled;
+            changed = true;
+        }
+        if (dataSystem.showMeasuredTemp != null && !dataSystem.showMeasuredTemp.equals(this.showMeasuredTemp)) {
+            this.showMeasuredTemp = dataSystem.showMeasuredTemp;
+            changed = true;
+        }
+        if (dataSystem.splitTypeSystem != null && !dataSystem.splitTypeSystem.equals(this.splitTypeSystem)) {
+            this.splitTypeSystem = dataSystem.splitTypeSystem;
+            changed = true;
+        }
+        if (dataSystem.suburbTemp != null && !dataSystem.suburbTemp.equals(this.suburbTemp)) {
+            this.suburbTemp = dataSystem.suburbTemp;
+            changed = true;
+        }
+        if (dataSystem.tspIp != null && !dataSystem.tspIp.equals(this.tspIp)) {
+            this.tspIp = dataSystem.tspIp;
+            changed = true;
+        }
+        if (dataSystem.tspModel != null && !dataSystem.tspModel.equals(this.tspModel)) {
+            this.tspModel = dataSystem.tspModel;
+            changed = true;
+        }
 
         return changed;
     }
@@ -183,5 +458,37 @@ public class DataSystem {
         if (other.country != null) this.country = other.country;
         if (other.latitude != null) this.latitude = other.latitude;
         if (other.longitude != null) this.longitude = other.longitude;
+        
+        // New fields
+        if (other.aaServiceRev != null) this.aaServiceRev = other.aaServiceRev;
+        if (other.allTspErrorCodes != null) this.allTspErrorCodes = new HashMap<>(other.allTspErrorCodes);
+        if (other.backupId != null) this.backupId = other.backupId;
+        if (other.deletedDevices != null) this.deletedDevices = new HashMap<>(other.deletedDevices);
+        if (other.deviceIdsV2 != null) this.deviceIdsV2 = new HashMap<>(other.deviceIdsV2);
+        if (other.deviceNames != null) this.deviceNames = new HashMap<>(other.deviceNames);
+        if (other.deviceNotificationVersion != null) this.deviceNotificationVersion = new HashMap<>(other.deviceNotificationVersion);
+        if (other.drawLightsTab != null) this.drawLightsTab = other.drawLightsTab;
+        if (other.drawThingsTab != null) this.drawThingsTab = other.drawThingsTab;
+        if (other.garageDoorReminderWaitTime != null) this.garageDoorReminderWaitTime = other.garageDoorReminderWaitTime;
+        if (other.garageDoorSecurityPin != null) this.garageDoorSecurityPin = other.garageDoorSecurityPin;
+        if (other.garageDoorSecurityPinEnabled != null) this.garageDoorSecurityPinEnabled = other.garageDoorSecurityPinEnabled;
+        if (other.hasLocks != null) this.hasLocks = other.hasLocks;
+        if (other.hasSensors != null) this.hasSensors = other.hasSensors;
+        if (other.hasThings != null) this.hasThings = other.hasThings;
+        if (other.hasThingsBOG != null) this.hasThingsBOG = other.hasThingsBOG;
+        if (other.hasThingsLight != null) this.hasThingsLight = other.hasThingsLight;
+        if (other.isValidSuburbTemp != null) this.isValidSuburbTemp = other.isValidSuburbTemp;
+        if (other.lockDoorReminderWaitTime != null) this.lockDoorReminderWaitTime = other.lockDoorReminderWaitTime;
+        if (other.membershipStatus != null) this.membershipStatus = other.membershipStatus;
+        if (other.myLightsDealerPhoneNumber != null) this.myLightsDealerPhoneNumber = other.myLightsDealerPhoneNumber;
+        if (other.myLightsLogoPIN != null) this.myLightsLogoPIN = other.myLightsLogoPIN;
+        if (other.myPlaceDealerPhoneNumber != null) this.myPlaceDealerPhoneNumber = other.myPlaceDealerPhoneNumber;
+        if (other.myPlaceLogoPIN != null) this.myPlaceLogoPIN = other.myPlaceLogoPIN;
+        if (other.remoteAccessPairingEnabled != null) this.remoteAccessPairingEnabled = other.remoteAccessPairingEnabled;
+        if (other.showMeasuredTemp != null) this.showMeasuredTemp = other.showMeasuredTemp;
+        if (other.splitTypeSystem != null) this.splitTypeSystem = other.splitTypeSystem;
+        if (other.suburbTemp != null) this.suburbTemp = other.suburbTemp;
+        if (other.tspIp != null) this.tspIp = other.tspIp;
+        if (other.tspModel != null) this.tspModel = other.tspModel;
     }
 }

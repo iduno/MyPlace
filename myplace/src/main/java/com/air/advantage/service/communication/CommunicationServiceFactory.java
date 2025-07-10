@@ -2,7 +2,7 @@ package com.air.advantage.service.communication;
 
 import org.jboss.logging.Logger;
 
-import com.air.advantage.service.communication.config.CommunicationConfig;
+import com.air.advantage.config.CommunicationConfig;
 
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;

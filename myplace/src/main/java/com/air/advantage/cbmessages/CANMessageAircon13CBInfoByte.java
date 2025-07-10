@@ -3,6 +3,12 @@ package com.air.advantage.cbmessages;
 public class CANMessageAircon13CBInfoByte extends CANMessageAircon {
     private int infoByte;
 
+    public CANMessageAircon13CBInfoByte() {
+        super();
+        this.messageType = MessageType.INFO_BYTE;
+        this.infoByte = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon13CBInfoByte msg = new CANMessageAircon13CBInfoByte();
         
@@ -21,4 +27,6 @@ public class CANMessageAircon13CBInfoByte extends CANMessageAircon {
     }
 
     public int getInfoByte() { return infoByte; }
+    
+    public void setInfoByte(int infoByte) { this.infoByte = infoByte; }
 }

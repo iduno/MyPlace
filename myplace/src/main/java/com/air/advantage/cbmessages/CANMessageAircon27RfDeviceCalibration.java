@@ -4,6 +4,15 @@ public class CANMessageAircon27RfDeviceCalibration extends CANMessageAircon {
     private int calibrationControl;
     private int channelNo;
     private int upDownPosition;
+
+    public CANMessageAircon27RfDeviceCalibration() {
+        super();
+        this.messageType = MessageType.RF_DEVICE_CALIBRATION;
+        this.calibrationControl = 0;
+        this.channelNo = 0;
+        this.upDownPosition = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon27RfDeviceCalibration msg = new CANMessageAircon27RfDeviceCalibration();
         
@@ -27,13 +36,28 @@ public class CANMessageAircon27RfDeviceCalibration extends CANMessageAircon {
         }
         return offset + 14;
     }
+
     public int getCalibrationControl() {
         return calibrationControl;
     }
+
+    public void setCalibrationControl(int calibrationControl) {
+        this.calibrationControl = calibrationControl;
+    }
+
     public int getChannelNo() {
         return channelNo;
     }
+
+    public void setChannelNo(int channelNo) {
+        this.channelNo = channelNo;
+    }
+
     public int getUpDownPosition() {
         return upDownPosition;
+    }
+
+    public void setUpDownPosition(int upDownPosition) {
+        this.upDownPosition = upDownPosition;
     }
 }

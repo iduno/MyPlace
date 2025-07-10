@@ -1,4 +1,4 @@
-package com.air.advantage.service.communication.config;
+package com.air.advantage.config;
 
 import org.eclipse.microprofile.config.spi.Converter;
 

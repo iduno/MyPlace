@@ -2,18 +2,25 @@ package com.air.advantage.aaservice.data;
 
 import java.util.TreeMap;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.gson.annotations.SerializedName;
 
 import jakarta.annotation.Nonnull;
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataAircon {
 
     @SerializedName("info")
+    @JsonProperty("info")
     @Nonnull
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public final DataAirconInfo airconInfo = new DataAirconInfo();
 
     @SerializedName("zones")
+    @JsonProperty("zones")
     @Nonnull
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public final TreeMap<String, DataZone> zones = new TreeMap<>();
 
     public enum FreshAirStatus {
@@ -83,14 +90,17 @@ public class DataAircon {
     DataAircon() {
     }
 
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public static String getAirconState(int airconIndex) {
         return "ac" + airconIndex;
     }
 
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public static DataAircon create() {
         return new DataAircon();
     }
 
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataZone> getZones() {
         return zones;
     }

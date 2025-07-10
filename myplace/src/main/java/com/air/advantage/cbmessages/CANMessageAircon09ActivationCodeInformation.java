@@ -5,6 +5,14 @@ public class CANMessageAircon09ActivationCodeInformation extends CANMessageAirco
     private int unlockCode; // 2 bytes
     private int activationTimeDays; // 1 byte
 
+    public CANMessageAircon09ActivationCodeInformation() {
+        super();
+        this.messageType = MessageType.ACTIVATION_CODE_INFORMATION;
+        this.action = 0;
+        this.unlockCode = 0;
+        this.activationTimeDays = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon09ActivationCodeInformation msg = new CANMessageAircon09ActivationCodeInformation();
         
@@ -35,5 +43,15 @@ public class CANMessageAircon09ActivationCodeInformation extends CANMessageAirco
     }
     public int getActivationTimeDays() {
         return activationTimeDays;
+    }
+    
+    public void setAction(int action) {
+        this.action = action;
+    }
+    public void setUnlockCode(int unlockCode) {
+        this.unlockCode = unlockCode;
+    }
+    public void setActivationTimeDays(int activationTimeDays) {
+        this.activationTimeDays = activationTimeDays;
     }
 }

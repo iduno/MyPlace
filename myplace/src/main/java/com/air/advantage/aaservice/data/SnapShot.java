@@ -2,56 +2,75 @@ package com.air.advantage.aaservice.data;
 
 import java.util.TreeMap;
 
-import com.google.gson.annotations.Expose;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.gson.annotations.SerializedName;
 
 /* compiled from: SnapShot.java */
 /* renamed from: com.air.advantage.aaservice.o.p */
 /* loaded from: classes.dex */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class SnapShot {
 
-    /* renamed from: a */
     @SerializedName("name")
+    @JsonProperty("name")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String name;
 
-    /* renamed from: b */
     @SerializedName("enabled")
+    @JsonProperty("enabled")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean enabled;
 
-    /* renamed from: c */
     @SerializedName("snapshotId")
-    @Expose(serialize = false)
+    @JsonProperty("snapshotId")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String snapshotId;
 
-    /* renamed from: d */
     @SerializedName("activeDays")
+    @JsonProperty("activeDays")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer activeDays;
 
-    /* renamed from: e */
     @SerializedName("startTime")
+    @JsonProperty("startTime")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer startTime;
 
-    /* renamed from: f */
     @SerializedName("stopTime")
+    @JsonProperty("stopTime")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer stopTime;
 
-    /* renamed from: g */
     @SerializedName("aircons")
+    @JsonProperty("aircons")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataAircon> aircons = new TreeMap<>();
     
     @SerializedName("lights")
+    @JsonProperty("lights")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataLight> lights;
     
     @SerializedName("nextStartTime")
+    @JsonProperty("nextStartTime")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Long nextStartTime;
     
     @SerializedName("nextStopTime")
+    @JsonProperty("nextStopTime")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Long nextStopTime;
     
     @SerializedName("isRunning")
+    @JsonProperty("isRunning")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean isRunning;
     
     @SerializedName("type")
+    @JsonProperty("type")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer type;
     
     public SnapShot() {

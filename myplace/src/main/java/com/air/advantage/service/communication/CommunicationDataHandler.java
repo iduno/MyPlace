@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.logging.Logger;
 
+import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.canhandler.Handler;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
@@ -14,7 +15,7 @@ import com.air.advantage.cbmessages.Message.MessageType;
 import com.air.advantage.cbmessages.MessageCAN;
 import com.air.advantage.cbmessages.MessageGetSystemData;
 import com.air.advantage.cbmessages.MessagePing;
-import com.air.advantage.service.communication.config.CommunicationConfig;
+import com.air.advantage.config.CommunicationConfig;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -44,6 +45,9 @@ public class CommunicationDataHandler {
 
     @Inject
     CommunicationConfig config;
+
+    @Inject
+    MyMasterData myMasterData;
 
     BoundedMessageQueue<Message> messageQueue = new BoundedMessageQueue<>(50);
 
@@ -213,7 +217,7 @@ public class CommunicationDataHandler {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();
                 for (CANMessage canMessage : canMessages) {
                     LOG.info("Processing CAN message: " + canMessage);
-                    Handler.dispatch(canMessage);
+                    Handler.dispatch(canMessage,myMasterData);
                 }
             
             }
@@ -224,7 +228,7 @@ public class CommunicationDataHandler {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();
                 for (CANMessage canMessage : canMessages) {
                     LOG.info("Processing CAN message: " + canMessage);
-                    Handler.dispatch(canMessage);
+                    Handler.dispatch(canMessage,myMasterData);
                 }
             
             }

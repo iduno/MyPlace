@@ -6,6 +6,14 @@ public class CANMessageAircon12ZoneSensorPairing extends CANMessageAircon {
     private int infoByte;
     private int sensorMajorRev;
 
+    public CANMessageAircon12ZoneSensorPairing() {
+        super();
+        this.messageType = MessageType.ZONE_SENSOR_PAIRING;
+        this.sensorUID = null;
+        this.infoByte = 0;
+        this.sensorMajorRev = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon12ZoneSensorPairing message = new CANMessageAircon12ZoneSensorPairing();
         
@@ -28,5 +36,29 @@ public class CANMessageAircon12ZoneSensorPairing extends CANMessageAircon {
         ByteArray.toHexDigits(infoByte, data, offset + 6);
         ByteArray.toHexDigits(sensorMajorRev, data, offset + 8);
         return offset + 14;
+    }
+    
+    public String getSensorUID() {
+        return sensorUID;
+    }
+    
+    public void setSensorUID(String sensorUID) {
+        this.sensorUID = sensorUID;
+    }
+    
+    public int getInfoByte() {
+        return infoByte;
+    }
+    
+    public void setInfoByte(int infoByte) {
+        this.infoByte = infoByte;
+    }
+    
+    public int getSensorMajorRev() {
+        return sensorMajorRev;
+    }
+    
+    public void setSensorMajorRev(int sensorMajorRev) {
+        this.sensorMajorRev = sensorMajorRev;
     }
 }

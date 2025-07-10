@@ -6,6 +6,15 @@ public class CANMessageAircon07CbStatusMessage extends CANMessageAircon {
     private int cbType;
     private int rfFwMajor;
 
+    public CANMessageAircon07CbStatusMessage() {
+        super();
+        this.messageType = MessageType.CB_STATUS_MESSAGE;
+        this.cbFwMajor = 0;
+        this.cbFwMinor = 0;
+        this.cbType = 0;
+        this.rfFwMajor = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon07CbStatusMessage msg = new CANMessageAircon07CbStatusMessage();
         
@@ -33,4 +42,9 @@ public class CANMessageAircon07CbStatusMessage extends CANMessageAircon {
     public int getCbFwMinor() { return cbFwMinor; }
     public int getCbType() { return cbType; }
     public int getRfFwMajor() { return rfFwMajor; }
+    
+    public void setCbFwMajor(int cbFwMajor) { this.cbFwMajor = cbFwMajor; }
+    public void setCbFwMinor(int cbFwMinor) { this.cbFwMinor = cbFwMinor; }
+    public void setCbType(int cbType) { this.cbType = cbType; }
+    public void setRfFwMajor(int rfFwMajor) { this.rfFwMajor = rfFwMajor; }
 }

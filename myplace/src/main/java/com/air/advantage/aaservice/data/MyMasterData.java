@@ -9,26 +9,24 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
+import com.air.advantage.config.MyPlaceConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import jakarta.annotation.PostConstruct;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 /* compiled from: MyMasterData.java */
 /* renamed from: com.air.advantage.aaservice.o.o */
 /* loaded from: classes.dex */
 @ApplicationScoped
 public class MyMasterData {
-    public final MasterData masterData = new MasterData();
+    public static final MasterData masterData = new MasterData();
 
-    @ConfigProperty(name = "myplace.config.path", defaultValue = "config.json")
-    String configPath;
-
-    @ConfigProperty(name = "myplace.save.delay.minutes", defaultValue = "1")
-    long saveDelayMinutes;
+    @Inject
+    MyPlaceConfig config;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private volatile ScheduledFuture<?> scheduledSave;
@@ -38,9 +36,24 @@ public class MyMasterData {
             .addDeserializationExclusionStrategy(new JsonExporterExclusionStrategy())
             .create();
 
-    @PostConstruct
-    void init() {
-        loadConfig();
+    public void onStart(@Observes StartupEvent event) {
+        System.out.println("MyMasterData initialization started");
+        System.out.println("Using config path: " + config.config().path());
+        System.out.println("Using save delay: " + config.config().saveDelayMinutes() + " minutes");
+        
+        try {
+            loadConfig();
+            System.out.println("MyMasterData initialization completed successfully");
+        } catch (Exception e) {
+            System.err.println("Error during MyMasterData initialization: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize MyMasterData", e);
+        }
+    }
+
+    public synchronized MasterData getMasterData() {
+
+        return masterData;
     }
 
     public synchronized void updateConfig(MasterData newData) {
@@ -50,12 +63,12 @@ public class MyMasterData {
 
     private synchronized void scheduleSave() {
         if (scheduledSave == null || scheduledSave.isDone()) {
-            scheduledSave = scheduler.schedule(this::saveConfig, saveDelayMinutes, TimeUnit.MINUTES);
+            scheduledSave = scheduler.schedule(this::saveConfig, config.config().saveDelayMinutes(), TimeUnit.MINUTES);
         }
     }
 
     private synchronized void saveConfig() {
-        try (FileWriter writer = new FileWriter(configPath)) {
+        try (FileWriter writer = new FileWriter(config.config().path())) {
             gson.toJson(this.masterData, writer);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save config", e);
@@ -63,7 +76,7 @@ public class MyMasterData {
     }
 
     public void loadConfig() {
-        File file = new File(configPath);
+        File file = new File(config.config().path());
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
                 MasterData loaded = gson.fromJson(reader, MasterData.class);

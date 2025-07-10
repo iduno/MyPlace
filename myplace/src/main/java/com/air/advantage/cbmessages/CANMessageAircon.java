@@ -43,6 +43,13 @@ public class CANMessageAircon extends CANMessage {
 
     protected MessageType messageType;
 
+    public CANMessageAircon() {
+        super();
+        this.systemType = SystemType.AIRCON;
+        this.deviceType = DeviceType.UNKNOWN; // Default device type
+        this.messageType = MessageType.UNKNOWN; // Default message type
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessage message = null;
         MessageType messageType = MessageType.fromBytes(data, offset);

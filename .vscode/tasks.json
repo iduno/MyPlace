@@ -4,7 +4,7 @@
     {
       "label": "Start MyPlace MYAIR in Debug Mode",
       "type": "shell",
-      "command": "mvn quarkus:dev -Ddebug=5005 -Dquarkus.http.port=8081 -Dsuspend=true",
+      "command": "mvn quarkus:dev -Ddebug=5005 -Dquarkus.http.port=8081 -Dsuspend=true -Dquarkus.profile=myplace",
       "options": {
 				"cwd": "myplace"
 			},
@@ -31,6 +31,58 @@
       "label": "Start MyPlace CB in Debug Mode",
       "type": "shell",
       "command": "mvn quarkus:dev -Ddebug=5006 -Dquarkus.http.port=8082 -Dsuspend=true -Dquarkus.profile=cb" ,
+      "options": {
+				"cwd": "myplace"
+			},
+      "isBackground": true,
+      "problemMatcher": {
+        "fileLocation": [
+						"relative",
+						"${workspaceFolder}/src/main/resources/templates"
+					],
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Listening for transport dt_socket at address.*$",
+          "endsPattern": "^.*Listening for transport dt_socket at address.*$"
+        }
+      }
+    },
+    {
+      "label": "Start TCP MyPlace MYAIR in Debug Mode",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Ddebug=5007 -Dquarkus.http.port=8083 -Dsuspend=true -Dquarkus.profile=myplacetcp",
+      "options": {
+				"cwd": "myplace"
+			},
+      "isBackground": true,
+      "problemMatcher": {
+        "fileLocation": [
+						"relative",
+						"${workspaceFolder}/src/main/resources/templates"
+					],
+        "pattern": {
+          "regexp": "^.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Listening for transport dt_socket at address.*$",
+          "endsPattern": "^.*Listening for transport dt_socket at address.*$"
+        }
+      }
+    },
+    {
+      "label": "Start TCP MyPlace CB in Debug Mode",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Ddebug=5008 -Dquarkus.http.port=8084 -Dsuspend=true -Dquarkus.profile=cbtcp" ,
       "options": {
 				"cwd": "myplace"
 			},

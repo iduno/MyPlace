@@ -8,6 +8,17 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
     private float setTemp;
     private float measuredTemp;
 
+    public CANMessageAircon03ZoneState() {
+        super();
+        this.messageType = MessageType.ZONE_STATE;
+        this.zoneNumber = 0;
+        this.zoneState = null;
+        this.zonePercent = 0;
+        this.zoneType = 0;
+        this.setTemp = 0.0f;
+        this.measuredTemp = 0.0f;
+    }
+
     public enum ZoneState {
         CLOSE(0),
         OPEN(1);
@@ -69,4 +80,11 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
     public int getZoneType() { return zoneType; }
     public float getSetTemp() { return setTemp; }
     public float getMeasuredTemp() { return measuredTemp; }
+    
+    public void setZoneNumber(int zoneNumber) { this.zoneNumber = zoneNumber; }
+    public void setZoneState(ZoneState zoneState) { this.zoneState = zoneState; }
+    public void setZonePercent(int zonePercent) { this.zonePercent = zonePercent; }
+    public void setZoneType(int zoneType) { this.zoneType = zoneType; }
+    public void setSetTemp(float setTemp) { this.setTemp = setTemp; }
+    public void setMeasuredTemp(float measuredTemp) { this.measuredTemp = measuredTemp; }
 }

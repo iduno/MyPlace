@@ -3,6 +3,11 @@ package com.air.advantage.cbmessages;
 public class CANMessageAircon08CBErrorStatus extends CANMessageAircon {
     private String errorCode;
 
+    public CANMessageAircon08CBErrorStatus() {
+        super();
+        this.messageType = MessageType.CB_ERROR;
+        this.errorCode = null;
+    }
 
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon08CBErrorStatus msg = new CANMessageAircon08CBErrorStatus();
@@ -30,4 +35,6 @@ public class CANMessageAircon08CBErrorStatus extends CANMessageAircon {
     }
 
     public String getErrorCode() { return errorCode; }
+    
+    public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
 }

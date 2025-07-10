@@ -107,6 +107,18 @@ public class CANMessageAircon05AirconState extends CANMessageAircon {
     private FreshAirStatus freshAirStatus;
     private int rfSysId;
 
+    public CANMessageAircon05AirconState() {
+        super();
+        this.messageType = MessageType.AIRCON_STATE;
+        this.systemState = null;
+        this.systemMode = null;
+        this.systemFan = null;
+        this.setTemp = 0.0f;
+        this.myZoneId = 0;
+        this.freshAirStatus = null;
+        this.rfSysId = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon05AirconState msg = new CANMessageAircon05AirconState();
         
@@ -143,4 +155,12 @@ public class CANMessageAircon05AirconState extends CANMessageAircon {
     public int getMyZoneId() { return myZoneId; }
     public FreshAirStatus getFreshAirStatus() { return freshAirStatus; }
     public int getRfSysId() { return rfSysId; }
+    
+    public void setSystemState(SystemState systemState) { this.systemState = systemState; }
+    public void setSystemMode(SystemMode systemMode) { this.systemMode = systemMode; }
+    public void setSystemFan(FanState systemFan) { this.systemFan = systemFan; }
+    public void setSetTemp(float setTemp) { this.setTemp = setTemp; }
+    public void setMyZoneId(int myZoneId) { this.myZoneId = myZoneId; }
+    public void setFreshAirStatus(FreshAirStatus freshAirStatus) { this.freshAirStatus = freshAirStatus; }
+    public void setRfSysId(int rfSysId) { this.rfSysId = rfSysId; }
 }

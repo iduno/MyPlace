@@ -26,6 +26,15 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
     private int fwMajor;
     private int fwMinor;
 
+    public CANMessageAircon02UnitTypeInformation() {
+        super();
+        this.messageType = MessageType.UNIT_TYPE_INFORMATION;
+        this.unitType = 0;
+        this.activationStatus = null;
+        this.fwMajor = 0;
+        this.fwMinor = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon02UnitTypeInformation msg = new CANMessageAircon02UnitTypeInformation();
         
@@ -48,11 +57,16 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
         ByteArray.toHexDigits(activationStatus != null ? activationStatus.getValue() : 0, data, offset + 2);
         ByteArray.toHexDigits(fwMajor, data, offset + 4);
         ByteArray.toHexDigits(fwMinor, data, offset + 6);
-        return offset + 14;
+        return offset + 8;
     }
 
     public int getUnitType() { return unitType; }
     public CodeStatus getActivationStatus() { return activationStatus; }
     public int getFwMajor() { return fwMajor; }
     public int getFwMinor() { return fwMinor; }
+    
+    public void setUnitType(int unitType) { this.unitType = unitType; }
+    public void setActivationStatus(CodeStatus activationStatus) { this.activationStatus = activationStatus; }
+    public void setFwMajor(int fwMajor) { this.fwMajor = fwMajor; }
+    public void setFwMinor(int fwMinor) { this.fwMinor = fwMinor; }
 }

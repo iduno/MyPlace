@@ -2,6 +2,8 @@ package com.air.advantage.canhandler;
 
 import com.air.advantage.aaservice.data.DataAircon;
 import com.air.advantage.aaservice.data.DataAirconInfo;
+import com.air.advantage.aaservice.data.DataZone;
+import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageAircon;
 import com.air.advantage.cbmessages.CANMessageAircon00Unknown;
@@ -27,6 +29,9 @@ import com.air.advantage.cbmessages.CANMessageAircon27RfDeviceCalibration;
 public class HandlerAircon extends Handler {
     // Reference to AirconState data class (should be injected or managed)
     // private AirconState airconState;
+     public HandlerAircon(MyMasterData myMasterData) {
+        this.myMasterData = myMasterData;
+    }
 
     @Override
     public void process(CANMessage message) {
@@ -90,19 +95,19 @@ public class HandlerAircon extends Handler {
         }
         // Map fields from msg to dataAirconInfo
         dataAirconInfo.uid = msg.getUid();
-        // Add additional mappings as needed
-        // dataAirconInfo.noOfZones = msg.getNumZones();
-        // dataAirconInfo.noOfConstantZones = msg.getNumConstantZones();
-        // dataAirconInfo.constantZone1 = msg.getConstantZone1();
-        // dataAirconInfo.constantZone2 = msg.getConstantZone2();
-        // dataAirconInfo.constantZone3 = msg.getConstantZone3();
-        // dataAirconInfo.filterCleanStatus = msg.getFilterCleanStatus();
+        dataAirconInfo.noOfZones = msg.getNumZones();
+        dataAirconInfo.noOfConstantZones = msg.getNumConstantZones();
+        dataAirconInfo.constantZone1 = msg.getConstantZone1();
+        dataAirconInfo.constantZone2 = msg.getConstantZone2();
+        dataAirconInfo.constantZone3 = msg.getConstantZone3();
+        dataAirconInfo.filterCleanStatus = msg.getFilterCleanStatus();
         // Update zones map if needed
         if (dataAircon.getZones() != null) {
-            int size = dataAircon.getZones().size();
-            if (msg.getNumZones() != size) {
-                for (int i = msg.getNumZones() + 1; i < 11; i++) {
-                    dataAircon.getZones().remove("zone" + i); // Replace with your actual zone key logic
+            int currentSize = dataAircon.getZones().size();
+            int numZones = msg.getNumZones();
+            if (numZones < currentSize) {
+                for (int i = numZones + 1; i <= currentSize; i++) {
+                    dataAircon.getZones().remove("zone" + i); // Replace with your actual zone key logic if needed
                 }
             }
         }
@@ -118,7 +123,7 @@ public class HandlerAircon extends Handler {
 
     // Helper to get or create DataAircon (implement as needed)
     private DataAircon getOrCreateDataAircon(String uid) {
-        return myMasterData.masterData.aircons.putIfAbsent(uid, DataAircon.create());
+        return myMasterData.masterData.getAirconByUID(uid);
 
     }
 
@@ -153,54 +158,205 @@ public class HandlerAircon extends Handler {
     }
 
     private void process(CANMessageAircon02UnitTypeInformation msg) {
-        // TODO: Add business logic for CANMessageAircon02UnitTypeInformation
+        // Attempt to get the UID from context or message (if available)
+        // If UID is not available in msg, you may need to pass it from previous context
+        // For this example, assume UID is available as msg.getUid() or similar
+        String uid = null;
+        if (msg instanceof CANMessageAircon) {
+            uid = ((CANMessageAircon) msg).getUid();
+        }
+        if (uid == null || uid.isEmpty()) {
+            System.out.println("UnitTypeInformation: UID not found, cannot update DataAirconInfo");
+            return;
+        }
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
+        // Map fields from msg to dataAirconInfo
+        dataAirconInfo.cbType = msg.getUnitType();
+        // Map activationStatus enum if needed
+        if (msg.getActivationStatus() != null) {
+            switch (msg.getActivationStatus()) {
+                case NO_CODE:
+                    dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.noCode;
+                    break;
+                case CODE_ENABLED:
+                    dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.codeEnabled;
+                    break;
+                case EXPIRED:
+                    dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.expired;
+                    break;
+                default:
+                    dataAirconInfo.activationCodeStatus = null;
+            }
+        } else {
+            dataAirconInfo.activationCodeStatus = null;
+        }
+        dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
+        dataAirconInfo.cbFWRevMinor = msg.getFwMinor();
+        System.out.println("Processed UnitTypeInformation for UID " + uid +
+                ": cbType=" + dataAirconInfo.cbType +
+                ", activationCodeStatus=" + dataAirconInfo.activationCodeStatus +
+                ", cbFWRevMajor=" + dataAirconInfo.cbFWRevMajor +
+                ", cbFWRevMinor=" + dataAirconInfo.cbFWRevMinor);
     }
 
     private void process(CANMessageAircon03ZoneState msg) {
-        // TODO: Add business logic for CANMessageAircon03ZoneState
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        int zoneNum = msg.getZoneNumber();
+        String zoneKey = "zone" + zoneNum;
+        DataZone zone = dataAircon.getZones().get(zoneKey);
+        if (zone == null) {
+            zone = new DataZone();
+            dataAircon.getZones().put(zoneKey, zone);
+        }
+        // Map fields
+        zone.name = zoneKey;
+        // zone.state = msg.getZoneState(); // If you have a state field
+        // zone.percent = msg.getZonePercent(); // If you have a percent field
+        // zone.type = msg.getZoneType(); // If you have a type field
+        zone.measuredTemp = msg.getMeasuredTemp();
+        // zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        System.out.println("Processed ZoneState for UID " + uid + ", zone " + zoneKey);
     }
 
     private void process(CANMessageAircon04ZoneConfiguration msg) {
-        // TODO: Add business logic for CANMessageAircon04ZoneConfiguration
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        int zoneNum = msg.getZoneNumber();
+        String zoneKey = "zone" + zoneNum;
+        DataZone zone = dataAircon.getZones().get(zoneKey);
+        if (zone == null) {
+            zone = new DataZone();
+            dataAircon.getZones().put(zoneKey, zone);
+        }
+        zone.minDamper = msg.getMinDamper();
+        zone.maxDamper = msg.getMaxDamper();
+        zone.motion = msg.getMotionStatus();
+        zone.motionConfig = msg.getMotionConfig();
+        zone.error = msg.getZoneError();
+        System.out.println("Processed ZoneConfiguration for UID " + uid + ", zone " + zoneKey);
     }
 
     private void process(CANMessageAircon05AirconState msg) {
-        // TODO: Add business logic for CANMessageAircon05AirconState
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        // Map fields
+        // info.systemState = msg.getSystemState(); // If you have a systemState field
+        // info.mode = msg.getSystemMode(); // If you have a mode field
+        // info.fan = msg.getSystemFan(); // If you have a fan field
+        // info.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        // info.myZoneId = msg.getMyZoneId(); // If you have a myZoneId field
+        // info.freshAirStatus = msg.getFreshAirStatus();
+        // info.rfSysId = msg.getRfSysId();
+        System.out.println("Processed AirconState for UID " + uid);
     }
 
     private void process(CANMessageAircon06CBStatus msg) {
-        // TODO: Add business logic for CANMessageAircon06CBStatus
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        info.cbFWRevMajor = msg.getCbFwMajor();
+        info.cbFWRevMinor = msg.getCbFwMinor();
+        info.cbType = msg.getCbType();
+        // info.rfFWRevMajor = msg.getRfFwMajor(); // If you have this field
+        System.out.println("Processed CBStatus for UID " + uid);
     }
 
     private void process(CANMessageAircon07CbStatusMessage msg) {
-        // TODO: Add business logic for CANMessageAircon07CbStatusMessage
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        info.cbFWRevMajor = msg.getCbFwMajor();
+        info.cbFWRevMinor = msg.getCbFwMinor();
+        info.cbType = msg.getCbType();
+        // info.rfFWRevMajor = msg.getRfFwMajor(); // If you have this field
+        System.out.println("Processed CBStatusMessage for UID " + uid);
     }
 
     private void process(CANMessageAircon08CBErrorStatus msg) {
-        // TODO: Add business logic for CANMessageAircon08CBErrorStatus
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        info.airconErrorCode = msg.getErrorCode();
+        System.out.println("Processed CBErrorStatus for UID " + uid + ", errorCode=" + info.airconErrorCode);
     }
 
     private void process(CANMessageAircon09ActivationCodeInformation msg) {
-        // TODO: Add business logic for CANMessageAircon09ActivationCodeInformation
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        // Map action to activationCode if the field exists
+        if (msg.getAction() == 1) {
+            // info.activationCode = DataAircon.ActivationCode.setNewCode; // Uncomment if field exists
+        } else if (msg.getAction() == 2) {
+            // info.activationCode = DataAircon.ActivationCode.unlock; // Uncomment if field exists
+        }
+        // Map unlockCode and activationTimeDays if fields exist
+        // info.unlockCode = msg.getUnlockCode(); // Uncomment if field exists
+        // info.activationTimeDays = msg.getActivationTimeDays(); // Uncomment if field exists
+        System.out.println("Processed ActivationCodeInformation for UID " + uid +
+            ", action=" + msg.getAction() +
+            ", unlockCode=" + msg.getUnlockCode() +
+            ", activationTimeDays=" + msg.getActivationTimeDays());
     }
 
     private void process(CANMessageAircon0aMidInformation msg) {
-        // TODO: Add business logic for CANMessageAircon0aMidInformation
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        // info.mid = msg.getMid(); // Uncomment if field exists
+        System.out.println("Processed MidInformation for UID " + uid /*+ ", mid=" + msg.getMid()*/);
     }
 
     private void process(CANMessageAircon12ZoneSensorPairing msg) {
-        // TODO: Add business logic for CANMessageAircon12ZoneSensorPairing
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        // You may need to determine the correct zone for this sensor
+        // For now, just print the sensor UID and infoByte
+        // DataZone zone = dataAircon.getZones().get(...); // Find by sensor UID if possible
+        // zone.sensorUID = msg.getSensorUID(); // Uncomment if field exists
+        // zone.infoByte = msg.getInfoByte(); // Uncomment if field exists
+        // zone.sensorMajorRev = msg.getSensorMajorRev(); // Uncomment if field exists
+        System.out.println("Processed ZoneSensorPairing for UID " + uid + ", sensorUID=" + msg.getSensorUID() + ", infoByte=" + msg.getInfoByte() + ", sensorMajorRev=" + msg.getSensorMajorRev());
     }
 
     private void process(CANMessageAircon13CBInfoByte msg) {
-        // TODO: Add business logic for CANMessageAircon13CBInfoByte
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        DataAirconInfo info = dataAircon.airconInfo;
+        // info.infoByte = msg.getInfoByte(); // Uncomment if field exists
+        System.out.println("Processed CBInfoByte for UID " + uid + ", infoByte=" + msg.getInfoByte());
     }
 
     private void process(CANMessageAircon26RfDevicePairing msg) {
-        // TODO: Add business logic for CANMessageAircon26RfDevicePairing
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        // You may want to update pairing info in DataAircon or DataZone
+        // info.pairingControl = msg.getPairingControl(); // Uncomment if field exists
+        // info.rfDeviceType = msg.getRfDeviceType(); // Uncomment if field exists
+        // info.channelNo = msg.getChannelNo(); // Uncomment if field exists
+        System.out.println("Processed RfDevicePairing for UID " + uid + ", pairingControl=" + msg.getPairingControl() + ", rfDeviceType=" + msg.getRfDeviceType() + ", channelNo=" + msg.getChannelNo());
     }
 
     private void process(CANMessageAircon27RfDeviceCalibration msg) {
-        // TODO: Add business logic for CANMessageAircon27RfDeviceCalibration
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        // You may want to update calibration info in DataAircon or DataZone
+        // info.calibrationControl = msg.getCalibrationControl(); // Uncomment if field exists
+        // info.channelNo = msg.getChannelNo(); // Uncomment if field exists
+        // info.upDownPosition = msg.getUpDownPosition(); // Uncomment if field exists
+        System.out.println("Processed RfDeviceCalibration for UID " + uid + ", calibrationControl=" + msg.getCalibrationControl() + ", channelNo=" + msg.getChannelNo() + ", upDownPosition=" + msg.getUpDownPosition());
     }
 }

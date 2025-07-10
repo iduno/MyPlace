@@ -6,14 +6,13 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import com.air.advantage.cbmessages.Message;
-import com.air.advantage.service.communication.config.CommunicationConfig;
+import com.air.advantage.config.CommunicationConfig;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;
 
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
-
 public class SerialCommunicationService implements CommunicationService {
     
     private static final Logger LOG = Logger.getLogger(SerialCommunicationService.class);

@@ -16,6 +16,22 @@
       "hostName": "localhost",
       "port": 5006,
       "preLaunchTask": "Start MyPlace CB in Debug Mode"
+    },
+    {
+      "type": "java",
+      "name": "Debug TCP MYAIR Application",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5007,
+      "preLaunchTask": "Start TCP MyPlace MYAIR in Debug Mode"
+    },
+    {
+      "type": "java",
+      "name": "Debug TCP CB Application",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5008,
+      "preLaunchTask": "Start TCP MyPlace CB in Debug Mode"
     }
   ]
 }

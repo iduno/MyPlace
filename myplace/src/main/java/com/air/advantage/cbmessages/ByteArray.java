@@ -277,6 +277,18 @@ public class ByteArray {
         return result;
     }
 
+    public static String toHexString(byte[] data) {
+        if (data == null || data.length == 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(data.length * 2);
+        for (byte b : data) {
+            int value = b & 0xFF; // Convert byte to unsigned int
+            sb.append(String.format("%02x", value)); // Format as two-digit hex
+        }
+        return sb.toString();
+    }
+
     /**
      * Writes the two lowercase hex digits representing the 8-bit value into the buffer at the given index.
      * @param value 8-bit integer value to convert

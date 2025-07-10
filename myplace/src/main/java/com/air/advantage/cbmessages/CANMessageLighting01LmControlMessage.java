@@ -1,6 +1,6 @@
 package com.air.advantage.cbmessages;
 
-public class CANMessageLighting01LmUpdateBrightnessLevel extends CANMessageLighting {
+public class CANMessageLighting01LmControlMessage extends CANMessageLighting {
     public enum LightState {
         OFF(0),
         ON(1);
@@ -57,14 +57,19 @@ public class CANMessageLighting01LmUpdateBrightnessLevel extends CANMessageLight
     private LightState lightState;
     private int brightnessLevel;
 
-
+    public CANMessageLighting01LmControlMessage() {
+        super();
+        this.roomNumber = 0;
+        this.lightState = null;
+        this.brightnessLevel = 0;
+    }
 
     public static CANMessage deserialize(byte[] data) {
         return deserialize(data, 11);
     }
 
     public static CANMessage deserialize(byte[] data, int offset) {
-        CANMessageLighting01LmUpdateBrightnessLevel msg = new CANMessageLighting01LmUpdateBrightnessLevel();
+        CANMessageLighting01LmControlMessage msg = new CANMessageLighting01LmControlMessage();
         
         if (data.length >= offset + 2) {
             msg.roomNumber = ByteArray.parseHexValue(offset, data);
@@ -135,4 +140,27 @@ public class CANMessageLighting01LmUpdateBrightnessLevel extends CANMessageLight
         return brightnessLevels[brightnessLevel / 5];
     }
 
+    public int getRoomNumber() {
+        return roomNumber;
+    }
+    
+    public void setRoomNumber(int roomNumber) {
+        this.roomNumber = roomNumber;
+    }
+    
+    public LightState getLightState() {
+        return lightState;
+    }
+    
+    public void setLightState(LightState lightState) {
+        this.lightState = lightState;
+    }
+    
+    public int getBrightnessLevel() {
+        return brightnessLevel;
+    }
+    
+    public void setBrightnessLevel(int brightnessLevel) {
+        this.brightnessLevel = brightnessLevel;
+    }
 }

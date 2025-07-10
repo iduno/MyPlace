@@ -9,6 +9,18 @@ public class CANMessageAircon04ZoneConfiguration extends CANMessageAircon {
     private int zoneError;
     private int rssi;
 
+    public CANMessageAircon04ZoneConfiguration() {
+        super();
+        this.messageType = MessageType.ZONE_CONFIGURATION;
+        this.zoneNumber = 0;
+        this.minDamper = 0;
+        this.maxDamper = 0;
+        this.motionStatus = 0;
+        this.motionConfig = 0;
+        this.zoneError = 0;
+        this.rssi = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon04ZoneConfiguration msg = new CANMessageAircon04ZoneConfiguration();
         
@@ -45,4 +57,12 @@ public class CANMessageAircon04ZoneConfiguration extends CANMessageAircon {
     public int getMotionConfig() { return motionConfig; }
     public int getZoneError() { return zoneError; }
     public int getRssi() { return rssi; }
+    
+    public void setZoneNumber(int zoneNumber) { this.zoneNumber = zoneNumber; }
+    public void setMinDamper(int minDamper) { this.minDamper = minDamper; }
+    public void setMaxDamper(int maxDamper) { this.maxDamper = maxDamper; }
+    public void setMotionStatus(int motionStatus) { this.motionStatus = motionStatus; }
+    public void setMotionConfig(int motionConfig) { this.motionConfig = motionConfig; }
+    public void setZoneError(int zoneError) { this.zoneError = zoneError; }
+    public void setRssi(int rssi) { this.rssi = rssi; }
 }

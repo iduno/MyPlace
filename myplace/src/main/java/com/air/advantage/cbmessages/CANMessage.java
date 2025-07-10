@@ -73,6 +73,13 @@ public class CANMessage {
     protected String uid;
     protected byte[] payload;
 
+    public CANMessage() {
+        this.systemType = SystemType.UNKNOWN;
+        this.deviceType = DeviceType.UNKNOWN;
+        this.uid = "00000"; // Default UID
+        this.payload = new byte[8]; // Default payload size
+    }
+
     // Getters and setters
     public SystemType getSystemType() {
         return systemType;
@@ -166,17 +173,36 @@ public class CANMessage {
             byte[] sysTypeBytes = systemType.getValue().getBytes();
             System.arraycopy(sysTypeBytes, 0, data, offset, Math.min(2, sysTypeBytes.length));
         }
+        offset += 2;
         // Write deviceType (2 bytes)
         if (deviceType != null) {
             byte[] devTypeBytes = deviceType.getValue().getBytes();
-            System.arraycopy(devTypeBytes, 0, data, offset + 2, Math.min(2, devTypeBytes.length));
+            System.arraycopy(devTypeBytes, 0, data, offset, Math.min(2, devTypeBytes.length));
         }
+        offset += 2;
         // Write uid (5 bytes)
         if (uid != null) {
             byte[] uidBytes = uid.getBytes();
-            System.arraycopy(uidBytes, 0, data, offset + 4, Math.min(5, uidBytes.length));
+            System.arraycopy(uidBytes, 0, data, offset, Math.min(5, uidBytes.length));
         }
+        offset += 5;
 
-        return offset + 9;
+        return offset;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CANMessage{");
+        sb.append("systemType=").append(systemType != null ? systemType.getRawText() : "null").append(", ");
+        sb.append("deviceType=").append(deviceType != null ? deviceType.getRawText() : "null").append(", ");
+        sb.append("uid='").append(uid).append('\'');
+        sb.append(", payload=");
+        if (payload != null) {
+            sb.append(ByteArray.toHexString(payload));
+        } else {
+            sb.append("null");
+        }
+        sb.append('}');
+        return sb.toString();
     }
 }

@@ -1,5 +1,6 @@
 package com.air.advantage.canhandler;
 
+import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageLighting;
 // import your LightingState data class as needed
@@ -7,6 +8,9 @@ import com.air.advantage.cbmessages.CANMessageLighting;
 public class HandlerLighting extends Handler {
     // Reference to LightingState data class (should be injected or managed)
     // private LightingState lightingState;
+    public HandlerLighting(MyMasterData myMasterData) {
+        this.myMasterData = myMasterData;
+    }
 
     @Override
     public void process(CANMessage message) {

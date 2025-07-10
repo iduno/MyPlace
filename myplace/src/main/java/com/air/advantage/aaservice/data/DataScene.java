@@ -2,24 +2,31 @@ package com.air.advantage.aaservice.data;
 
 import java.util.HashMap;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /* compiled from: DataScene.java */
 /* renamed from: com.air.advantage.aaservice.o.j */
 /* loaded from: classes.dex */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataScene {
 
-    /* renamed from: a */
     @SerializedName("id")
+    @JsonProperty("id")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String id;
 
-    /* renamed from: b */
     @SerializedName("lights")
+    @JsonProperty("lights")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public HashMap<String, DataLight> lights;
 
-    /* renamed from: c */
     @SerializedName("canMessages")
+    @JsonProperty("canMessages")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     @Expose(serialize = false)
     public String canMessages;
 

@@ -6,6 +6,14 @@ public class CANMessageAircon26RfDevicePairing extends CANMessageAircon {
     private int rfDeviceType;
     private int channelNo;
 
+    public CANMessageAircon26RfDevicePairing() {
+        super();
+        this.messageType = MessageType.RF_DEVICE_PAIRING;
+        this.pairingControl = 0;
+        this.rfDeviceType = 0;
+        this.channelNo = 0;
+    }
+
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageAircon26RfDevicePairing msg = new CANMessageAircon26RfDevicePairing();
         
@@ -35,5 +43,15 @@ public class CANMessageAircon26RfDevicePairing extends CANMessageAircon {
     }
     public int getChannelNo() {
         return channelNo;
+    }
+    
+    public void setPairingControl(int pairingControl) {
+        this.pairingControl = pairingControl;
+    }
+    public void setRfDeviceType(int rfDeviceType) {
+        this.rfDeviceType = rfDeviceType;
+    }
+    public void setChannelNo(int channelNo) {
+        this.channelNo = channelNo;
     }
 }
