@@ -68,7 +68,7 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
         ByteArray.toHexDigits(zoneType, data, offset + 4);
         ByteArray.toHexDigits((int)(setTemp * 2.0f), data, offset + 6);
         int measuredTempInt = (int) measuredTemp;
-        int measuredTempDec = (int) ((measuredTemp - measuredTempInt) * 100);
+        int measuredTempDec = (int) ((measuredTemp - measuredTempInt) * 10);
         ByteArray.toHexDigits(measuredTempInt, data, offset + 8);
         ByteArray.toHexDigits(measuredTempDec, data, offset + 10);
         return offset + 14;

@@ -10,8 +10,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.air.advantage.config.MyPlaceConfig;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -30,11 +32,10 @@ public class MyMasterData {
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private volatile ScheduledFuture<?> scheduledSave;
-    private final Gson gson = new GsonBuilder()
-            .setPrettyPrinting()
-            .addSerializationExclusionStrategy(new JsonExporterExclusionStrategy())
-            .addDeserializationExclusionStrategy(new JsonExporterExclusionStrategy())
-            .create();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     public void onStart(@Observes StartupEvent event) {
         System.out.println("MyMasterData initialization started");
@@ -57,7 +58,7 @@ public class MyMasterData {
     }
 
     public synchronized void updateConfig(MasterData newData) {
-        this.masterData.copyFrom(newData);
+        MyMasterData.masterData.copyFrom(newData);
         scheduleSave();
     }
 
@@ -69,7 +70,7 @@ public class MyMasterData {
 
     private synchronized void saveConfig() {
         try (FileWriter writer = new FileWriter(config.config().path())) {
-            gson.toJson(this.masterData, writer);
+            objectMapper.writeValue(writer, MyMasterData.masterData);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save config", e);
         }
@@ -79,9 +80,9 @@ public class MyMasterData {
         File file = new File(config.config().path());
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
-                MasterData loaded = gson.fromJson(reader, MasterData.class);
+                MasterData loaded = objectMapper.readValue(reader, MasterData.class);
                 if (loaded != null) {
-                    this.masterData.copyFrom(loaded);
+                    MyMasterData.masterData.copyFrom(loaded);
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load config", e);

@@ -32,6 +32,62 @@
       "hostName": "localhost",
       "port": 5008,
       "preLaunchTask": "Start TCP MyPlace CB in Debug Mode"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run MYAIR Application",
+      "runtimeExecutable": "mvn",
+      "args": [
+        "quarkus:dev",
+        "-Ddebug=false",
+        "-Dquarkus.http.port=8081",
+        "-Dquarkus.profile=myplace"
+      ],
+      "cwd": "${workspaceFolder}/myplace",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run CB Application",
+      "runtimeExecutable": "mvn",
+      "args": [
+        "quarkus:dev",
+        "-Ddebug=false",
+        "-Dquarkus.http.port=8082",
+        "-Dquarkus.profile=cb"
+      ],
+      "cwd": "${workspaceFolder}/myplace",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run TCP MYAIR Application",
+      "runtimeExecutable": "mvn",
+      "args": [
+        "quarkus:dev",
+        "-Ddebug=false",
+        "-Dquarkus.http.port=8083",
+        "-Dquarkus.profile=myplacetcp"
+      ],
+      "cwd": "${workspaceFolder}/myplace",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run TCP CB Application",
+      "runtimeExecutable": "mvn",
+      "args": [
+        "quarkus:dev",
+        "-Ddebug=false",
+        "-Dquarkus.http.port=8084",
+        "-Dquarkus.profile=cbtcp"
+      ],
+      "cwd": "${workspaceFolder}/myplace",
+      "console": "integratedTerminal"
     }
   ]
 }

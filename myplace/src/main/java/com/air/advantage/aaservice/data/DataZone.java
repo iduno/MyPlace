@@ -1,8 +1,9 @@
 package com.air.advantage.aaservice.data;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import com.air.advantage.libraryairconlightjson.ZoneState;
+import com.air.advantage.aaservice.data.DataAircon.ZoneState;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -43,6 +44,9 @@ public class DataZone {
     public static final float TEMPERATURE_DIFFERENCE_TARGET = 0.0f;
     public static final int ZONE_CONTROL_TYPE_PERCENT = 1;
     public static final int ZONE_CONTROL_TYPE_VAV = 2;
+
+    @Nullable
+    private static DecimalFormat decimalFormat;
 
     @Nullable
     @JsonExporter(saveThis = false)
@@ -133,11 +137,24 @@ public class DataZone {
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ZoneState state;
 
+    @JsonExporter(saveThis = false)
+    @Nullable
+    @SerializedName("tempSensorClash")
+    @JsonView(JsonExporterViews.Export.class)
+    public Boolean tempSensorClash = Boolean.FALSE;
+
+    @JsonExporter(saveThis = false)
+    @Nullable
+    @SerializedName("type")
+    @JsonView(JsonExporterViews.Export.class)
+    public Integer type;
+
     /* renamed from: d */
     @SerializedName("value")
     @JsonProperty("value")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer value;
+
 
     public void copyFrom(DataZone other) {
         if (other == null) return;
@@ -161,5 +178,7 @@ public class DataZone {
         if (other.setTemp != null) this.setTemp = other.setTemp;
         if (other.state != null) this.state = other.state;
         if (other.value != null) this.value = other.value;
+        if (other.tempSensorClash != null) this.tempSensorClash = other.tempSensorClash;
+        if (other.type != null) this.type = other.type;
     }
 }

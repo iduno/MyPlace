@@ -87,6 +87,59 @@ public class DataAircon {
         }
     }
 
+    public enum SystemState {
+        off(0),
+        on(1);
+
+        private final int value;
+
+        SystemState(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public enum AirconMode {
+        cool(1),
+        heat(2),
+        vent(3),
+        auto(4),
+        dry(5),
+        myauto(6);
+
+        private final int value;
+
+        AirconMode(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public enum ZoneState {
+    close(0),
+    open(1);
+
+    private final int value;
+
+    /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
+    ZoneState(int i) {
+        this.value = i;
+    }
+
+    /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
+    public int getValue() {
+        return this.value;
+    }
+}
+
+
+
     DataAircon() {
     }
 

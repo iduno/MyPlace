@@ -9,7 +9,10 @@ import org.jboss.logging.Logger;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.canhandler.Handler;
 import com.air.advantage.cbmessages.CANMessage;
+import com.air.advantage.cbmessages.CANMessage.DeviceType;
 import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
+import com.air.advantage.cbmessages.CANMessageAircon08CBErrorStatus;
+import com.air.advantage.cbmessages.CANMessageAircon0aMidInformation;
 import com.air.advantage.cbmessages.Message;
 import com.air.advantage.cbmessages.Message.MessageType;
 import com.air.advantage.cbmessages.MessageCAN;
@@ -32,6 +35,7 @@ public class CommunicationDataHandler {
     private final AtomicBoolean isConnected = new AtomicBoolean(false);
     private final AtomicBoolean isReconnecting = new AtomicBoolean(false);
     private final AtomicLong lastMessageTime = new AtomicLong(0);
+    private final AtomicLong lastStatusTime = new AtomicLong(0);
     private Long reconnectTimerId;
     
     @Inject
@@ -50,6 +54,8 @@ public class CommunicationDataHandler {
     MyMasterData myMasterData;
 
     BoundedMessageQueue<Message> messageQueue = new BoundedMessageQueue<>(50);
+
+    BoundedMessageQueue<CANMessage> messageCANQueue = new BoundedMessageQueue<>(50);
 
     
     private int reconnectAttempts = 0;
@@ -108,6 +114,12 @@ public class CommunicationDataHandler {
         return true;
     }
 
+    @ConsumeEvent("communication-send-can")
+    public boolean sendCANMessage(CANMessage message) {
+        messageCANQueue.push(message);
+        return true;
+    }
+
     public void connect() {
         LOG.info("Connecting");
         isConnected.set(false);
@@ -122,6 +134,7 @@ public class CommunicationDataHandler {
                 // Send initial ping message if in MYAIR mode
                 MessageCAN canMessage = new MessageCAN(MessageType.SET_CAN);
                 CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
+                airconStatus.setDeviceType(DeviceType.AIRCON_1);
                 canMessage.getMessageCANBaseList().add(airconStatus);
                 sendMessage(canMessage);
             }
@@ -205,7 +218,13 @@ public class CommunicationDataHandler {
                     LOG.info("Received ping message, but not sending ACK");
                     Message canMessage = messageQueue.pop();
                     if (canMessage == null) {
-                        canMessage = new MessageCAN(MessageType.SET_CAN);
+                        MessageCAN cm = new MessageCAN(MessageType.SET_CAN);
+                        CANMessage canMsg = messageCANQueue.pop();
+                        while (canMsg != null) {
+                            cm.getMessageCANBaseList().add(canMsg);
+                            canMsg = messageCANQueue.pop();
+                        }
+                        canMessage= cm;
                     }
                     communicationManager.send(canMessage);
                     if (canMessage.getMessageType() == MessageType.SET_CAN) {
@@ -217,7 +236,7 @@ public class CommunicationDataHandler {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();
                 for (CANMessage canMessage : canMessages) {
                     LOG.info("Processing CAN message: " + canMessage);
-                    Handler.dispatch(canMessage,myMasterData);
+                    Handler.dispatch(canMessage,myMasterData, eventBus);
                 }
             
             }
@@ -228,7 +247,7 @@ public class CommunicationDataHandler {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();
                 for (CANMessage canMessage : canMessages) {
                     LOG.info("Processing CAN message: " + canMessage);
-                    Handler.dispatch(canMessage,myMasterData);
+                    Handler.dispatch(canMessage,myMasterData, eventBus);
                 }
             
             }
@@ -242,6 +261,25 @@ public class CommunicationDataHandler {
             else {
                 LOG.warn("Received unsupported message type: " + data.getClass().getSimpleName());
             }
+
+            if (lastStatusTime.get() + 30000 < System.currentTimeMillis()) {
+                lastStatusTime.set(System.currentTimeMillis());
+
+                String uid = myMasterData.masterData.getAirconByUID("00000").airconInfo.uid;
+           
+                CANMessageAircon0aMidInformation cbMidInfoMessage = new CANMessageAircon0aMidInformation();
+                cbMidInfoMessage.setDeviceType(DeviceType.AIRCON_1);
+                cbMidInfoMessage.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+                cbMidInfoMessage.setUid(uid);
+                sendCANMessage(cbMidInfoMessage);
+
+                CANMessageAircon08CBErrorStatus cbErrorStatusMessage = new CANMessageAircon08CBErrorStatus();
+                cbErrorStatusMessage.setDeviceType(DeviceType.AIRCON_1);
+                cbErrorStatusMessage.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+                cbErrorStatusMessage.setUid(uid);
+                sendCANMessage(cbErrorStatusMessage);
+
+            }
  
             // If in CB mode, send the ping message immediately
             Message canMessage = messageQueue.pop();
@@ -249,12 +287,26 @@ public class CommunicationDataHandler {
                 communicationManager.send(canMessage);
             } else {
                 if (data.getMessageType() == MessageType.SET_CAN) {
-                    canMessage = new MessageCAN(MessageType.GET_CAN,MessageCAN.AckType.ACK);
+                    MessageCAN cm = new MessageCAN(MessageType.GET_CAN,MessageCAN.AckType.ACK);
+                    CANMessage canMsg = messageCANQueue.pop();
+                    while (canMsg != null) {
+                        cm.getMessageCANBaseList().add(canMsg);
+                        canMsg = messageCANQueue.pop();
+                    }
+                    canMessage= cm;
+        
                     communicationManager.send(canMessage);
                 }
             }
-            // Message pingMessage = new MessagePing();
-            // communicationManager.send(pingMessage);
+            try
+            {
+            Thread.sleep(200);
+            } catch (InterruptedException e)
+            {
+                LOG.error("Error during sleep: " + e.getMessage(), e);
+            }
+            Message pingMessage = new MessagePing();
+            communicationManager.send(pingMessage);
             
         }
         // Process your data here

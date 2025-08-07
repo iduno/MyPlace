@@ -13,6 +13,7 @@ import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessageAircon;
 import com.air.advantage.cbmessages.CANMessageAircon01ZoneInformation;
 import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation;
+import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation.UnitType;
 import com.air.advantage.cbmessages.CANMessageAircon03ZoneState;
 import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
 import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
@@ -76,7 +77,7 @@ public class HandlerAircon extends Handler {
             CANMessageAircon02UnitTypeInformation unitTypeMsg = new CANMessageAircon02UnitTypeInformation();
             // Set properties using available methods
             if (dataAirconSystem.airconInfo.unitType != null) {
-                unitTypeMsg.setUnitType(dataAirconSystem.airconInfo.unitType);
+                unitTypeMsg.setUnitType(UnitType.fromValue(dataAirconSystem.airconInfo.unitType));
             }
             if (dataAirconSystem.airconInfo.activationCodeStatus != null) {
                 try {

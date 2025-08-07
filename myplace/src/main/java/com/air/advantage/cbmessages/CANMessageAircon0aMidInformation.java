@@ -15,6 +15,6 @@ public class CANMessageAircon0aMidInformation extends CANMessageAircon {
     public int serialize(byte[] data, int offset) {
         offset = super.serialize(data, offset);
         // No fields to serialize for this message
-        return offset;
+        return offset + 14;
     }
 }

@@ -3,13 +3,14 @@ package com.air.advantage.canhandler;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageLighting;
-// import your LightingState data class as needed
 
+import io.vertx.mutiny.core.eventbus.EventBus;
 public class HandlerLighting extends Handler {
     // Reference to LightingState data class (should be injected or managed)
     // private LightingState lightingState;
-    public HandlerLighting(MyMasterData myMasterData) {
+    public HandlerLighting(MyMasterData myMasterData, EventBus eventBus) {
         this.myMasterData = myMasterData;
+        this.eventBus = eventBus;
     }
 
     @Override

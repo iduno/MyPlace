@@ -22,6 +22,7 @@ import com.air.advantage.cbmessages.CANMessageAircon13CBInfoByte;
 import com.air.advantage.cbmessages.CANMessageAircon26RfDevicePairing;
 import com.air.advantage.cbmessages.CANMessageAircon27RfDeviceCalibration;
 
+import io.vertx.mutiny.core.eventbus.EventBus;
 // TODO: Import or define DataAirconInfo and Zone classes for this handler
 // import your.package.DataAirconInfo;
 // import your.package.Zone;
@@ -29,8 +30,9 @@ import com.air.advantage.cbmessages.CANMessageAircon27RfDeviceCalibration;
 public class HandlerAircon extends Handler {
     // Reference to AirconState data class (should be injected or managed)
     // private AirconState airconState;
-     public HandlerAircon(MyMasterData myMasterData) {
+     public HandlerAircon(MyMasterData myMasterData, EventBus eventBus) {
         this.myMasterData = myMasterData;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -172,7 +174,7 @@ public class HandlerAircon extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         // Map fields from msg to dataAirconInfo
-        dataAirconInfo.cbType = msg.getUnitType();
+        dataAirconInfo.cbType = msg.getUnitType() != null ? msg.getUnitType().getValue() : 0;
         // Map activationStatus enum if needed
         if (msg.getActivationStatus() != null) {
             switch (msg.getActivationStatus()) {

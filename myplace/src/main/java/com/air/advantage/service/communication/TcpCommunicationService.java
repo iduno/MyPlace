@@ -173,7 +173,7 @@ public class TcpCommunicationService implements CommunicationService {
                 activeConnections.values().forEach(socket -> {
                     socket.write(buffer)
                         .subscribe().with(
-                            v -> LOG.info("Sent data to client: " + socket.remoteAddress()),
+                            v -> LOG.info("Sent data to client: " + socket.remoteAddress() + " | Data: " + buffer.toString()),
                             e -> LOG.error("Failed to send data to client: " + socket.remoteAddress() + " - " + e.getMessage(), e)
                         );
                 });
@@ -190,7 +190,7 @@ public class TcpCommunicationService implements CommunicationService {
                 Buffer buffer = Buffer.buffer(dataToSend);
                 socket.write(buffer)
                         .subscribe().with(
-                            v -> LOG.info("Sent data to client: " + socket.remoteAddress()),
+                            v -> LOG.info("Sent data to client: " + socket.remoteAddress() + " | Data: " + buffer.toString()),
                             e -> LOG.error("Failed to send data to client: " + socket.remoteAddress() + " - " + e.getMessage(), e)
                         );
                 LOG.info("Sent data to server: " + data);

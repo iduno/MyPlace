@@ -45,7 +45,7 @@ public class CANMessageAircon extends CANMessage {
 
     public CANMessageAircon() {
         super();
-        this.systemType = SystemType.AIRCON;
+        this.systemType = SystemType.CAN_AIRCON;
         this.deviceType = DeviceType.UNKNOWN; // Default device type
         this.messageType = MessageType.UNKNOWN; // Default message type
     }

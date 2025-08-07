@@ -21,7 +21,31 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
             return null;
         }
     }
-    private int unitType;
+
+    public enum UnitType {
+        UNKNOWN(0x00),
+        DAIKIN(0x11),
+        PANASONIC(0x12),
+        FUJITSU(0x13),
+        SAMSUNG_DVM(0x19);
+        
+        private final int value;
+        UnitType(int value) {
+            this.value = value;
+        }
+        public int getValue() {
+            return value;
+        }
+        public static UnitType fromValue(int value) {
+            for (UnitType type : UnitType.values()) {
+                if (type.value == value) {
+                    return type;
+                }
+            }
+            return UNKNOWN;
+        }
+    }
+    private UnitType unitType;
     private CodeStatus activationStatus;
     private int fwMajor;
     private int fwMinor;
@@ -29,7 +53,7 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
     public CANMessageAircon02UnitTypeInformation() {
         super();
         this.messageType = MessageType.UNIT_TYPE_INFORMATION;
-        this.unitType = 0;
+        this.unitType = UnitType.UNKNOWN;
         this.activationStatus = null;
         this.fwMajor = 0;
         this.fwMinor = 0;
@@ -39,7 +63,7 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
         CANMessageAircon02UnitTypeInformation msg = new CANMessageAircon02UnitTypeInformation();
         
         if (data.length >= offset + 4) {
-            msg.unitType = ByteArray.parseHexValue(offset, data);
+            msg.unitType = UnitType.fromValue(ByteArray.parseHexValue(offset, data));
             msg.activationStatus = CodeStatus.fromValue(ByteArray.parseHexValue(offset + 2, data));
             if (data.length >= offset + 8) {
                 msg.fwMajor = ByteArray.parseHexValue(offset + 4, data);
@@ -53,19 +77,19 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
     public int serialize(byte[] data, int offset) {
         offset = super.serialize(data, offset);
         
-        ByteArray.toHexDigits(unitType, data, offset);
+        ByteArray.toHexDigits(unitType != null ? unitType.getValue():0, data, offset);
         ByteArray.toHexDigits(activationStatus != null ? activationStatus.getValue() : 0, data, offset + 2);
         ByteArray.toHexDigits(fwMajor, data, offset + 4);
         ByteArray.toHexDigits(fwMinor, data, offset + 6);
-        return offset + 8;
+        return offset + 14;
     }
 
-    public int getUnitType() { return unitType; }
+    public UnitType getUnitType() { return unitType; }
     public CodeStatus getActivationStatus() { return activationStatus; }
     public int getFwMajor() { return fwMajor; }
     public int getFwMinor() { return fwMinor; }
     
-    public void setUnitType(int unitType) { this.unitType = unitType; }
+    public void setUnitType(UnitType unitType) { this.unitType = unitType; }
     public void setActivationStatus(CodeStatus activationStatus) { this.activationStatus = activationStatus; }
     public void setFwMajor(int fwMajor) { this.fwMajor = fwMajor; }
     public void setFwMinor(int fwMinor) { this.fwMinor = fwMinor; }

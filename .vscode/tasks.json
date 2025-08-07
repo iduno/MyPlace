@@ -4,7 +4,7 @@
     {
       "label": "Start MyPlace MYAIR in Debug Mode",
       "type": "shell",
-      "command": "mvn quarkus:dev -Ddebug=5005 -Dquarkus.http.port=8081 -Dsuspend=true -Dquarkus.profile=myplace",
+      "command": "mvn quarkus:dev -Ddebug=5005 -Dquarkus.http.port=2025 -Dsuspend=true -Dquarkus.profile=myplace",
       "options": {
 				"cwd": "myplace"
 			},
@@ -104,6 +104,42 @@
           "endsPattern": "^.*Listening for transport dt_socket at address.*$"
         }
       }
+    },
+    {
+      "label": "Run MyPlace MYAIR",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Dquarkus.http.port=8081 -Dquarkus.profile=myplace",
+      "options": {
+        "cwd": "myplace"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Run MyPlace CB",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Dquarkus.http.port=8082 -Dquarkus.profile=cb",
+      "options": {
+        "cwd": "myplace"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Run TCP MyPlace MYAIR",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Dquarkus.http.port=8083 -Dquarkus.profile=myplacetcp",
+      "options": {
+        "cwd": "myplace"
+      },
+      "isBackground": true
+    },
+    {
+      "label": "Run TCP MyPlace CB",
+      "type": "shell",
+      "command": "mvn quarkus:dev -Dquarkus.http.port=8084 -Dquarkus.profile=cbtcp",
+      "options": {
+        "cwd": "myplace"
+      },
+      "isBackground": true
     }
   ]
 }

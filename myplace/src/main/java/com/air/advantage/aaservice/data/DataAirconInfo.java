@@ -1,7 +1,7 @@
 package com.air.advantage.aaservice.data;
 
-import com.air.advantage.libraryairconlightjson.AirconMode;
-import com.air.advantage.libraryairconlightjson.SystemState;
+import com.air.advantage.aaservice.data.DataAircon.AirconMode;
+import com.air.advantage.aaservice.data.DataAircon.SystemState;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;

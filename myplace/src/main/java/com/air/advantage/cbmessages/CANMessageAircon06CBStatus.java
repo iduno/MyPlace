@@ -42,7 +42,9 @@ public class CANMessageAircon06CBStatus extends CANMessageAircon {
         offset += 2;
         ByteArray.toHexDigits(rfFwMajor, data, offset);
         offset += 2;
-        return offset;
+        
+        // Ensure the total offset is initial offset + 14
+        return offset + 6; // 8 bytes already written, need 6 more to reach 14
     }
 
     public int getCbFwMajor() { return cbFwMajor; }

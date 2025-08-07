@@ -7,10 +7,10 @@ import java.util.logging.Logger;
 
 import org.jboss.logmanager.Level;
 
+import com.air.advantage.aaservice.data.DataAircon.AirconMode;
 import com.air.advantage.aaservice.data.DataAircon.FanStatus;
-import com.air.advantage.libraryairconlightjson.AirconMode;
-import com.air.advantage.libraryairconlightjson.SystemState;
-import com.air.advantage.libraryairconlightjson.ZoneState;
+import com.air.advantage.aaservice.data.DataAircon.SystemState;
+import com.air.advantage.aaservice.data.DataAircon.ZoneState;
 import com.air.advantage.libraryairconlightjson.backup.BackupAirconV1;
 import com.air.advantage.libraryairconlightjson.backup.BackupDataV1;
 import com.air.advantage.libraryairconlightjson.backup.BackupLightV1;

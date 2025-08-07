@@ -4,8 +4,8 @@ public class CANMessage {
 
     public enum SystemType {
         LIGHTING("02"),
-        AIRCON("07"),
-        RF("08"),
+        CAN_AIRCON("07"),
+        RF_AIRCON("08"),
         UNKNOWN("00");
 
         private final String value;
@@ -36,7 +36,7 @@ public class CANMessage {
     }
     public enum DeviceType {
         UNKNOWN("00"),
-        LIGHT("01"),
+        CONTROL_BOARD("01"),
         RF_CONTROLLER("02"),
         AIRCON_1("03"),
         AIRCON_2("04");
@@ -138,8 +138,8 @@ public class CANMessage {
             case LIGHTING:
                 message = CANMessageLighting.deserialize(data, offset);
                 break;
-            case RF:
-            case AIRCON:
+            case RF_AIRCON:
+            case CAN_AIRCON:
                 message = CANMessageAircon.deserialize(data, offset);
                 break;
             default:
