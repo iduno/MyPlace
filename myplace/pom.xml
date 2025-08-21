@@ -13,14 +13,23 @@
 
 
         <dependencies>
+            <!-- Frontend module dependency to ensure it's built first -->
             <dependency>
+                <groupId>com.idunou.myplace</groupId>
+                <artifactId>myplace-frontend</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+            </dependency>
+            
+            <!-- Remove quarkus-rest in favor of quarkus-resteasy -->
+            <!-- <dependency>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-rest</artifactId>
-            </dependency>
-            <dependency>
+            </dependency> -->
+            <!-- <dependency>
               <groupId>io.quarkus</groupId>
               <artifactId>quarkus-rest-jackson</artifactId>
-            </dependency>
+            </dependency> -->
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
@@ -46,6 +55,22 @@
             <dependency>
               <groupId>io.smallrye.reactive</groupId>
               <artifactId>smallrye-mutiny-vertx-core</artifactId>
+            </dependency>
+            
+            <dependency>
+              <groupId>io.quarkus</groupId>
+              <artifactId>quarkus-resteasy-jackson</artifactId>
+            </dependency>
+            
+            <dependency>
+              <groupId>io.quarkus</groupId>
+              <artifactId>quarkus-resteasy</artifactId>
+            </dependency>
+
+            <!-- Add CORS support -->
+            <dependency>
+              <groupId>io.quarkus</groupId>
+              <artifactId>quarkus-vertx-http</artifactId>
             </dependency>
             
             <dependency>
@@ -85,6 +110,30 @@
             <arg>-parameters</arg>
           </compilerArgs>
         </configuration>
+      </plugin>
+      
+      <!-- Copy React frontend resources -->
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <executions>
+          <execution>
+            <id>copy-frontend-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/META-INF/resources</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.basedir}/../myplace-frontend/build</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
             </plugins>
 

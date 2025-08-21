@@ -2,6 +2,8 @@
 target/
 */target/
 
+test/
+
 # Ignore Java1 compiled files
 *.class
 *.java1

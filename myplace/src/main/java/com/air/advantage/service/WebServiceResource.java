@@ -1,11 +1,8 @@
 package com.air.advantage.service;
 
-import java.util.TreeMap;
-
 import com.air.advantage.aaservice.data.DataAircon;
 import com.air.advantage.aaservice.data.JsonExporterViews;
 import com.air.advantage.aaservice.data.MyMasterData;
-import com.air.advantage.servicehandler.HandlerAircon;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import jakarta.inject.Inject;
@@ -49,106 +46,132 @@ public class WebServiceResource {
     @POST
     @Path("/changeName")
     public Response changeName(String body) {
-        // Generic success response as in WebServer.java1
-        String xml = "<iZS10.3><request>changeName</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"changeName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setSystemData")
     public Response setSystemData(String body) {
-        String xml = "<iZS10.3><request>setSystemData</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setSystemData\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setClock")
     public Response setClock(String body) {
-        String xml = "<iZS10.3><request>setClock</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setClock\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setZoneData")
     public Response setZoneData(String body) {
-        String xml = "<iZS10.3><request>setZoneData</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setZoneData\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setZoneTimer")
     public Response setZoneTimer(String body) {
-        String xml = "<iZS10.3><request>setZoneTimer</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setZoneTimer\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setScheduleData")
     public Response setScheduleData(String body) {
-        String xml = "<iZS10.3><request>setScheduleData</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setScheduleData\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLight")
     public Response setLight(String body) {
-        String xml = "<iZS10.3><request>setLight</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setLight\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightName")
     public Response setLightName(String body) {
-        String xml = "<iZS10.3><request>setLightName</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setLightName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightToGroup")
     public Response setLightToGroup(String body) {
-        String xml = "<iZS10.3><request>setLightToGroup</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setLightToGroup\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightScene")
-    public Response setLightScene(String body) {
-        String xml = "<iZS10.3><request>setLightScene</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightScene(com.air.advantage.aaservice.data.DataScene scene) {
+        try {
+            if (scene != null && scene.id != null) {
+                MyMasterData.masterData.myLights.scenes.put(scene.id, scene);
+                return Response.ok("{\"ack\":true,\"request\":\"setLightScene\"}", MediaType.APPLICATION_JSON).build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"ack\":false,\"request\":\"setLightScene\",\"error\":\"Missing scene id\"}")
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setLightScene\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
     }
 
     @POST
     @Path("/runLightScene")
-    public Response runLightScene(String body) {
-        // Not supported
-        String xml = "<iZS10.3><request>No longer supported</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response runLightScene(com.air.advantage.aaservice.data.DataScene scene) {
+        try {
+            // Update the scene in masterData.myLights.scenes
+            if (scene != null && scene.id != null) {
+                MyMasterData.masterData.myLights.scenes.put(scene.id, scene);
+                return Response.ok("{\"ack\":true,\"request\":\"runLightScene\"}", MediaType.APPLICATION_JSON).build();
+            } else {
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"ack\":false,\"request\":\"runLightScene\",\"error\":\"Missing scene id\"}")
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"runLightScene\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
     }
 
     @POST
     @Path("/setLightGroupName")
     public Response setLightGroupName(String body) {
-        String xml = "<iZS10.3><request>setLightGroupName</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setLightGroupName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightGroup")
     public Response setLightGroup(String body) {
-        String xml = "<iZS10.3><request>setLightGroup</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setLightGroup\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setAircon")
-    public Response setAircon(TreeMap<String, DataAircon> airconMap) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setAircon(java.util.Map<String, com.air.advantage.aaservice.data.DataAircon> airconMap) {
         try {
-            HandlerAircon handlerAircon = new HandlerAircon(myMasterData);
-            var result = handlerAircon.setAircon(airconMap,true);
-            return Response.ok(result).build();
+            for (var entry : airconMap.entrySet()) {
+                DataAircon aircon = MyMasterData.masterData.aircons.get(entry.getKey());
+                if (aircon == null) {
+                    aircon = DataAircon.create();
+                }
+                aircon.copyFrom(entry.getValue());
+                MyMasterData.masterData.aircons.put(entry.getKey(), aircon);
+            }
+            return Response.ok("{\"ack\":true,\"request\":\"setAircon\"}", MediaType.APPLICATION_JSON).build();
         } catch (Exception e) {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity("Error processing aircon update: " + e.getMessage())
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setAircon\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
                 .build();
         }
     }
@@ -156,85 +179,82 @@ public class WebServiceResource {
     @POST
     @Path("/setSnapShot")
     public Response setSnapShot(String body) {
-        String xml = "<iZS10.3><request>setSnapShot</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setSnapShot\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setMySystem")
-    public Response setMySystem(String body) {
-        String xml = "<iZS10.3><request>setMySystem</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setMySystem(com.air.advantage.aaservice.data.DataSystem incomingSystem) {
+        try {
+            MyMasterData.masterData.system.updateSystem(incomingSystem);
+            return Response.ok("{\"ack\":true,\"request\":\"setMySystem\"}", MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setMySystem\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
     }
 
     @POST
     @Path("/setThing")
     public Response setThing(String body) {
-        String xml = "<iZS10.3><request>setThing</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setGroupThing")
     public Response setGroupThing(String body) {
-        String xml = "<iZS10.3><request>setGroupThing</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setGroupThingName")
     public Response setGroupThingName(String body) {
-        String xml = "<iZS10.3><request>setGroupThingName</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setGroupThingName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setNewGroupThingName")
     public Response setNewGroupThingName(String body) {
-        String xml = "<iZS10.3><request>setNewGroupThingName</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setNewGroupThingName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setThingToGroupThing")
     public Response setThingToGroupThing(String body) {
-        String xml = "<iZS10.3><request>setThingToGroupThing</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setThingToGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setThingToNewGroupThing")
     public Response setThingToNewGroupThing(String body) {
-        String xml = "<iZS10.3><request>setThingToNewGroupThing</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setThingToNewGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/runScene")
     public Response runScene(String body) {
-        String xml = "<iZS10.3><request>runScene</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"runScene\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setScene")
     public Response setScene(String body) {
-        String xml = "<iZS10.3><request>setScene</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setScene\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setSensor")
     public Response setSensor(String body) {
-        String xml = "<iZS10.3><request>setSensor</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setSensor\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setBackupDataToRestore")
     public Response setBackupDataToRestore(String body) {
-        String xml = "<iZS10.3><request>setBackupDataToRestore</request></iZS10.3>";
-        return Response.ok(xml, MediaType.APPLICATION_XML).build();
+        return Response.ok("{\"ack\":true,\"request\":\"setBackupDataToRestore\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST

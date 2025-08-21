@@ -64,6 +64,7 @@
 			</activation>
 			<modules>
                 <module>myplace</module>
+                <module>myplace-frontend</module>
             </modules>
 		</profile>
 	</profiles>

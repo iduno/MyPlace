@@ -1,12 +1,11 @@
 # Parent Project
 
-This is the parent project that contains two submodules: **myplace** and **myplace_cb_demo**.
+This is the parent project that contains two submodules: **myplace**.
 The code is not currently fully functional and work in progress.
 
 ## Project Structure
 
-- **myplace**: This module contains the main application logic and resources.
-- **myplace_cb_demo**: Not in use. to be deleted.
+- **myplace**: This is the main application. It functions as both a control board simulator and a myplace service
 
 ## Setup Instructions
 
@@ -34,7 +33,7 @@ To run the **myplace** module, navigate to the **myplace** directory and execute
   ```
 - The following for the My Place app
   ```
-  mvn quarkus:dev -Dquarkus.profile=dev
+  mvn quarkus:dev -Dquarkus.profile=myplace
   ```
 
 ## Contributing
