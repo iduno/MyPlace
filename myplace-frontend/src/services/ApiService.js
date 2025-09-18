@@ -52,12 +52,32 @@ class ApiService {
       // Adapt to your backend API structure
       const systemData = await this.getSystem();
       const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+
+      // Based on the DataAircon Java model, we need to structure the data correctly
+      // with info and zones properties
       const payload = {
         [airconId]: {
-          ...airconData,
+          info: {
+            // Only include properties that should be updated
+            // These match the DataAirconInfo structure
+            ...(airconData.mode && { mode: airconData.mode }),
+            ...(airconData.state && { state: airconData.state }),
+            ...(airconData.fan && { fan: airconData.fan }),
+            ...(airconData.setTemp && { setTemp: airconData.setTemp }),
+            ...(airconData.myZone && { myZone: airconData.myZone }),
+            ...(airconData.myAutoModeEnabled !== undefined && { myAutoModeEnabled: airconData.myAutoModeEnabled }),
+            ...(airconData.aaAutoFanModeEnabled !== undefined && { aaAutoFanModeEnabled: airconData.aaAutoFanModeEnabled }),
+            ...(airconData.climateControlModeEnabled !== undefined && { climateControlModeEnabled: airconData.climateControlModeEnabled }),
+            ...(airconData.freshAirStatus && { freshAirStatus: airconData.freshAirStatus }),
+            ...(airconData.countDownToOff !== undefined && { countDownToOff: airconData.countDownToOff }),
+            ...(airconData.countDownToOn !== undefined && { countDownToOn: airconData.countDownToOn })
+          },
           timestamp: new Date().toISOString()
         }
       };
+      
+      // Log what we're sending for debugging
+      console.log('Sending aircon update:', JSON.stringify(payload, null, 2));
       
       const response = await fetch(`${this.baseUrl}/setAircon`, {
         method: 'POST',
@@ -199,11 +219,17 @@ class ApiService {
       // Get the first aircon ID or use default
       const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
       
-      // Create zone update structure
+      // Create zone update structure matching the DataZone Java class
       const zoneUpdate = {
         state: zoneData.isOpen ? 'open' : 'close',
         setTemp: zoneData.temperature,
         value: zoneData.damperValue, // This is the damper percentage
+        ...(zoneData.name && { name: zoneData.name }),
+        ...(zoneData.minDamper !== undefined && { minDamper: zoneData.minDamper }),
+        ...(zoneData.maxDamper !== undefined && { maxDamper: zoneData.maxDamper }),
+        ...(zoneData.following !== undefined && { following: zoneData.following }),
+        ...(zoneData.followers && { followers: zoneData.followers }),
+        ...(zoneData.motionConfig !== undefined && { motionConfig: zoneData.motionConfig }),
       };
       
       // Create a payload that matches the setAircon structure
@@ -216,6 +242,9 @@ class ApiService {
           timestamp: new Date().toISOString()
         }
       };
+      
+      // Log what we're sending for debugging
+      console.log('Sending zone update:', JSON.stringify(payload, null, 2));
       
       const response = await fetch(`${this.baseUrl}/setAircon`, {
         method: 'POST',

@@ -36,6 +36,7 @@ public interface CommunicationConfig {
     SerialConfig serial();
     TcpConfig tcp();
     FileConfig file();
+    HttpConfig http();
     
     @ConfigMapping(prefix = "serial")
     interface SerialConfig {
@@ -79,5 +80,25 @@ public interface CommunicationConfig {
         @WithName("polling.interval.ms")
         @WithDefault("1000")
         long pollingInterval();
+    }
+    
+    @ConfigMapping(prefix = "http")
+    interface HttpConfig {
+        // Optional port - if not specified, raw HTTP server will not start
+        @WithName("server.port")
+        // No default value makes it optional
+        Integer serverPort();
+        
+        @WithName("max.line.length")
+        @WithDefault("16384")
+        int maxLineLength();
+        
+        @WithName("max.header.size")
+        @WithDefault("16384")
+        int maxHeaderSize();
+        
+        @WithName("decoder.buffer.size")
+        @WithDefault("10240")
+        int decoderBufferSize();
     }
 }

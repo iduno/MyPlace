@@ -188,7 +188,7 @@ const AirconFragment = () => {
         setTemperature(data.temperature || 24);
         setFanSpeed(mapFanSpeedFromString(data.fanSpeed) || 1);
         setTimerEnabled(data.timerEnabled || false);
-        setTimerValue(data.timerValue || 0);
+        setTimerValue((data.timerValue || 0) / 60.0);
         setMode(data.mode || 'cool');
         setSystemStatus(data.systemStatus || 'standby');
         setZoneName(data.zoneName || 'Room');
@@ -278,20 +278,24 @@ const AirconFragment = () => {
   };
 
   // Update aircon data on server
-  const updateAirconData = async () => {
+  const updateAirconData = async (overrideData = {}) => {
     try {
       setUpdating(true);
       
+      // Create data object with current state values
+      // but allow specific fields to be overridden for immediate updates
       const airconData = {
-        power,
-        temperature,
-        fanSpeed: mapFanSpeedToString(fanSpeed),
-        timerEnabled,
-        timerValue,
-        mode,
-        energySaving,
-        zoneName
+        state: power ? 'on' : 'off', // Convert boolean to string as per DataAirconInfo
+        setTemp: temperature,
+        fan: mapFanSpeedToString(fanSpeed),
+        mode: mode,
+        myAutoModeEnabled: energySaving,
+        countDownToOff: (power && timerEnabled) ? Math.round(timerValue * 60) : 0, // Convert hours to minutes
+        countDownToOn: (!power && timerEnabled) ? Math.round(timerValue * 60) : 0, // Convert hours to minutes
+        ...overrideData // Override with any specific values passed
       };
+
+      console.log('Updating aircon data:', airconData);
       
       const response = await ApiService.updateAircon(airconData);
       
@@ -312,18 +316,23 @@ const AirconFragment = () => {
 
   const handlePowerToggle = () => {
     const newPowerState = !power;
-    setPower(newPowerState);
     
-    // Clear the timer whenever power state changes
+    console.log('Power state changed to:', newPowerState);
+    
+
+    // Update server immediately with the new power state
+    updateAirconData({
+      state: newPowerState ? 'on' : 'off',
+      countDownToOff: 0,
+      countDownToOn: 0,
+    });
+    
+    // Update local state after API call is initiated
+    setPower(newPowerState);
     if (timerEnabled) {
       setTimerEnabled(false);
-      setTimerValue(0.5);
+      setTimerValue(0);
     }
-    
-    // Update server with new power state
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
   };
 
   const handleTemperatureChange = (direction) => {
@@ -331,27 +340,25 @@ const AirconFragment = () => {
     
     if (direction === 'up' && temperature < 32) {
       newTemp = temperature + 1;
-      setTemperature(newTemp);
     } else if (direction === 'down' && temperature > 16) {
       newTemp = temperature - 1;
-      setTemperature(newTemp);
     } else {
       return; // No change needed
     }
     
-    // Update server with new temperature
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
+    // Update server with new temperature immediately
+    updateAirconData({ setTemp: newTemp });
+    
+    // Update local state
+    setTemperature(newTemp);
   };
 
   const handleFanSpeedChange = (speed) => {
-    setFanSpeed(speed);
+    // Update server with new fan speed immediately
+    updateAirconData({ fan: mapFanSpeedToString(speed) });
     
-    // Update server with new fan speed
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
+    // Update local state
+    setFanSpeed(speed);
   };
 
   // Get the formatted timer display value
@@ -367,30 +374,15 @@ const AirconFragment = () => {
     // For hour and half values (like 1.5h)
     return `${Math.floor(value)}h ${Math.round((value % 1) * 60)}min`;
   };
-
-  // This function is no longer used - left for reference
-  const handleTimerToggle = () => {
-    const newTimerState = !timerEnabled;
-    setTimerEnabled(newTimerState);
-    
-    // Reset timer to starting value (30min) when enabling
-    if (newTimerState && timerValue === 0) {
-      setTimerValue(0.5);
-    }
-    
-    // Update server with new timer state
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
-  };
   
   // Handle incrementing the timer value
   const handleTimerIncrement = () => {
     let newValue = timerValue;
+    let newTimerEnabled = timerEnabled;
     
     // If timer is not enabled, enable it and start with 30min
     if (!timerEnabled) {
-      setTimerEnabled(true);
+      newTimerEnabled = true;
       newValue = 0.5;
     } 
     // If timer is already enabled, increment according to pattern
@@ -409,70 +401,35 @@ const AirconFragment = () => {
       }
     }
     
+    // Update server with new timer value immediately
+    updateAirconData({ 
+      countDownToOff: (power && newTimerEnabled) ? Math.round(newValue * 60) : 0, // Convert to minutes
+      countDownToOn: (!power && newTimerEnabled) ? Math.round(newValue * 60) : 0  // Convert to minutes
+    });
+    
+    // Update local state
     setTimerValue(newValue);
-    
-    // Update server with new timer value
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
-  };
-
-  // Handle decrementing the timer value
-  const handleTimerDecrement = () => {
-    // If timer is not enabled, enable it and start with 30min
-    if (!timerEnabled) {
-      setTimerEnabled(true);
-      setTimerValue(0.5);
-      
-      // Update server with new timer state
-      setTimeout(() => {
-        updateAirconData();
-      }, 300);
-      return;
-    }
-    
-    let newValue = timerValue;
-    
-    // If at 30min (0.5h), cycle to 12h
-    if (timerValue === 0.5) {
-      newValue = 12;
-    }
-    // For values above 3h, decrement by 1h
-    else if (timerValue > 3) {
-      newValue = timerValue - 1;
-    }
-    // For values 3h and below, decrement by 30min
-    else {
-      newValue = timerValue - 0.5;
-    }
-    
-    setTimerValue(newValue);
-    
-    // Update server with new timer value
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
+    setTimerEnabled(newTimerEnabled);
   };
   
   const handleModeChange = (event, newMode) => {
     if (newMode !== null) {
-      setMode(newMode);
+      // Update server with new mode immediately
+      updateAirconData({ mode: newMode });
       
-      // Update server with new mode
-      setTimeout(() => {
-        updateAirconData();
-      }, 300);
+      // Update local state
+      setMode(newMode);
     }
   };
   
   const handleEnergySavingToggle = () => {
     const newEnergySavingState = !energySaving;
-    setEnergySaving(newEnergySavingState);
     
-    // Update server with new energy saving state
-    setTimeout(() => {
-      updateAirconData();
-    }, 300);
+    // Update server with new energy saving state immediately
+    updateAirconData({ myAutoModeEnabled: newEnergySavingState });
+    
+    // Update local state
+    setEnergySaving(newEnergySavingState);
   };
 
   return (
@@ -555,7 +512,10 @@ const AirconFragment = () => {
                     disabled={!timerEnabled}
                     onClick={() => {
                       setTimerEnabled(false);
-                      setTimeout(() => updateAirconData(), 300);
+                      setTimeout(() => updateAirconData({
+                        countDownToOff: 0,
+                        countDownToOn: 0
+                      }), 300);
                     }}
                   >
                     <DeleteIcon fontSize="small" />
