@@ -15,12 +15,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.air.advantage.config.CommunicationConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.mutiny.core.Vertx;
@@ -32,7 +30,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -176,52 +174,94 @@ public class CustomHttpServerConfig {
      * 
      * @param method the Method to invoke
      * @param jsonBody the JSON body of the request (can be null)
+     * @param queryParams the parsed query parameters map (can be null)
      * @return the Response from the method
      * @throws Exception if an error occurs during invocation
      */
-    private Response invokeWebServiceMethod(Method method, String jsonBody) throws Exception {
+    private Response invokeWebServiceMethod(Method method, String jsonBody, Map<String, String> queryParams) throws Exception {
         // Check method parameter types
         Parameter[] parameters = method.getParameters();
         Object[] args = new Object[parameters.length];
         
-        // If no parameters, just invoke the method with empty args
-        if (parameters.length == 0) {
-            // Leave args empty
+        // Process each parameter
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter param = parameters[i];
+            QueryParam queryParamAnnotation = param.getAnnotation(QueryParam.class);
+            
+            if (queryParamAnnotation != null && queryParams != null) {
+                // Handle @QueryParam annotated parameters
+                String value = queryParams.get(queryParamAnnotation.value());
+                args[i] = value;
+            } else {
+                // Handle non-query parameters (existing logic for body parameters)
+                args[i] = null; // Will be set by existing logic below if needed
+            }
         }
-        // If there's only one parameter and it's a String, pass the JSON body directly
-        else if (parameters.length == 1 && parameters[0].getType() == String.class) {
-            args[0] = jsonBody;
+        
+        // Handle non-query parameters with existing logic
+        Parameter[] nonQueryParams = new Parameter[0];
+        int[] nonQueryIndices = new int[0];
+        int nonQueryCount = 0;
+        
+        // Count and identify non-query parameters
+        for (int i = 0; i < parameters.length; i++) {
+            if (parameters[i].getAnnotation(QueryParam.class) == null) {
+                nonQueryCount++;
+            }
+        }
+        
+        if (nonQueryCount > 0) {
+            nonQueryParams = new Parameter[nonQueryCount];
+            nonQueryIndices = new int[nonQueryCount];
+            int idx = 0;
+            for (int i = 0; i < parameters.length; i++) {
+                if (parameters[i].getAnnotation(QueryParam.class) == null) {
+                    nonQueryParams[idx] = parameters[i];
+                    nonQueryIndices[idx] = i;
+                    idx++;
+                }
+            }
+        }
+        
+        // If no non-query parameters, we're done
+        if (nonQueryCount == 0) {
+            // All parameters are query parameters, already handled above
+        }
+        // If there's only one non-query parameter and it's a String, pass the JSON body directly
+        else if (nonQueryCount == 1 && nonQueryParams[0].getType() == String.class) {
+            args[nonQueryIndices[0]] = jsonBody;
         } 
-        // If there's only one parameter and we have JSON, try to parse it to match the parameter type
-        else if (parameters.length == 1 && jsonBody != null && !jsonBody.isEmpty()) {
+        // If there's only one non-query parameter and we have JSON, try to parse it to match the parameter type
+        else if (nonQueryCount == 1 && jsonBody != null && !jsonBody.isEmpty()) {
             try {
-                Class<?> paramType = parameters[0].getType();
+                Class<?> paramType = nonQueryParams[0].getType();
                 
                 // Check if the parameter is a parameterized type (like Map<String, DataAircon>)
-                if (parameters[0].getParameterizedType() != null && 
-                    !parameters[0].getParameterizedType().equals(paramType)) {
+                if (nonQueryParams[0].getParameterizedType() != null && 
+                    !nonQueryParams[0].getParameterizedType().equals(paramType)) {
                     // Use TypeReference for generic types to preserve type information
-                    args[0] = objectMapper.readValue(
+                    args[nonQueryIndices[0]] = objectMapper.readValue(
                         jsonBody, 
-                        objectMapper.getTypeFactory().constructType(parameters[0].getParameterizedType())
+                        objectMapper.getTypeFactory().constructType(nonQueryParams[0].getParameterizedType())
                     );
                 } else {
                     // For simple types
-                    args[0] = objectMapper.readValue(jsonBody, paramType);
+                    args[nonQueryIndices[0]] = objectMapper.readValue(jsonBody, paramType);
                 }
             } catch (IOException e) {
-                throw new IllegalArgumentException("Cannot parse JSON for " + parameters[0].getType().getName() + ": " + e.getMessage(), e);
+                throw new IllegalArgumentException("Cannot parse JSON for " + nonQueryParams[0].getType().getName() + ": " + e.getMessage(), e);
             }
         }
-        // If there are multiple parameters, try to extract them from a JSON object
-        else if (parameters.length > 1 && jsonBody != null && !jsonBody.isEmpty()) {
+        // If there are multiple non-query parameters, try to extract them from a JSON object
+        else if (nonQueryCount > 1 && jsonBody != null && !jsonBody.isEmpty()) {
             try {
                 // Parse JSON into a Map
                 Map<String, Object> jsonMap = objectMapper.readValue(jsonBody, new TypeReference<Map<String, Object>>() {});
                 
-                // For each parameter, look for a matching entry in the map
-                for (int i = 0; i < parameters.length; i++) {
-                    Parameter param = parameters[i];
+                // For each non-query parameter, look for a matching entry in the map
+                for (int i = 0; i < nonQueryCount; i++) {
+                    Parameter param = nonQueryParams[i];
+                    int argIndex = nonQueryIndices[i];
                     String paramName = param.getName();
                     Class<?> paramType = param.getType();
                     
@@ -233,7 +273,7 @@ public class CustomHttpServerConfig {
                             paramType.isPrimitive() || 
                             Number.class.isAssignableFrom(paramType) ||
                             Boolean.class == paramType) {
-                            args[i] = value;
+                            args[argIndex] = value;
                         } 
                         // For complex types, convert via JSON
                         else {
@@ -244,13 +284,13 @@ public class CustomHttpServerConfig {
                             if (param.getParameterizedType() != null && 
                                 !param.getParameterizedType().equals(paramType)) {
                                 // Use TypeFactory to preserve generic type information
-                                args[i] = objectMapper.readValue(
+                                args[argIndex] = objectMapper.readValue(
                                     valueJson, 
                                     objectMapper.getTypeFactory().constructType(param.getParameterizedType())
                                 );
                             } else {
                                 // For simple types
-                                args[i] = objectMapper.readValue(valueJson, paramType);
+                                args[argIndex] = objectMapper.readValue(valueJson, paramType);
                             }
                         }
                     }
@@ -277,7 +317,7 @@ public class CustomHttpServerConfig {
     }
 
     public void configServer(@Observes StartupEvent ev) {
-        Integer serverPort = communicationConfig.http().serverPort();
+        Integer serverPort = communicationConfig.http().serverPort().orElse(null);
         
         // Only start the server if a port is configured
         if (serverPort == null) {
@@ -309,6 +349,21 @@ public class CustomHttpServerConfig {
                 String rawQuery = queryIndex != -1 && uri.length() > queryIndex + 1
                         ? uri.substring(queryIndex + 1)
                         : "";
+
+                // Parse query parameters into a map
+                Map<String, String> queryParams = new HashMap<>();
+                if (!rawQuery.isEmpty()) {
+                    String[] pairs = rawQuery.split("&");
+                    for (String pair : pairs) {
+                        String[] kv = pair.split("=", 2);
+                        if (kv.length > 1) {
+                            queryParams.put(URLDecoder.decode(kv[0], StandardCharsets.UTF_8), 
+                                           URLDecoder.decode(kv[1], StandardCharsets.UTF_8));
+                        } else if (kv.length == 1) {
+                            queryParams.put(URLDecoder.decode(kv[0], StandardCharsets.UTF_8), "");
+                        }
+                    }
+                }
                 
                 // First, try to find a matching web service method using reflection
                 Method webServiceMethod = findWebServiceMethod(path, request.method());
@@ -339,9 +394,15 @@ public class CustomHttpServerConfig {
                             try {
                                 // Get the body content as a string
                                 String bodyContent = buffer.toString();
+
+                                // Remove "parameter=json=" from the start if present
+                                String prefix = "parameter=json=";
+                                if (bodyContent.startsWith(prefix)) {
+                                    bodyContent = bodyContent.substring(prefix.length());
+                                }
                                 
                                 // Invoke the web service method with the body content
-                                Response response = invokeWebServiceMethod(webServiceMethod, bodyContent);
+                                Response response = invokeWebServiceMethod(webServiceMethod, bodyContent, queryParams);
                                 
                                 // Handle the response
                                 if (response != null) {
@@ -400,7 +461,7 @@ public class CustomHttpServerConfig {
                     
                     // For GET requests or GET with json, invoke synchronously
                     try {
-                        Response response = invokeWebServiceMethod(webServiceMethod, jsonBody);
+                        Response response = invokeWebServiceMethod(webServiceMethod, jsonBody, queryParams);
                         
                         // Handle the response
                         if (response != null) {
@@ -445,79 +506,11 @@ public class CustomHttpServerConfig {
                             request.response().setStatusCode(204).end();
                         }
                         
-                        // We've handled this request directly
-                        return;
                     } catch (Exception e) {
                         System.err.println("Error invoking web service method: " + e.getMessage());
                         request.response().setStatusCode(500).end("{\"error\":\"" + e.getMessage() + "\"}");
-                        return;
                     }
                 }
-                
-                // If we reach here, no matching method was found, or we chose to forward
-                // Process request normally with URL encoding for forwarding
-                rawQuery = URLDecoder.decode(rawQuery, StandardCharsets.UTF_8);
-                StringBuilder escapedQuery = new StringBuilder();
-                if (!rawQuery.isEmpty()) {
-                    String[] pairs = rawQuery.split("&");
-                    for (int i = 0; i < pairs.length; i++) {
-                        String[] kv = pairs[i].split("=", 2);
-                        String key = URLEncoder.encode(kv[0], StandardCharsets.UTF_8);
-                        String value = kv.length > 1 ? URLEncoder.encode(kv[1], StandardCharsets.UTF_8) : "";
-                        escapedQuery.append(key).append("=").append(value);
-                        if (i < pairs.length - 1) escapedQuery.append("&");
-                    }
-                }
-
-                String forwardUri = path + (escapedQuery.length() > 0 ? "?" + escapedQuery : "");
-                System.out.println("  Forwarding to default server: " + forwardUri);
-
-                // Forward to default Quarkus server using configured port
-                client.request(request.method(), 
-                    defaultHttpPort, 
-                    "localhost", 
-                    forwardUri)
-                    .onSuccess(clientReq -> {
-                        // Copy headers from original request if needed
-                        request.headers().forEach(entry -> {
-                            clientReq.putHeader(entry.getKey(), entry.getValue());
-                        });
-                        
-                        // Handle request body if present and send to internal server
-                        if (request.method() == io.vertx.core.http.HttpMethod.POST || 
-                            request.method() == io.vertx.core.http.HttpMethod.PUT) {
-                            request.body().onSuccess(buffer -> {
-                                clientReq.end(buffer);
-                            });
-                        } else {
-                            clientReq.end();
-                        }
-                        
-                        // Handle the response from internal server
-                        clientReq.response().onSuccess(response -> {
-                            // Set the response headers and status
-                            request.response().setStatusCode(response.statusCode());
-                            response.headers().forEach(entry -> {
-                                request.response().putHeader(entry.getKey(), entry.getValue());
-                            });
-                            
-                            // Handle the response body
-                            response.body().onSuccess(body -> {
-                                request.response().end(body);
-                            });
-                        })
-                        .onFailure(err -> {
-                            System.err.println("Error proxying request: " + err.getMessage());
-                            request.response().setStatusCode(502).end();
-                        });
-                    })
-                    .onFailure(err -> {
-                        System.err.println("Error creating client request: " + err.getMessage());
-                        request.response().setStatusCode(502).end();
-                    });
-
-                    
-
                 } catch (Exception e) {
                     System.err.println("Error in raw request handler: " + e.getMessage());
                     request.response().setStatusCode(500).end();

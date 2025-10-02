@@ -1,5 +1,7 @@
 package com.air.advantage.config;
 
+import java.util.Optional;
+
 import com.air.advantage.service.communication.CommunicationType;
 
 import io.smallrye.config.ConfigMapping;
@@ -87,7 +89,7 @@ public interface CommunicationConfig {
         // Optional port - if not specified, raw HTTP server will not start
         @WithName("server.port")
         // No default value makes it optional
-        Integer serverPort();
+        Optional<Integer> serverPort();
         
         @WithName("max.line.length")
         @WithDefault("16384")

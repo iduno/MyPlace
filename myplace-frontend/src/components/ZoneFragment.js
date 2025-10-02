@@ -24,11 +24,10 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import AirIcon from '@mui/icons-material/Air';
-import SettingsIcon from '@mui/icons-material/Settings';
+// Removed SettingsIcon (config removed per new requirements)
 import StarIcon from '@mui/icons-material/Star';
 import LockIcon from '@mui/icons-material/Lock';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 // Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -55,10 +54,12 @@ const ZoneButton = styled(Button)(({ theme, selected }) => ({
 }));
 
 const ZoneCard = styled(Card)(({ theme, active }) => ({
-  padding: theme.spacing(2),
-  backgroundColor: active ? '#ffffff' : '#f5f5f5',
-  marginBottom: theme.spacing(2),
-  borderLeft: active ? `4px solid ${theme.palette.primary.main}` : '4px solid #e0e0e0',
+  padding: theme.spacing(1),
+  backgroundColor: active ? '#ffffff' : '#fafafa',
+  marginBottom: theme.spacing(1),
+  borderLeft: active ? `3px solid ${theme.palette.primary.main}` : '3px solid #e0e0e0',
+  display: 'flex',
+  alignItems: 'stretch'
 }));
 
 const ControlButton = styled(Button)(({ theme }) => ({
@@ -85,202 +86,41 @@ const ZoneFragment = () => {
   const [selectedZoneId, setSelectedZoneId] = useState(null);
   const [systemId, setSystemId] = useState('');
   
-  // Fetch zones data on component mount
+  // Subscribe to zone polling cache
   useEffect(() => {
-    const fetchZonesData = async () => {
-      try {
-        setLoading(true);
-        const data = await ApiService.getZones();
-        
-        // Validate the response data
-        if (data && data.zones && data.zones.length > 0) {
-          // Sort zones by zone number for consistent display
-          const sortedZones = [...data.zones].sort((a, b) => (a.zoneNumber || 0) - (b.zoneNumber || 0));
-          
-          // Update state with fetched data
-          setZones(sortedZones);
-          setSystemId(data.systemId || 'System 1');
-          
-          // Select first zone by default
-          setSelectedZoneId(sortedZones[0].id);
-        } else {
-          throw new Error('No zones data available');
+    setLoading(true);
+    ApiService.startZonePolling();
+    const unsubscribe = ApiService.subscribeZones((data, { error }) => {
+      if (error) {
+        if (!ApiService.getCachedZones()) {
+          // Only show error initially if nothing loaded yet
+            setError('Failed to fetch zones data');
+            setLoading(false);
         }
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to fetch zones data:', err);
-        setError('Failed to fetch zones data');
-        setLoading(false);
-        
-        // Use mock data in case of error
-        const mockZones = [
-          { 
-            id: '1', 
-            name: 'Living Room', 
-            temperature: 24, 
-            damperValue: 80, 
-            isOpen: true, 
-            measuredTemp: 22.5,
-            isMaster: true,
-            isConstant: false,
-            type: 1,
-            minDamper: 0,
-            maxDamper: 100,
-            zoneNumber: 1
-          },
-          { 
-            id: '2', 
-            name: 'Bedroom', 
-            temperature: 22, 
-            damperValue: 60, 
-            isOpen: true,
-            measuredTemp: 21.3,
-            isMaster: false,
-            isConstant: false,
-            type: 1,
-            minDamper: 0,
-            maxDamper: 100,
-            zoneNumber: 2
-          },
-          { 
-            id: '3', 
-            name: 'Kitchen', 
-            temperature: 23, 
-            damperValue: 70, 
-            isOpen: false,
-            measuredTemp: 24.1,
-            isMaster: false,
-            isConstant: true,
-            type: 0,
-            minDamper: 0,
-            maxDamper: 100,
-            zoneNumber: 3
-          },
-          { 
-            id: '4', 
-            name: 'Bathroom', 
-            temperature: 25, 
-            damperValue: 50, 
-            isOpen: true,
-            measuredTemp: 23.8,
-            isMaster: false,
-            isConstant: false,
-            type: 1,
-            minDamper: 0,
-            maxDamper: 80,
-            zoneNumber: 4
-          }
-        ];
-        setZones(mockZones);
-        setSystemId('System 1 (Mock)');
-        setSelectedZoneId('1');
-        
-        showSnackbar('Could not connect to server. Using mock data.', 'warning');
+        return; // keep old data on errors
       }
-    };
-
-    fetchZonesData();
-    
-    // We've removed the polling as requested
-  }, []);
+      if (!data) return;
+      const sorted = [...data.zones].sort((a,b) => (a.zoneNumber||0) - (b.zoneNumber||0));
+      setZones(sorted);
+      setSystemId(data.systemId || 'System 1');
+      if (!selectedZoneId && sorted.length) {
+        setSelectedZoneId(sorted[0].id);
+      } else if (selectedZoneId && !sorted.find(z => z.id === selectedZoneId) && sorted.length) {
+        setSelectedZoneId(sorted[0].id);
+      }
+      setLoading(false);
+      setError(null);
+    });
+    return () => unsubscribe();
+  }, [selectedZoneId]);
   
   // Fetch just the zone status information without clearing existing data
   const fetchZoneStatus = async () => {
-    try {
-      setUpdating(true);
-      
-      // Store a copy of the current zones data in case we need to restore it
-      const originalZones = [...zones];
-      const originalSelectedId = selectedZoneId;
-      
-      const data = await ApiService.getZones();
-      
-      // If we didn't get valid data, abort and keep current data
-      if (!data || !data.zones || data.zones.length === 0) {
-        showSnackbar('No zone data received from server', 'warning');
-        setUpdating(false);
-        return;
-      }
-      
-      // Get list of IDs from both current and new data
-      const existingIds = zones.map(zone => zone.id);
-      const newIds = data.zones.map(zone => zone.id);
-      
-      // Check if we have completely different zones (possible API inconsistency)
-      const hasCommonZones = existingIds.some(id => newIds.includes(id));
-      if (zones.length > 0 && !hasCommonZones) {
-        console.warn('Received completely different zone IDs from API - may indicate inconsistent data');
-      }
-      
-      // Carefully merge the data - prioritize keeping existing zone structure
-      const updatedZones = zones.map(existingZone => {
-        // Try to find matching zone in new data
-        const newZone = data.zones.find(z => z.id === existingZone.id);
-        if (newZone) {
-          // Update only specific properties, keeping all other state intact
-          return {
-            ...existingZone,  // Keep ALL existing properties
-            name: newZone.name || existingZone.name,
-            isOpen: newZone.isOpen !== undefined ? newZone.isOpen : existingZone.isOpen,
-            temperature: newZone.temperature || existingZone.temperature,
-            damperValue: newZone.damperValue !== undefined ? newZone.damperValue : existingZone.damperValue,
-            measuredTemp: newZone.measuredTemp || existingZone.measuredTemp,
-            isMaster: newZone.isMaster !== undefined ? newZone.isMaster : existingZone.isMaster,
-            isConstant: newZone.isConstant !== undefined ? newZone.isConstant : existingZone.isConstant,
-            type: newZone.type || existingZone.type,
-            minDamper: newZone.minDamper || existingZone.minDamper,
-            maxDamper: newZone.maxDamper || existingZone.maxDamper,
-            zoneNumber: newZone.zoneNumber || existingZone.zoneNumber,
-            following: newZone.following || existingZone.following,
-            followers: newZone.followers || existingZone.followers
-          };
-        }
-        // If zone doesn't exist in new data, keep the existing one
-        return existingZone;
-      });
-      
-      // Add any new zones that didn't exist before
-      data.zones.forEach(newZone => {
-        if (!existingIds.includes(newZone.id)) {
-          updatedZones.push(newZone);
-        }
-      });
-      
-      // Only update if we have valid data
-      if (updatedZones.length > 0) {
-        // Keep the currently selected zone if possible
-        if (selectedZoneId) {
-          const selectedZoneStillExists = updatedZones.some(z => z.id === selectedZoneId);
-          if (!selectedZoneStillExists && updatedZones.length > 0) {
-            setSelectedZoneId(updatedZones[0].id);
-          }
-        } else if (updatedZones.length > 0) {
-          setSelectedZoneId(updatedZones[0].id);
-        }
-        
-        // Update system ID if provided
-        if (data.systemId) {
-          setSystemId(data.systemId);
-        }
-        
-        // Sort zones by number for consistent display
-        updatedZones.sort((a, b) => (a.zoneNumber || 0) - (b.zoneNumber || 0));
-        
-        setZones(updatedZones);
-        showSnackbar('Zones refreshed successfully', 'success');
-      } else {
-        // If somehow we ended up with no zones, restore original data
-        setZones(originalZones);
-        setSelectedZoneId(originalSelectedId);
-        showSnackbar('No zone data available - keeping current view', 'warning');
-      }
-    } catch (err) {
-      console.error('Failed to fetch zone status:', err);
-      showSnackbar('Failed to refresh zones', 'error');
-    } finally {
-      setUpdating(false);
-    }
+    // Manual refresh button now just forces immediate poll
+    setUpdating(true);
+    ApiService.refreshZones();
+    // We rely on subscription callback to update UI; remove spinner after short delay
+    setTimeout(() => setUpdating(false), 600);
   };
 
   // Show snackbar message
@@ -308,16 +148,25 @@ const ZoneFragment = () => {
       
       // If this update is to set a zone as master, handle that specially
       if (updates.isMaster) {
-        // Update all zones to not be master
+        // Optimistic UI update
         const zonesWithUpdatedMaster = zones.map(zone => ({
           ...zone,
-          isMaster: zone.id === zoneId // Only the selected zone should be master
+            isMaster: zone.id === zoneId
         }));
         setZones(zonesWithUpdatedMaster);
-        
-        // TODO: Add API call to set master zone
-        showSnackbar(`${zoneToUpdate.name} set as master zone`);
-        setUpdating(false);
+
+        try {
+          // Send master zone update via setAircon (myZone = zoneNumber)
+          await ApiService.updateAircon({ myZone: zoneToUpdate.zoneNumber });
+          showSnackbar(`${zoneToUpdate.name} set as master zone`);
+        } catch (err) {
+          console.error('Failed to set master zone:', err);
+          showSnackbar('Failed to set master zone', 'error');
+          // Re-sync from server
+          await fetchZoneStatus();
+        } finally {
+          setUpdating(false);
+        }
         return;
       }
       
@@ -485,273 +334,98 @@ const ZoneFragment = () => {
                 
         {/* All Zones List */}
         <Box mb={2}>
-          <Typography variant="subtitle1" gutterBottom>
-            All Zones
+          <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', letterSpacing: '.5px' }}>
+            ZONES
           </Typography>
           
-          {zones.map((zone) => (
-            <ZoneCard 
-              key={zone.id} 
-              active={zone.isOpen}
-              sx={{ 
-                cursor: 'pointer',
-                borderLeft: zone.isMaster 
-                  ? `4px solid ${theme.palette.secondary.main}`
-                  : zone.isConstant
-                    ? `4px solid ${theme.palette.warning.main}`
-                    : zone.isOpen 
-                      ? `4px solid ${theme.palette.primary.main}` 
-                      : '4px solid #e0e0e0',
-                mb: 2,
-              }}
-              onClick={() => handleZoneSelect(zone.id)}
-            >
-              <Grid container spacing={2}>
-                {/* Zone Name and Status with Badges */}
-                <Grid item xs={12}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" alignItems="center">
-                      <Box display="flex" alignItems="center">
-                        {zone.isMaster && (
-                          <StarIcon 
-                            color="secondary" 
-                            fontSize="small" 
-                            sx={{ mr: 1 }}
-                          />
-                        )}
-                        {zone.isConstant && (
-                          <LockIcon 
-                            color="warning" 
-                            fontSize="small" 
-                            sx={{ mr: 1 }}
-                          />
-                        )}
-                        <Typography variant="h6">
-                          {zone.name}
-                        </Typography>
-                      </Box>
-                      {zone.isMaster && (
-                        <Box 
-                          component="span" 
-                          sx={{ 
-                            ml: 1,
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            fontSize: '0.65rem',
-                            bgcolor: theme.palette.secondary.main,
-                            color: 'white',
-                            fontWeight: 'bold',
-                            display: 'flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <StarIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-                          MASTER
-                        </Box>
-                      )}
-                      {zone.isConstant && (
-                        <Box 
-                          component="span" 
-                          sx={{ 
-                            ml: 1,
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            fontSize: '0.65rem',
-                            bgcolor: theme.palette.warning.main,
-                            color: 'white',
-                            fontWeight: 'bold',
-                            display: 'flex',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <LockIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-                          CONSTANT
-                        </Box>
-                      )}
-                    </Box>
-                    <Box display="flex" alignItems="center">
-                      <Typography variant="body2" mr={1}>
-                        {zone.isOpen ? 'Open' : 'Closed'}
-                      </Typography>
-                      <Switch
-                        checked={zone.isOpen}
-                        onChange={() => handleZoneToggle(zone.id)}
-                        color="primary"
-                      />
-                    </Box>
-                  </Box>
-                </Grid>
-                
-                {/* Current Temperature Row - Always shown */}
-                <Grid item xs={12}>
-                  <Box 
-                    display="flex" 
-                    justifyContent="space-between" 
-                    alignItems="center"
-                    p={1}
-                    bgcolor="#f9f9f9"
-                    borderRadius={1}
-                  >
-                    <Box display="flex" alignItems="center">
-                      <ThermostatIcon 
-                        color={zone.isOpen ? "primary" : "disabled"} 
-                        fontSize="small"
-                        sx={{ mr: 1 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        Current:
-                      </Typography>
-                      <Typography 
-                        variant="body1" 
-                        fontWeight="medium"
-                        ml={1}
-                      >
-                        {zone.measuredTemp ? `${zone.measuredTemp}°C` : 'N/A'}
-                      </Typography>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center">
-                      <Typography variant="body2" color="text.secondary" mr={1}>
-                        Set:
-                      </Typography>
-                      <Typography 
-                        variant="body1" 
-                        fontWeight="medium"
-                        color={zone.isOpen ? 'primary.main' : 'text.disabled'}
-                      >
-                        {zone.temperature}°C
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
-                
-                {/* Temperature Control - Always shown */}
-                <Grid item xs={12} md={6}>
-                  <Box 
-                    p={2} 
-                    bgcolor="#ffffff" 
-                    borderRadius={2} 
-                    boxShadow="0px 2px 4px rgba(0,0,0,0.1)"
-                  >
-                    <Typography variant="body2" color="textSecondary" align="center" gutterBottom>
-                      TEMPERATURE
-                    </Typography>
-                    <Box display="flex" alignItems="center" justifyContent="center">
-                      <IconButton 
-                        onClick={() => handleTemperatureChange(zone.id, 'down')}
-                        disabled={!zone.isOpen || zone.temperature <= 16}
-                        size="large"
-                      >
-                        <ArrowDownwardIcon />
-                      </IconButton>
-                      
-                      <Typography 
-                        variant="h3" 
-                        sx={{ 
-                          fontWeight: 'bold',
-                          mx: 3,
-                          color: zone.isOpen ? 'primary.main' : 'text.disabled'
+          <Grid container spacing={0.5} direction="column" >
+            {zones.map(zone => (
+              <Grid item xs={12} key={zone.id}>
+                <ZoneCard
+                  active={zone.isOpen}
+                  sx={{
+                    borderLeft: zone.isMaster
+                      ? `3px solid ${theme.palette.secondary.main}`
+                      : zone.isConstant
+                        ? `3px solid ${theme.palette.warning.main}`
+                        : zone.isOpen
+                          ? `3px solid ${theme.palette.primary.main}`
+                          : '3px solid #e0e0e0'
+                  }}
+                >
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                    <Box display="flex" alignItems="center" sx={{ minWidth: 0 }}>
+                      {zone.isMaster && <StarIcon color="secondary" fontSize="small" sx={{ mr: 0.5 }} />}
+                      {zone.isConstant && <LockIcon color="warning" fontSize="small" sx={{ mr: 0.5 }} />}
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: zone.isMaster ? 'bold' : 500,
+                          cursor: 'pointer',
+                          textOverflow: 'ellipsis',
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          '&:hover': { textDecoration: !zone.isMaster ? 'underline' : 'none' }
+                        }}
+                        title={zone.name + (zone.isMaster ? ' (Master)' : '')}
+                        onClick={() => {
+                          if (!zone.isMaster) updateZoneData(zone.id, { isMaster: true });
                         }}
                       >
-                        {zone.temperature}°
+                        {zone.name}
                       </Typography>
-                      
-                      <IconButton 
-                        onClick={() => handleTemperatureChange(zone.id, 'up')}
-                        disabled={!zone.isOpen || zone.temperature >= 32}
-                        size="large"
-                      >
-                        <ArrowUpwardIcon />
-                      </IconButton>
                     </Box>
+                    <Switch
+                      size="small"
+                      checked={zone.isOpen}
+                      onChange={() => handleZoneToggle(zone.id)}
+                      color="primary"
+                    />
                   </Box>
-                </Grid>
-                
-                {/* Damper Control - Always shown */}
-                <Grid item xs={12} md={6}>
-                  <Box 
-                    p={2} 
-                    bgcolor="#ffffff" 
-                    borderRadius={2} 
-                    boxShadow="0px 2px 4px rgba(0,0,0,0.1)"
-                  >
-                    <Typography variant="body2" color="textSecondary" align="center" gutterBottom>
-                      DAMPER SETTING
-                    </Typography>
-                    <Box px={2}>
-                      <Slider
-                        value={zone.damperValue}
-                        onChange={(e, value) => handleDamperValueChange(zone.id, value)}
-                        disabled={!zone.isOpen || zone.isConstant}
-                        min={zone.minDamper || 0}
-                        max={zone.maxDamper || 100}
-                        step={10}
-                        marks={[
-                          { value: zone.minDamper || 0, label: `${zone.minDamper || 0}%` },
-                          { value: zone.maxDamper || 100, label: `${zone.maxDamper || 100}%` }
-                        ]}
-                        valueLabelDisplay="on"
-                        valueLabelFormat={(value) => `${value}%`}
-                      />
-                    </Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                    <Typography variant="caption" color="text.secondary">Cur: {zone.measuredTemp ? `${zone.measuredTemp}°` : 'N/A'}</Typography>
+                    <Typography variant="caption" color={zone.isOpen ? 'primary.main' : 'text.disabled'}>Set: {zone.temperature}°</Typography>
                   </Box>
-                </Grid>
-                
-                {/* Zone Actions - Always shown */}
-                <Grid item xs={12}>
-                  <Box display="flex" justifyContent="space-between" mt={2}>
-                    <Box>
-                      {zone.isMaster ? (
-                        <Typography variant="body2" color="secondary" fontWeight="medium">
-                          Master Zone (controls system temperature)
-                        </Typography>
-                      ) : zone.isConstant ? (
-                        <Typography variant="body2" color="warning.dark" fontWeight="medium">
-                          Constant Zone (always receives air)
-                        </Typography>
-                      ) : (
-                        <Typography variant="body2" color="textSecondary">
-                          {updating ? 'Updating...' : 'Standard zone'}
-                        </Typography>
-                      )}
-                    </Box>
-                    
-                    <ButtonGroup variant="outlined" size="small">
-                      {zone.isMaster ? (
-                        <Button 
-                          variant="contained"
-                          color="secondary"
-                          startIcon={<ThermostatIcon />}
-                        >
-                          Master
-                        </Button>
-                      ) : (
-                        <Button 
-                          startIcon={<ThermostatIcon />}
-                          disabled={!zone.isOpen || zone.isConstant}
-                          onClick={() => updateZoneData(zone.id, { isMaster: true })}
-                        >
-                          Set as Master
-                        </Button>
-                      )}
-                      <Button 
-                        startIcon={<SettingsIcon />}
-                        disabled={!zone.isOpen}
-                      >
-                        Config
-                      </Button>
-                    </ButtonGroup>
+                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                    <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'down')} disabled={zone.temperature <= 16}>
+                      <ArrowDownwardIcon fontSize="inherit" />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ mx: 0.5, fontWeight: 'bold', color: 'primary.main' }}>{zone.temperature}°</Typography>
+                    <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'up')} disabled={zone.temperature >= 32}>
+                      <ArrowUpwardIcon fontSize="inherit" />
+                    </IconButton>
                   </Box>
-                </Grid>
+                  <Slider
+                    size="medium"
+                    value={zone.damperValue}
+                    onChange={(e,val) => handleDamperValueChange(zone.id, val)}
+                    disabled={zone.isConstant} // allow when closed now
+                    min={zone.minDamper || 0}
+                    max={zone.maxDamper || 100}
+                    step={5}
+                    valueLabelDisplay="auto"
+                    valueLabelFormat={(v) => `${v}%`}
+                    sx={{
+                      mt: 0.5,
+                      width: { xs: '15%', sm: '15%', md: '15%' },
+                      alignSelf: 'center',
+                      '& .MuiSlider-track': { height: 4 },
+                      '& .MuiSlider-rail': { height: 4 },
+                      '& .MuiSlider-thumb': { width: 14, height: 14 },
+                      '& .MuiSlider-valueLabel': { fontSize: '0.65rem', top: -6 }
+                    }}
+                  />
+                  <Typography variant="caption" color="text.secondary" sx={{ display:'block', mt: 0.5, textAlign:'right', ml:'auto' }}>
+                    {zone.isMaster ? 'Master zone' : zone.isConstant ? 'Constant zone' : zone.isOpen ? 'Open' : 'Closed'}
+                  </Typography>
+                </ZoneCard>
               </Grid>
-            </ZoneCard>
-          ))}
+            ))}
+          </Grid>
         </Box>
 
-        {/* Zone Summary and Actions */}
-        <Box mt={3} p={2} bgcolor="#ffffff" borderRadius={2} boxShadow="0px 2px 4px rgba(0,0,0,0.05)">
+  {/* Zone Summary and Actions */}
+  <Box mt={2} p={2} bgcolor="#ffffff" borderRadius={2} boxShadow="0px 2px 4px rgba(0,0,0,0.05)">
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={8}>
               <Box>
@@ -780,14 +454,14 @@ const ZoneFragment = () => {
             </Grid>
             
             <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button 
-                variant="contained" 
-                onClick={fetchZoneStatus} 
+              <Button
+                variant="outlined"
+                onClick={fetchZoneStatus}
                 disabled={updating}
-                startIcon={updating ? <CircularProgress size={20} /> : <RefreshIcon />}
-                size="large"
+                startIcon={updating ? <CircularProgress size={18} /> : <RefreshIcon />}
+                size="small"
               >
-                {updating ? 'Updating...' : 'Refresh All Zones'}
+                {updating ? 'Refreshing...' : 'Refresh'}
               </Button>
             </Grid>
           </Grid>

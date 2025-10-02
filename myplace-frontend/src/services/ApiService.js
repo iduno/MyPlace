@@ -4,7 +4,40 @@
 class ApiService {
   constructor() {
     // Base URL of your Quarkus backend
-    this.baseUrl = process.env.REACT_APP_API_BASE_URL || '';
+    // Prefer Vite environment variable (define in .env files as VITE_API_BASE_URL)
+    let envBase = '';
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
+        envBase = import.meta.env.VITE_API_BASE_URL;
+      }
+    } catch (_) { /* ignore if not available */ }
+
+    // Fallback logic: if not set, use '/api' during dev (so it hits Vite proxy), '' otherwise
+    if (!envBase) {
+      const isDev = typeof window !== 'undefined' && window.location && window.location.port === '3000';
+      envBase = isDev ? '/api' : '';
+    }
+
+    // Normalize (remove trailing slash except root '/')
+    if (envBase.length > 1 && envBase.endsWith('/')) {
+      envBase = envBase.slice(0, -1);
+    }
+    this.baseUrl = envBase;
+
+    // Unified system polling internals (single endpoint powers both aircon + zones)
+    this._systemCache = null;              // Last raw system data
+    this._systemLastError = null;          // Last error
+    this._systemPollingHandle = null;      // Interval handle
+    this._systemPollingIntervalMs = 2000;  // 2s
+    this._systemPollingActive = false;     // Concurrency guard
+
+    // Derived caches
+    this._airconCache = null;
+    this._zoneCache = null;
+
+    // Listener sets (public subscriptions remain stable)
+    this._airconListeners = new Set();
+    this._zoneListeners = new Set();
   }
 
   /**
@@ -34,12 +67,155 @@ class ApiService {
         systemStatus: aircon.state === 'on' ? 'active' : 'standby',
         zoneName: aircon.name || 'AC',
         energySaving: aircon.quietNightModeEnabled || false,
-        zones: data.aircons[airconId]?.zones || {}
+        zones: data.aircons[airconId]?.zones || {},
+        _raw: data,
+        _fetchedAt: Date.now()
       };
     } catch (error) {
       console.error('Error fetching aircon data:', error);
       throw error;
     }
+  }
+
+  /**
+   * Return the last cached aircon data (may be null if not yet fetched)
+   */
+  getCachedAircon() {
+    return this._airconCache;
+  }
+
+  /**
+   * Subscribe to aircon cache updates. Listener receives (data, {error, fromCache})
+   * Returns an unsubscribe function.
+   */
+  subscribeAircon(listener) {
+    this._airconListeners.add(listener);
+    // Immediately emit current cache if available
+    if (this._airconCache) {
+      try { listener(this._airconCache, { error: null, fromCache: true }); } catch (_) { /* ignore */ }
+    }
+    return () => {
+      this._airconListeners.delete(listener);
+      // If no listeners remain, stop polling to save resources
+      if (this._airconListeners.size === 0) {
+        this.stopAirconPolling();
+      }
+    };
+  }
+
+  // --- Unified system polling (backwards-compatible wrappers below) ---
+  startSystemPolling() {
+    if (this._systemPollingHandle) return;
+    this._pollSystemImmediate();
+    this._systemPollingHandle = setInterval(() => this._pollSystem(), this._systemPollingIntervalMs);
+  }
+  refreshSystem() { this._pollSystemImmediate(); }
+  stopSystemPolling() {
+    if (this._systemPollingHandle) {
+      clearInterval(this._systemPollingHandle);
+      this._systemPollingHandle = null;
+    }
+  }
+  // Backwards compatible aliases
+  startAirconPolling() { this.startSystemPolling(); }
+  startZonePolling() { this.startSystemPolling(); }
+  refreshAircon() { this.refreshSystem(); }
+  refreshZones() { this.refreshSystem(); }
+  stopAirconPolling() { this.stopSystemPolling(); }
+  stopZonePolling() { this.stopSystemPolling(); }
+
+  async _pollSystem() {
+    if (this._systemPollingActive) return;
+    this._systemPollingActive = true;
+    try {
+      const raw = await this._fetchSystemRaw();
+      this._systemCache = raw;
+      this._systemLastError = null;
+      // Derive specialized views
+      this._airconCache = this._extractAircon(raw);
+      this._zoneCache = this._extractZones(raw);
+      this._notifyAirconListeners(this._airconCache, null);
+      this._notifyZoneListeners(this._zoneCache, null);
+    } catch (err) {
+      this._systemLastError = err;
+      if (!this._systemCache) { // Only push an error event if nothing loaded yet
+        this._notifyAirconListeners(null, err);
+        this._notifyZoneListeners(null, err);
+      }
+    } finally {
+      this._systemPollingActive = false;
+    }
+  }
+  _pollSystemImmediate() { this._pollSystem(); }
+
+  _notifyAirconListeners(data, error) { this._airconListeners.forEach(l => { try { l(data, { error, fromCache: !error }); } catch(_){} }); }
+  _notifyZoneListeners(data, error) { this._zoneListeners.forEach(l => { try { l(data, { error, fromCache: !error }); } catch(_){} }); }
+
+  async _fetchSystemRaw() {
+    const response = await fetch(`${this.baseUrl}/getSystemData`);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    const data = await response.json();
+    data._fetchedAt = Date.now();
+    return data;
+  }
+
+  _extractAircon(systemData) {
+    if (!systemData || !systemData.aircons) return null;
+    const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+    const aircon = systemData.aircons[airconId]?.info || {};
+    return {
+      power: aircon.state === 'on',
+      temperature: aircon.setTemp || 24,
+      fanSpeed: aircon.fan || 'low',
+      timerEnabled: (aircon.countDownToOff > 0 || aircon.countDownToOn > 0),
+      timerValue: Math.max(aircon.countDownToOff || 0, aircon.countDownToOn || 0),
+      mode: aircon.mode || 'cool',
+      systemStatus: aircon.state === 'on' ? 'active' : 'standby',
+      zoneName: aircon.name || 'AC',
+      energySaving: aircon.quietNightModeEnabled || false,
+      zones: systemData.aircons[airconId]?.zones || {},
+      _raw: systemData,
+      _fetchedAt: systemData._fetchedAt
+    };
+  }
+  _extractZones(systemData) {
+    if (!systemData || !systemData.aircons) return null;
+    const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+    const aircon = systemData.aircons[airconId];
+    if (!aircon || !aircon.zones) {
+      return { zones: [], systemId: systemData.systemInfo?.id || 'System 1', _fetchedAt: systemData._fetchedAt };
+    }
+    const masterZoneNumber = aircon.info?.myZone || 1;
+    const noOfConstants = aircon.info?.noOfConstants || 0;
+    const zonesArray = Object.entries(aircon.zones).map(([id, zoneData]) => {
+      const zoneNumber = zoneData.number || parseInt(id.replace('z',''));
+      const isMaster = zoneNumber === masterZoneNumber;
+      const isConstant = zoneData.type === 0;
+      return {
+        id,
+        name: zoneData.name || `Zone ${id}`,
+        temperature: zoneData.setTemp || 24,
+        measuredTemp: zoneData.measuredTemp,
+        damperValue: zoneData.value || 0,
+        isOpen: zoneData.state === 'open',
+        isMaster,
+        isConstant,
+        type: zoneData.type,
+        minDamper: zoneData.minDamper,
+        maxDamper: zoneData.maxDamper,
+        following: zoneData.following || 0,
+        followers: zoneData.followers || [],
+        zoneNumber
+      };
+    });
+    return {
+      zones: zonesArray,
+      systemId: systemData.system?.name || 'System 1',
+      masterZoneNumber,
+      noOfConstants,
+      _raw: systemData,
+      _fetchedAt: systemData._fetchedAt
+    };
   }
 
   /**
@@ -90,8 +266,10 @@ class ApiService {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
-      return await response.json();
+      const result = await response.json();
+      // Trigger an immediate refresh so cache is up-to-date after mutation
+      this.refreshAircon();
+      return result;
     } catch (error) {
       console.error('Error updating aircon data:', error);
       throw error;
@@ -198,13 +376,33 @@ class ApiService {
         zones: zonesArray,
         systemId: data.system?.name || 'System 1',
         masterZoneNumber: masterZoneNumber,
-        noOfConstants: noOfConstants
+        noOfConstants: noOfConstants,
+        _raw: data,
+        _fetchedAt: Date.now()
       };
     } catch (error) {
       console.error('Error fetching zones data:', error);
       throw error;
     }
   }
+  
+  // Zones cache helpers
+  getCachedZones() { return this._zoneCache; }
+
+  subscribeZones(listener) {
+    this._zoneListeners.add(listener);
+    if (this._zoneCache) {
+      try { listener(this._zoneCache, { error: null, fromCache: true }); } catch (_) {}
+    }
+    return () => {
+      this._zoneListeners.delete(listener);
+      if (this._zoneListeners.size === 0) {
+        this.stopZonePolling();
+      }
+    };
+  }
+
+  // (Removed duplicate zone polling – handled by unified system polling)
   
   /**
    * Update zone settings
@@ -257,8 +455,10 @@ class ApiService {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
-      return await response.json();
+      const result = await response.json();
+      // Immediate refresh after mutation
+      this.refreshZones();
+      return result;
     } catch (error) {
       console.error('Error updating zone data:', error);
       throw error;

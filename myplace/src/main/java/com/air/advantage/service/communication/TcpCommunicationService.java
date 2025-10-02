@@ -59,7 +59,7 @@ public class TcpCommunicationService implements CommunicationService {
         server = vertx.createNetServer();
         server.connectHandler(socket -> {
             String clientId = socket.remoteAddress().toString();
-            LOG.info("New client connected: " + clientId);
+            LOG.trace("New client connected: " + clientId);
             
             activeConnections.put(clientId, socket);
             eventBus.publish("communication-status", "connected");
@@ -68,14 +68,14 @@ public class TcpCommunicationService implements CommunicationService {
                 this.parser.parse(buffer);
                 Message message = this.parser.pollMessage();
                 while (message != null) {
-                    LOG.info("Received message from client: " + message.data);
+                    LOG.trace("Received message from client: " + message.data);
                     eventBus.publish("communication-data", message);
                     message = this.parser.pollMessage();
                 }
             });
             
             socket.closeHandler(() -> {
-                LOG.info("Client disconnected: " + clientId);
+                LOG.trace("Client disconnected: " + clientId);
                 activeConnections.remove(clientId);
                 eventBus.publish("communication-status", "disconnected");
             });
@@ -90,7 +90,7 @@ public class TcpCommunicationService implements CommunicationService {
         server.listen(config.port())
             .subscribe().with(
                 netServer -> {
-                    LOG.info("TCP server started on port " + config.port());
+                    LOG.trace("TCP server started on port " + config.port());
                     eventBus.publish("communication-status", "connected");
                 },
                 error -> {
@@ -107,7 +107,7 @@ public class TcpCommunicationService implements CommunicationService {
         client.connect(config.port(), config.host())
             .subscribe().with(
                 socket -> {
-                    LOG.info("Connected to server: " + config.host() + ":" + config.port());
+                    LOG.trace("Connected to server: " + config.host() + ":" + config.port());
                     clientSocket.set(socket);
                     
                     // Notify that connection is established
@@ -117,7 +117,7 @@ public class TcpCommunicationService implements CommunicationService {
                         this.parser.parse(buffer);
                         Message message = this.parser.pollMessage();
                         while (message != null) {
-                            LOG.info("Received message from server: " + message);
+                            LOG.trace("Received message from server: " + message);
                             eventBus.publish("communication-data", message);
                             message = this.parser.pollMessage();
                         }
@@ -173,7 +173,7 @@ public class TcpCommunicationService implements CommunicationService {
                 activeConnections.values().forEach(socket -> {
                     socket.write(buffer)
                         .subscribe().with(
-                            v -> LOG.info("Sent data to client: " + socket.remoteAddress() + " | Data: " + buffer.toString()),
+                            v -> LOG.trace("Sent data to client: " + socket.remoteAddress() + " | Data: " + buffer.toString()),
                             e -> LOG.error("Failed to send data to client: " + socket.remoteAddress() + " - " + e.getMessage(), e)
                         );
                 });
@@ -190,15 +190,14 @@ public class TcpCommunicationService implements CommunicationService {
                 Buffer buffer = Buffer.buffer(dataToSend);
                 socket.write(buffer)
                         .subscribe().with(
-                            v -> LOG.info("Sent data to client: " + socket.remoteAddress() + " | Data: " + buffer.toString()),
+                            v -> LOG.trace("Sent data to client: " + socket.remoteAddress() + " | Data: " + buffer.toString()),
                             e -> LOG.error("Failed to send data to client: " + socket.remoteAddress() + " - " + e.getMessage(), e)
                         );
-                LOG.info("Sent data to server: " + data);
+                LOG.trace("Sent data to server: " + data);
                 return true;
             }
         }
-        
-        LOG.warn("Cannot send data, no connection established");
+
         return false;
     }
     

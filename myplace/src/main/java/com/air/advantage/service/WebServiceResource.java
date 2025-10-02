@@ -4,8 +4,6 @@ import com.air.advantage.aaservice.data.DataAircon;
 import com.air.advantage.aaservice.data.JsonExporterViews;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -29,7 +27,7 @@ public class WebServiceResource {
     @Path("/getSystemData")
     @WebService(value = "getSystemData", methods = WebService.HttpMethod.GET)
     @JsonView(JsonExporterViews.Export.class) // Use JsonView to control serialization
-    public Response getSystemData() {
+    public Response getSystemData(@QueryParam("uid") String uid,@QueryParam("fcmToken") String fcmToken, @QueryParam("notificationVersion") String notificationVersion, @QueryParam("deviceName") String deviceName) {
         // Return masterData object as JSON
         // JAX-RS will automatically handle the conversion using the Jackson provider
         return Response.ok(myMasterData.masterData).build();
@@ -284,7 +282,7 @@ public class WebServiceResource {
     @POST
     @Path("/setBackupDataToRestore")
     @WebService(value = "setBackupDataToRestore", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setBackupDataToRestore(String body) {
+    public Response setBackupDataToRestore(java.util.Map<String, com.air.advantage.aaservice.data.DataAircon> airconMap) {
         return Response.ok("{\"ack\":true,\"request\":\"setBackupDataToRestore\"}", MediaType.APPLICATION_JSON).build();
     }
 

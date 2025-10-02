@@ -7,6 +7,8 @@ The code is not currently fully functional and work in progress.
 
 - **myplace**: This is the main application. It functions as both a control board simulator and a myplace service
 
+- **myplace-frontend**: This is a frontend webpage to access the myplace server.
+
 ## Setup Instructions
 
 1. Clone the repository:
@@ -35,6 +37,14 @@ To run the **myplace** module, navigate to the **myplace** directory and execute
   ```
   mvn quarkus:dev -Dquarkus.profile=myplace
   ```
+
+## Info
+
+The server on port 2025 uses a different http server than the quarkus http server due to myplace using unescaped json strings in the url. vertx rejects the message before it can get to a interceptor to adjust the input.
+TODO: make the server a bit less of a hack.
+
+The myplace-frontend uses the quarkus http server endpoint and send correctly formatted json calls.
+
 
 ## Contributing
 

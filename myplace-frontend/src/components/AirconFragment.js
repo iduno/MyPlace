@@ -85,6 +85,8 @@ const PowerToggle = styled(Switch)(({ theme }) => ({
   },
   '& .MuiSwitch-thumb': {
     boxShadow: '0 2px 4px 0 rgba(0, 35, 11, 0.2)',
+    width: 28,
+    height: 28,
   },
   width: 70, // Increased from 60 to 100
   height: 36,
@@ -96,10 +98,6 @@ const PowerToggle = styled(Switch)(({ theme }) => ({
     '&.Mui-checked': {
       transform: 'translateX(30px)', // Adjusted to move further right on the wider switch
     }
-  },
-  '& .MuiSwitch-thumb': {
-    width: 28,
-    height: 28,
   },
 }));
 
@@ -176,74 +174,35 @@ const AirconFragment = () => {
   const [updating, setUpdating] = useState(false); // For update operations in progress
   const [energySaving, setEnergySaving] = useState(false); // Energy saving mode
 
-  // Fetch aircon data on component mount
+  // Subscribe to ApiService polling cache
   useEffect(() => {
-    const fetchAirconData = async () => {
-      try {
-        setLoading(true);
-        const data = await ApiService.getAircon();
-        
-        // Update state with fetched data
-        setPower(data.power || false);
-        setTemperature(data.temperature || 24);
-        setFanSpeed(mapFanSpeedFromString(data.fanSpeed) || 1);
-        setTimerEnabled(data.timerEnabled || false);
-        setTimerValue((data.timerValue || 0) / 60.0);
-        setMode(data.mode || 'cool');
-        setSystemStatus(data.systemStatus || 'standby');
-        setZoneName(data.zoneName || 'Room');
-        setEnergySaving(data.energySaving || false);
-        
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to fetch aircon data:', err);
-        setError('Failed to fetch aircon data');
-        setLoading(false);
-        
-        // Use mock data in case of error
-        setPower(false);
-        setTemperature(24);
-        setFanSpeed(1);
-        setTimerEnabled(false);
-        setTimerValue(0);
-        setMode('cool');
-        setSystemStatus('standby');
-        setZoneName('Room');
-        setEnergySaving(false);
-        
-        showSnackbar('Could not connect to server. Using mock data.', 'warning');
+    setLoading(true);
+    // Start polling (idempotent) & subscribe
+    ApiService.startAirconPolling();
+    const unsubscribe = ApiService.subscribeAircon((data, { error }) => {
+      if (error) {
+        // Only show error if we have never loaded data
+        if (!ApiService.getCachedAircon()) {
+          setError('Failed to fetch aircon data');
+          setLoading(false);
+        }
+        return; // keep previous state on errors
       }
-    };
-
-    fetchAirconData();
-    
-    // Set up polling for status updates every 30 seconds
-    const statusInterval = setInterval(() => {
-      if (power) { // Only poll when the unit is powered on
-        fetchAirconStatus();
-      }
-    }, 30000);
-    
-    return () => {
-      clearInterval(statusInterval); // Clean up on component unmount
-    };
-  }, []);
-  
-  // Fetch just the status information without updating UI state
-  const fetchAirconStatus = async () => {
-    try {
-      const data = await ApiService.getAircon();
-      // Only update status-related information
+      if (!data) return;
+      setPower(data.power || false);
+      setTemperature(data.temperature || 24);
+      setFanSpeed(mapFanSpeedFromString(data.fanSpeed) || 1);
+      setTimerEnabled(data.timerEnabled || false);
+      setTimerValue((data.timerValue || 0) / 60.0);
+      setMode(data.mode || 'cool');
       setSystemStatus(data.systemStatus || 'standby');
-      // If the power state changed externally, update it
-      if (power !== data.power) {
-        setPower(data.power);
-      }
-    } catch (err) {
-      console.error('Failed to fetch aircon status:', err);
-      // No need to show error for background polling
-    }
-  };
+      setZoneName(data.zoneName || 'Room');
+      setEnergySaving(data.energySaving || false);
+      setLoading(false);
+      setError(null);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Map fan speed from string to number
   const mapFanSpeedFromString = (speedString) => {
@@ -297,7 +256,7 @@ const AirconFragment = () => {
 
       console.log('Updating aircon data:', airconData);
       
-      const response = await ApiService.updateAircon(airconData);
+  const response = await ApiService.updateAircon(airconData); // This triggers immediate refresh
       
       if (response.ack) {
         showSnackbar('Aircon settings updated successfully');
@@ -614,14 +573,14 @@ const AirconFragment = () => {
                 aria-label="additional modes"
                 fullWidth
               >
-                <ModeButton value="fan" aria-label="fan only mode">
+                <ModeButton value="vent" aria-label="fan only mode">
                   Fan
                 </ModeButton>
                 <ModeButton value="dry" aria-label="dry mode">
                   <WaterDropIcon sx={{ mr: 1 }} />
                   Dry
                 </ModeButton>
-                <ModeButton value="auto" aria-label="auto mode">
+                <ModeButton value="myauto" aria-label="auto mode">
                   <AutoAwesomeIcon sx={{ mr: 1 }} />
                   Auto
                 </ModeButton>

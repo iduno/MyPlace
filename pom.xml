@@ -11,12 +11,12 @@
     <properties>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.24.2</quarkus.platform.version> <!-- reference https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom for latest version -->
+        <quarkus.platform.version>3.28.1</quarkus.platform.version> <!-- reference https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom for latest version -->
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.parameters>true</maven.compiler.parameters>
     </properties>
 
