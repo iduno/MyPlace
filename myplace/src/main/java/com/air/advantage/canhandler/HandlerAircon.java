@@ -1,6 +1,7 @@
 package com.air.advantage.canhandler;
 
 import com.air.advantage.aaservice.data.DataAircon;
+import com.air.advantage.aaservice.data.DataAircon.ZoneState;
 import com.air.advantage.aaservice.data.DataAirconInfo;
 import com.air.advantage.aaservice.data.DataZone;
 import com.air.advantage.aaservice.data.MyMasterData;
@@ -215,11 +216,22 @@ public class HandlerAircon extends Handler {
         }
         // Map fields
         zone.name = zoneKey;
+        switch (msg.getZoneState()) {
+            case CLOSE:
+                zone.state = ZoneState.close;
+                break;
+            case OPEN:
+                zone.state = ZoneState.open;
+                break;
+            default:
+                zone.state = null; // or some default state
+        }
         // zone.state = msg.getZoneState(); // If you have a state field
         // zone.percent = msg.getZonePercent(); // If you have a percent field
         // zone.type = msg.getZoneType(); // If you have a type field
         zone.measuredTemp = msg.getMeasuredTemp();
         // zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        dataAircon.getZones().replace(zoneKey, zone);
         System.out.println("Processed ZoneState for UID " + uid + ", zone " + zoneKey);
     }
 

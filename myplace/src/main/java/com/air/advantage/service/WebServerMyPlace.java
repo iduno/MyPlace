@@ -34,11 +34,15 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 
 /**
- * This class configures the Vert.x HTTP server at the lowest possible level
- * to be more permissive with malformed URLs and provide custom error handling.
+ * This class is for a HTTP web server on port 2025 for support of MyPlace calls.
+ * MyPlace uses an invalid parameter format for GET calls (json=... in the URL)
+ * which is not supported by JAX-RS. So we have to implement a custom HTTP
+ * server to handle these calls and route them to the appropriate methods.
+ * 
+ * This server calls the WebServiceResource methods directly via reflection.
  */
 @ApplicationScoped
-public class CustomHttpServerConfig {
+public class WebServerMyPlace {
 
     @Inject
     Vertx vertx;
@@ -48,9 +52,6 @@ public class CustomHttpServerConfig {
     
     @Inject
     WebServiceResource webServiceResource;
-    
-    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
-    int defaultHttpPort;
     
     // Cache of method mappings to avoid repeated reflection lookups
     private final Map<String, Method> methodCache = new ConcurrentHashMap<>();
