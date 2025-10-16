@@ -15,6 +15,9 @@ const urlsToCache = [
   '/static/js/0.chunk.js',
   '/static/js/bundle.js',
   '/manifest.json',
+  // Local Material Icons assets
+  '/fonts/material-icons.css',
+  '/fonts/material-icons.woff2',
   // iOS icons
   '/splash/ios/16.png',
   '/splash/ios/32.png',

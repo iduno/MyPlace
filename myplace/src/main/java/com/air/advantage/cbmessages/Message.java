@@ -18,7 +18,8 @@ public class Message {
         GET_CLOCK("getClock"),
         GET_ZONE_DATA_ZONE("getZoneData"),
         GET_ZONE_TIMER("getZoneTimer"),
-        GET_SCHEDULE_DATA_SCHEDULE("getScheduleData"),
+        GET_ALL_ZONE_SENSOR_DATA("getAllZoneSensorData"),
+        GET_SCHEDULE_DATA("getScheduleData"),
         CAN2_IN_USE("CAN2 in use"),
         UNKNOWN("Unknown");
 
@@ -89,8 +90,10 @@ public class Message {
                 return MessageGetZoneDataZone.deserialize(data);
             case GET_ZONE_TIMER:
                 return MessageGetZoneTimer.deserialize(data);
-            case GET_SCHEDULE_DATA_SCHEDULE:
-                return MessageGetScheduleDataSchedule.deserialize(data);
+            case GET_SCHEDULE_DATA:
+                return MessageGetScheduleData.deserialize(data);
+            case GET_ALL_ZONE_SENSOR_DATA:
+                return MessageGetAllZoneSensorData.deserialize(data,messageType);
             default:
                 return new Message(new String(data));
         }

@@ -110,7 +110,8 @@ public class HandlerAircon extends Handler {
             int numZones = msg.getNumZones();
             if (numZones < currentSize) {
                 for (int i = numZones + 1; i <= currentSize; i++) {
-                    dataAircon.getZones().remove("zone" + i); // Replace with your actual zone key logic if needed
+                    String zoneKey = String.format("z%02d", i);
+                    dataAircon.getZones().remove(zoneKey); // Replace with your actual zone key logic if needed
                 }
             }
         }
@@ -207,8 +208,7 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
-        int zoneNum = msg.getZoneNumber();
-        String zoneKey = "zone" + zoneNum;
+        String zoneKey = String.format("z%02d", msg.getZoneNumber());
         DataZone zone = dataAircon.getZones().get(zoneKey);
         if (zone == null) {
             zone = new DataZone();
@@ -239,8 +239,7 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
-        int zoneNum = msg.getZoneNumber();
-        String zoneKey = "zone" + zoneNum;
+        String zoneKey = String.format("z%02d", msg.getZoneNumber());
         DataZone zone = dataAircon.getZones().get(zoneKey);
         if (zone == null) {
             zone = new DataZone();

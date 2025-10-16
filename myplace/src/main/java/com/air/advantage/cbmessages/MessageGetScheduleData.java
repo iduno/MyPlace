@@ -1,12 +1,12 @@
 package com.air.advantage.cbmessages;
 
-public class MessageGetScheduleDataSchedule extends Message {
-    public MessageGetScheduleDataSchedule() {
-        this.messageType = MessageType.GET_SCHEDULE_DATA_SCHEDULE;
+public class MessageGetScheduleData extends Message {
+    public MessageGetScheduleData() {
+        this.messageType = MessageType.GET_SCHEDULE_DATA;
     }
 
-    public static MessageGetScheduleDataSchedule deserialize(byte[] data) {
-        return new MessageGetScheduleDataSchedule();
+    public static MessageGetScheduleData deserialize(byte[] data) {
+        return new MessageGetScheduleData();
     }
 
     @Override

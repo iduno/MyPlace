@@ -1,6 +1,7 @@
 package com.air.advantage.canhandler;
 
 import com.air.advantage.aaservice.data.DataAircon;
+import com.air.advantage.aaservice.data.DataAircon.AirconMode;
 import com.air.advantage.aaservice.data.DataAirconInfo;
 import com.air.advantage.aaservice.data.DataZone;
 import com.air.advantage.aaservice.data.MyMasterData;
@@ -190,14 +191,23 @@ public class HandlerAirconCB extends Handler {
             return;
         }
         String zoneName = String.format("z%02d", msg.getZoneNumber());
-        for (String key : dataAircon.zones.keySet()) {
-            DataZone zone = dataAircon.zones.get(key);
-            if (zone == null) continue;
-            if (zoneName.equals(zone.name)) {
-                
+        DataZone zone = dataAircon.zones.get(zoneName);
+        if (zone != null) 
+        {
+            zone.number = msg.getZoneNumber();
+            if (msg.getZoneState() == CANMessageAircon03ZoneState.ZoneState.OPEN) {
+                zone.state = DataAircon.ZoneState.open;
+            } else {
+                zone.state = DataAircon.ZoneState.close;
             }
-            
+            //zone.value = msg.getZonePercent();
+            zone.type = msg.getZoneType();
+            if (msg.getSetTemp() > 0.0) {
+            zone.setTemp = msg.getSetTemp();
+            }
+            //zone.measuredTemp = msg.getMeasuredTemp();
         }
+
     }
 
     private void process(CANMessageAircon04ZoneConfiguration msg) {
@@ -216,6 +226,62 @@ public class HandlerAirconCB extends Handler {
         if (dataAircon == null) {
             return;
         }
+        switch (msg.getSystemState())
+        {
+            case OFF:
+                dataAircon.airconInfo.state = DataAircon.SystemState.off;
+                break;
+            case ON:
+                dataAircon.airconInfo.state = DataAircon.SystemState.on;
+                break;
+        }
+        dataAircon.airconInfo.setTemp = msg.getSetTemp();
+        if (msg.getMyZoneId() >0) {
+            dataAircon.airconInfo.myZone = msg.getMyZoneId();
+        }
+        switch (msg.getSystemMode())
+        {
+            case MYAUTO:
+                dataAircon.airconInfo.mode = AirconMode.myauto;
+                break;
+            case AUTO:
+                dataAircon.airconInfo.mode = AirconMode.auto;
+                break;
+            case COOL:
+                dataAircon.airconInfo.mode = AirconMode.cool;
+                break;
+            case DRY:
+                dataAircon.airconInfo.mode = AirconMode.dry;
+                break;
+            case VENT:
+                dataAircon.airconInfo.mode = AirconMode.vent;
+                break;
+            case HEAT:
+                dataAircon.airconInfo.mode = AirconMode.heat;
+                break;
+        }
+        switch (msg.getSystemFan())
+        {
+            case OFF:
+                dataAircon.airconInfo.fan = DataAircon.FanStatus.off;
+                break;
+            case LOW:
+                dataAircon.airconInfo.fan = DataAircon.FanStatus.low;
+                break;
+            case MEDIUM:
+                dataAircon.airconInfo.fan = DataAircon.FanStatus.medium;
+                break;
+            case HIGH:
+                dataAircon.airconInfo.fan = DataAircon.FanStatus.high;
+                break;
+            case AUTO:
+                dataAircon.airconInfo.fan = DataAircon.FanStatus.auto;
+                break;
+            case AUTOAA:
+                dataAircon.airconInfo.fan = DataAircon.FanStatus.autoAA;
+                break;
+        }
+        
     }
 
     private void process(CANMessageAircon06CBStatus msg) {
