@@ -8,11 +8,14 @@ public class Message {
 
     public enum MessageType {
         PING("Ping"),
+        ACK_PING("ACKPING"),
         ACK("<ack>1</ack>"),
         NAK("<ack>0</ack>"),
         GET_CAN("getCAN "),
         SET_CAN("setCAN "),
         ACK_CAN("ackCAN "),
+        GET_IPC("getIPC "),
+        SET_IPC("setIPC "),
         UNKNOWN_REQUEST("<request>Unknown</request>"),
         GET_SYSTEM_DATA("getSystemData"),
         GET_CLOCK("getClock"),
@@ -21,6 +24,7 @@ public class Message {
         GET_ALL_ZONE_SENSOR_DATA("getAllZoneSensorData"),
         GET_SCHEDULE_DATA("getScheduleData"),
         CAN2_IN_USE("CAN2 in use"),
+        IPC_IN_USE("IPC in use"),
         UNKNOWN("Unknown");
 
         private final String value;

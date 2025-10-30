@@ -226,11 +226,11 @@ public class HandlerAircon extends Handler {
             default:
                 zone.state = null; // or some default state
         }
-        // zone.state = msg.getZoneState(); // If you have a state field
-        // zone.percent = msg.getZonePercent(); // If you have a percent field
-        // zone.type = msg.getZoneType(); // If you have a type field
+
+        zone.maxDamper = msg.getZonePercent(); // If you have a percent field
+        zone.type = msg.getZoneType(); // If you have a type field
         zone.measuredTemp = msg.getMeasuredTemp();
-        // zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
         dataAircon.getZones().replace(zoneKey, zone);
         System.out.println("Processed ZoneState for UID " + uid + ", zone " + zoneKey);
     }
@@ -259,13 +259,39 @@ public class HandlerAircon extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
         // Map fields
-        // info.systemState = msg.getSystemState(); // If you have a systemState field
-        // info.mode = msg.getSystemMode(); // If you have a mode field
-        // info.fan = msg.getSystemFan(); // If you have a fan field
-        // info.setTemp = msg.getSetTemp(); // If you have a setTemp field
-        // info.myZoneId = msg.getMyZoneId(); // If you have a myZoneId field
-        // info.freshAirStatus = msg.getFreshAirStatus();
-        // info.rfSysId = msg.getRfSysId();
+        switch (msg.getSystemState()) {
+            case OFF -> info.state = DataAircon.SystemState.off;
+            case ON -> info.state = DataAircon.SystemState.on;
+        }
+        switch (msg.getSystemMode()) {
+            
+            case COOL -> info.mode = DataAircon.AirconMode.cool;
+            case HEAT -> info.mode = DataAircon.AirconMode.heat;
+            case VENT -> info.mode = DataAircon.AirconMode.vent;
+            case AUTO -> info.mode = DataAircon.AirconMode.auto;
+            case DRY -> info.mode = DataAircon.AirconMode.dry;
+            case MYAUTO -> info.mode = DataAircon.AirconMode.myauto;
+        }
+
+        switch (msg.getSystemFan()) {
+            case OFF -> info.fan = DataAircon.FanStatus.off;
+            case LOW -> info.fan = DataAircon.FanStatus.low;
+            case MEDIUM -> info.fan = DataAircon.FanStatus.medium;
+            case HIGH -> info.fan = DataAircon.FanStatus.high;
+            case AUTO -> info.fan = DataAircon.FanStatus.auto;
+            case AUTOAA -> info.fan = DataAircon.FanStatus.autoAA;
+        }
+
+        info.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        info.myZone = msg.getMyZoneId(); // If you have a myZoneId field
+
+        switch (msg.getFreshAirStatus()) {
+            case NONE -> info.freshAirStatus = DataAircon.FreshAirStatus.none;
+            case OFF -> info.freshAirStatus = DataAircon.FreshAirStatus.off;
+            case ON -> info.freshAirStatus = DataAircon.FreshAirStatus.on;
+        }
+
+        info.rfSysID = msg.getRfSysId();
         System.out.println("Processed AirconState for UID " + uid);
     }
 

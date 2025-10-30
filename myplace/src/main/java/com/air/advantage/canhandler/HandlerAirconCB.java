@@ -162,6 +162,12 @@ public class HandlerAirconCB extends Handler {
         return error.toString();
     }
 
+    /*
+     *     private UnitType unitType;
+    private CodeStatus activationStatus;
+    private int fwMajor;
+    private int fwMinor;
+     */
     private void process(CANMessageAircon02UnitTypeInformation msg) {
         // Attempt to get the UID from context or message (if available)
         // If UID is not available in msg, you may need to pass it from previous context
@@ -180,7 +186,18 @@ public class HandlerAirconCB extends Handler {
             return;
         }
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
-        
+
+        if (msg.getUnitType() != null) {
+            dataAirconInfo.unitType = msg.getUnitType().getValue();
+        }
+
+        switch (msg.getActivationStatus()) {
+            case NO_CODE -> dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.noCode;
+            case CODE_ENABLED -> dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.codeEnabled;
+            case EXPIRED -> dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.expired;
+        }
+        dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
+        dataAirconInfo.cbFWRevMinor = msg.getFwMinor();
     }
 
     private void process(CANMessageAircon03ZoneState msg) {
@@ -200,12 +217,15 @@ public class HandlerAirconCB extends Handler {
             } else {
                 zone.state = DataAircon.ZoneState.close;
             }
-            //zone.value = msg.getZonePercent();
-            zone.type = msg.getZoneType();
+            zone.value = msg.getZonePercent();
+
+            //zone.type = msg.getZoneType();
             if (msg.getSetTemp() > 0.0) {
             zone.setTemp = msg.getSetTemp();
             }
-            //zone.measuredTemp = msg.getMeasuredTemp();
+            if (msg.getMeasuredTemp() > 0.0) {
+                zone.measuredTemp = msg.getMeasuredTemp();
+            }
         }
 
     }
@@ -216,6 +236,18 @@ public class HandlerAirconCB extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         if (dataAircon == null) {
             return;
+        }
+        String zoneName = String.format("z%02d", msg.getZoneNumber());
+        DataZone zone = dataAircon.zones.get(zoneName);
+        if (zone != null) 
+        {
+            zone.number = msg.getZoneNumber();
+            zone.minDamper = msg.getMinDamper();
+            zone.maxDamper = msg.getMaxDamper();
+            zone.motion = msg.getMotionStatus();
+            zone.motionConfig = msg.getMotionConfig();
+            zone.error = msg.getZoneError();
+            zone.rssi = msg.getRssi();
         }
     }
 
@@ -228,12 +260,8 @@ public class HandlerAirconCB extends Handler {
         }
         switch (msg.getSystemState())
         {
-            case OFF:
-                dataAircon.airconInfo.state = DataAircon.SystemState.off;
-                break;
-            case ON:
-                dataAircon.airconInfo.state = DataAircon.SystemState.on;
-                break;
+            case OFF -> dataAircon.airconInfo.state = DataAircon.SystemState.off;
+            case ON -> dataAircon.airconInfo.state = DataAircon.SystemState.on;
         }
         dataAircon.airconInfo.setTemp = msg.getSetTemp();
         if (msg.getMyZoneId() >0) {
@@ -241,46 +269,29 @@ public class HandlerAirconCB extends Handler {
         }
         switch (msg.getSystemMode())
         {
-            case MYAUTO:
-                dataAircon.airconInfo.mode = AirconMode.myauto;
-                break;
-            case AUTO:
-                dataAircon.airconInfo.mode = AirconMode.auto;
-                break;
-            case COOL:
-                dataAircon.airconInfo.mode = AirconMode.cool;
-                break;
-            case DRY:
-                dataAircon.airconInfo.mode = AirconMode.dry;
-                break;
-            case VENT:
-                dataAircon.airconInfo.mode = AirconMode.vent;
-                break;
-            case HEAT:
-                dataAircon.airconInfo.mode = AirconMode.heat;
-                break;
+            case MYAUTO -> dataAircon.airconInfo.mode = AirconMode.myauto;
+            case AUTO -> dataAircon.airconInfo.mode = AirconMode.auto;
+            case COOL -> dataAircon.airconInfo.mode = AirconMode.cool;
+            case DRY -> dataAircon.airconInfo.mode = AirconMode.dry;
+            case VENT -> dataAircon.airconInfo.mode = AirconMode.vent;
+            case HEAT -> dataAircon.airconInfo.mode = AirconMode.heat;
         }
         switch (msg.getSystemFan())
         {
-            case OFF:
-                dataAircon.airconInfo.fan = DataAircon.FanStatus.off;
-                break;
-            case LOW:
-                dataAircon.airconInfo.fan = DataAircon.FanStatus.low;
-                break;
-            case MEDIUM:
-                dataAircon.airconInfo.fan = DataAircon.FanStatus.medium;
-                break;
-            case HIGH:
-                dataAircon.airconInfo.fan = DataAircon.FanStatus.high;
-                break;
-            case AUTO:
-                dataAircon.airconInfo.fan = DataAircon.FanStatus.auto;
-                break;
-            case AUTOAA:
-                dataAircon.airconInfo.fan = DataAircon.FanStatus.autoAA;
-                break;
+            case OFF -> dataAircon.airconInfo.fan = DataAircon.FanStatus.off;
+            case LOW -> dataAircon.airconInfo.fan = DataAircon.FanStatus.low;
+            case MEDIUM -> dataAircon.airconInfo.fan = DataAircon.FanStatus.medium;
+            case HIGH -> dataAircon.airconInfo.fan = DataAircon.FanStatus.high;
+            case AUTO -> dataAircon.airconInfo.fan = DataAircon.FanStatus.auto;
+            case AUTOAA -> dataAircon.airconInfo.fan = DataAircon.FanStatus.autoAA;
         }
+        switch (msg.getFreshAirStatus())
+        {
+            case OFF -> dataAircon.airconInfo.freshAirStatus = DataAircon.FreshAirStatus.off;
+            case ON -> dataAircon.airconInfo.freshAirStatus = DataAircon.FreshAirStatus.on;
+            case NONE -> dataAircon.airconInfo.freshAirStatus = DataAircon.FreshAirStatus.none;
+        }
+        dataAircon.airconInfo.rfSysID = msg.getRfSysId();
         
     }
 
@@ -396,6 +407,12 @@ public class HandlerAirconCB extends Handler {
         if (dataAircon == null) {
             return;
         }
+
+        // dataAircon.airconInfo.cbFWRevMajor = msg.getCbFwMajor();
+        // dataAircon.airconInfo.cbFWRevMinor = msg.getCbFwMinor();
+        // dataAircon.airconInfo.cbType = msg.getCbType();
+        // dataAircon.airconInfo.rfFWRevMajor = msg.getRfFwMajor();
+
     }
 
     private void process(CANMessageAircon08CBErrorStatus msg) {
