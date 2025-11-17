@@ -209,6 +209,12 @@ public class CommunicationDataHandler {
         lastMessageTime.set(System.currentTimeMillis());
         if (config.runMode() == CommunicationConfig.RunMode.MYAIR) {
             if (data instanceof MessagePing) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e)
+                {
+                    LOG.error("Error during sleep: " + e.getMessage(), e);
+                }
                 if (sendAck) {
                     sendAck = false;
                     LOG.trace("Received ping message, sending ACK");

@@ -10,7 +10,9 @@ public class MessageGetSystemData extends Message {
     }
 
     public static MessageGetSystemData deserialize(byte[] data,MessageType messageType) {
-        return new MessageGetSystemData(messageType);
+        MessageGetSystemData message = new MessageGetSystemData(messageType);
+        message.data = new String(data);
+        return message;
     }
 
     @Override

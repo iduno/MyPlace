@@ -6,7 +6,9 @@ public class MessageGetZoneTimer extends Message {
     }
 
     public static MessageGetZoneTimer deserialize(byte[] data) {
-        return new MessageGetZoneTimer();
+        MessageGetZoneTimer message = new MessageGetZoneTimer();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

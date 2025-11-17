@@ -6,7 +6,9 @@ public class MessagePing extends Message {
     }
 
     public static MessagePing deserialize(byte[] data) {
-        return new MessagePing();
+        MessagePing message = new MessagePing();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

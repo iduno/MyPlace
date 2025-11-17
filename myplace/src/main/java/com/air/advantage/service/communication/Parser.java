@@ -11,7 +11,7 @@ import com.air.advantage.cbmessages.MessagePing;
 import io.vertx.mutiny.core.buffer.Buffer;
 
 public class Parser {
-    private final byte[] internalBuffer = new byte[3072];
+    private final byte[] internalBuffer = new byte[8192];
     private int bufferSize = 0;
     private int bufferReadPos;
     private final ArrayBlockingQueue<Message> messages = new ArrayBlockingQueue<>(100);
@@ -27,7 +27,7 @@ public class Parser {
         bufferReadPos = 0;
         try {
             // If the buffer size goes beyond the buffer length, reset it
-            if (this.bufferSize + 256 > internalBuffer.length) {
+            if (this.bufferSize + 4096 > internalBuffer.length) {
                 this.bufferSize = 0;
             }
             
@@ -36,7 +36,7 @@ public class Parser {
                 return;
             }
             
-            int readSize = Math.min(256, available);
+            int readSize = Math.min(4096, available);
             byte[] tempBuffer = buffer.getBytes(0, readSize);
             System.arraycopy(tempBuffer, 0, internalBuffer, this.bufferSize, readSize);
             this.bufferSize += readSize;
@@ -48,19 +48,19 @@ public class Parser {
                 if (nextTagPos >= 0) {
                     bufferReadPos = nextTagPos;
                     int pingIndex = ByteArray.findParseBlockTagPing(internalBuffer, bufferReadPos, bufferSize);
-                    // Found a ping message
-                    if (pingIndex > 13) {
-                        Message message = new MessagePing();
-                        if (!messages.offer(message)) {
-                            messages.poll(); // Remove oldest
-                            messages.offer(message); // Try again
-                        }
-                        // Remove all of the Ping messages in the buffer and discard any data until the last Ping message
-                        while (pingIndex - bufferReadPos > 13) {
-                            bufferReadPos = pingIndex;
-                            pingIndex = ByteArray.findParseBlockTagPing(internalBuffer, bufferReadPos, bufferSize);
-                        }
-                    }
+                    // // Found a ping message
+                    // if (pingIndex > 13) {
+                    //     Message message = new MessagePing();
+                    //     if (!messages.offer(message)) {
+                    //         messages.poll(); // Remove oldest
+                    //         messages.offer(message); // Try again
+                    //     }
+                    //     // Remove all of the Ping messages in the buffer and discard any data until the last Ping message
+                    //     while (pingIndex - bufferReadPos > 13) {
+                    //         bufferReadPos = pingIndex;
+                    //         pingIndex = ByteArray.findParseBlockTagPing(internalBuffer, bufferReadPos, bufferSize);
+                    //     }
+                    // }
                     endMessageIndex = ByteArray.findParseBlockTagEnd(internalBuffer, bufferReadPos, bufferSize);
                     if (endMessageIndex >= 0) {
                         try

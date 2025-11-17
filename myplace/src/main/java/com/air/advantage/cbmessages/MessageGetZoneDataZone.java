@@ -6,7 +6,9 @@ public class MessageGetZoneDataZone extends Message {
     }
 
     public static MessageGetZoneDataZone deserialize(byte[] data) {
-        return new MessageGetZoneDataZone();
+        MessageGetZoneDataZone message = new MessageGetZoneDataZone();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

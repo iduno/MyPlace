@@ -6,7 +6,9 @@ public class MessageGetScheduleData extends Message {
     }
 
     public static MessageGetScheduleData deserialize(byte[] data) {
-        return new MessageGetScheduleData();
+        MessageGetScheduleData message = new MessageGetScheduleData();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

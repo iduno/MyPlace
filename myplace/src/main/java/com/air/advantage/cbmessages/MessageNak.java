@@ -6,7 +6,9 @@ public class MessageNak extends Message {
     }
 
     public static MessageNak deserialize(byte[] data) {
-        return new MessageNak();
+        MessageNak message = new MessageNak();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

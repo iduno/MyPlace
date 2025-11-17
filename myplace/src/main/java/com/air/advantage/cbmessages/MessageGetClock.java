@@ -6,7 +6,9 @@ public class MessageGetClock extends Message {
     }
 
     public static MessageGetClock deserialize(byte[] data) {
-        return new MessageGetClock();
+        MessageGetClock message = new MessageGetClock();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

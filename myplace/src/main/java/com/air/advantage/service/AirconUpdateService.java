@@ -182,9 +182,9 @@ public class AirconUpdateService {
                         msg.setZoneState(CANMessageAircon03ZoneState.ZoneState.CLOSE);
                     }
                     msg.setZonePercent(valueOr(oldValue, newZone.value, 100));
-                    msg.setZoneType(valueOr(oldType, newZone.type, 0));
-                    msg.setSetTemp(valueOr(oldSetTemp, newZone.setTemp, 25.0f));
-                    msg.setMeasuredTemp(valueOr(oldMeasuredTemp, newZone.measuredTemp, 0.0f));
+                    msg.setSetTemp(valueOr(0.0f, newZone.setTemp, 25.0f));
+                    msg.setZoneType(valueOr(0, newZone.type, 0));
+                    msg.setMeasuredTemp(valueOr(0.0f, newZone.measuredTemp, 0.0f));
                     eventBus.publish("communication-send-can", msg);
                     anyMessageSent.set(true);
                 }

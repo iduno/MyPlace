@@ -117,7 +117,9 @@ public class TcpCommunicationService implements CommunicationService {
                         this.parser.parse(buffer);
                         Message message = this.parser.pollMessage();
                         while (message != null) {
+                            if (!message.getClass().getSimpleName().equals("MessagePing")) {
                             LOG.trace("Received message from server: " + message);
+                            }
                             eventBus.publish("communication-data", message);
                             message = this.parser.pollMessage();
                         }

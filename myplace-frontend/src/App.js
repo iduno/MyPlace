@@ -6,8 +6,10 @@ import {
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import SettingsIcon from '@mui/icons-material/Settings';
 import AirconFragment from './components/AirconFragment';
 import ZoneFragment from './components/ZoneFragment';
+import SetupFragment from './components/SetupFragment';
 import OfflineDetection from './components/OfflineDetection';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
 import './App.css';
@@ -68,6 +70,25 @@ function App() {
   // Handle tab change
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  const handleNavigate = (page) => {
+    // Basic navigation mapping from SetupFragment
+    switch (page) {
+      case 'ZoneSetup':
+        setActiveTab(1);
+        break;
+      case 'AdvancedInfo':
+        setActiveTab(0);
+        break;
+      case 'CloseApp':
+        // no-op in web, could show a message
+        console.log('CloseApp requested');
+        break;
+      default:
+        // fallback: log
+        console.log('Navigate to', page);
+    }
   };
 
   // Fetch data on component mount
@@ -138,6 +159,12 @@ function App() {
                 iconPosition="start"
                 {...a11yProps(1)} 
               />
+              <Tab
+                label="Setup"
+                icon={<SettingsIcon />}
+                iconPosition="start"
+                {...a11yProps(2)}
+              />
             </Tabs>
           </Paper>
           
@@ -155,6 +182,10 @@ function App() {
               
               <TabPanel value={activeTab} index={1}>
                 <ZoneFragment />
+              </TabPanel>
+
+              <TabPanel value={activeTab} index={2}>
+                <SetupFragment onNavigate={handleNavigate} />
               </TabPanel>
             </>
           )}

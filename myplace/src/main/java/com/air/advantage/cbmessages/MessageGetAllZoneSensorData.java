@@ -10,7 +10,9 @@ public class MessageGetAllZoneSensorData extends Message {
     }
 
     public static MessageGetAllZoneSensorData deserialize(byte[] data,MessageType messageType) {
-        return new MessageGetAllZoneSensorData(messageType);
+        MessageGetAllZoneSensorData message = new MessageGetAllZoneSensorData(messageType);
+        message.data = new String(data);
+        return message;
     }
 
     @Override

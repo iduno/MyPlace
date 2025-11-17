@@ -247,6 +247,9 @@ class ApiService {
             ...(airconData.freshAirStatus && { freshAirStatus: airconData.freshAirStatus }),
             ...(airconData.countDownToOff !== undefined && { countDownToOff: airconData.countDownToOff }),
             ...(airconData.countDownToOn !== undefined && { countDownToOn: airconData.countDownToOn })
+            // Allow setting the display name for the aircon and device
+            , ...(airconData.name && { name: airconData.name })
+            , ...(airconData.deviceName && { deviceName: airconData.deviceName })
           },
           timestamp: new Date().toISOString()
         }

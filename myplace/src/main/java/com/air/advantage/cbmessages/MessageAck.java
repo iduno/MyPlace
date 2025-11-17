@@ -6,7 +6,9 @@ public class MessageAck extends Message {
     }
 
     public static MessageAck deserialize(byte[] data) {
-        return new MessageAck();
+        MessageAck message = new MessageAck();
+        message.data = new String(data);
+        return message;
     }
 
     @Override

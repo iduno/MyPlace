@@ -2,8 +2,11 @@ package com.air.advantage.service;
 
 import com.air.advantage.aaservice.data.JsonExporterViews;
 import com.air.advantage.aaservice.data.MyMasterData;
+import com.air.advantage.cbmessages.Message;
+import com.air.advantage.service.communication.CommunicationService;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -24,6 +27,9 @@ public class WebServiceResource {
 
     @Inject
     AirconUpdateService airconUpdateService;
+
+    @Inject
+    EventBus eventBus;
 
     @GET
     @Path("/getSystemData")
@@ -289,5 +295,17 @@ public class WebServiceResource {
     public Response loginRequest(String body) {
         String xmlResponse = "<iZS10.3><request>login</request><mac></mac><ack>1</ack><authenticated>1</authenticated></iZS10.3>";
         return Response.ok(xmlResponse, MediaType.APPLICATION_XML).build();
+    }
+
+    @POST
+    @Path("/sendRawMessage")
+    public Response sendRawMessage(String message) {
+        byte[] messageChars = message.getBytes();
+        Message msg = Message.deserialize(messageChars);
+
+        eventBus.publish("communication-send", msg);
+
+
+        return Response.ok("{\"ack\":true,\"request\":\"sendRawMessage\"}", MediaType.APPLICATION_JSON).build();
     }
 }

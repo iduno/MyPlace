@@ -172,7 +172,6 @@ const AirconFragment = () => {
   const [systemStatus, setSystemStatus] = useState('standby'); // active, standby, error
   const [zoneName, setZoneName] = useState('Room'); // Zone/room name
   const [updating, setUpdating] = useState(false); // For update operations in progress
-  const [energySaving, setEnergySaving] = useState(false); // Energy saving mode
 
   // Subscribe to ApiService polling cache
   useEffect(() => {
@@ -197,7 +196,6 @@ const AirconFragment = () => {
       setMode(data.mode || 'cool');
       setSystemStatus(data.systemStatus || 'standby');
       setZoneName(data.zoneName || 'Room');
-      setEnergySaving(data.energySaving || false);
       setLoading(false);
       setError(null);
     });
@@ -210,6 +208,7 @@ const AirconFragment = () => {
       case 'low': return 1;
       case 'medium': return 2;
       case 'high': return 3;
+      case 'auto': return 4;
       default: return 1;
     }
   };
@@ -220,6 +219,7 @@ const AirconFragment = () => {
       case 1: return 'low';
       case 2: return 'medium';
       case 3: return 'high';
+      case 4: return 'auto'
       default: return 'low';
     }
   };
@@ -248,7 +248,7 @@ const AirconFragment = () => {
         setTemp: temperature,
         fan: mapFanSpeedToString(fanSpeed),
         mode: mode,
-        myAutoModeEnabled: energySaving,
+        // myAutoModeEnabled: energySaving,
         countDownToOff: (power && timerEnabled) ? Math.round(timerValue * 60) : 0, // Convert hours to minutes
         countDownToOn: (!power && timerEnabled) ? Math.round(timerValue * 60) : 0, // Convert hours to minutes
         ...overrideData // Override with any specific values passed
@@ -380,16 +380,6 @@ const AirconFragment = () => {
       setMode(newMode);
     }
   };
-  
-  const handleEnergySavingToggle = () => {
-    const newEnergySavingState = !energySaving;
-    
-    // Update server with new energy saving state immediately
-    updateAirconData({ myAutoModeEnabled: newEnergySavingState });
-    
-    // Update local state
-    setEnergySaving(newEnergySavingState);
-  };
 
   return (
     <StyledPaper elevation={1}>
@@ -511,20 +501,16 @@ const AirconFragment = () => {
                 >
                   High
                 </FanSpeedButton>
+                <FanSpeedButton 
+                  variant={fanSpeed === 4 ? "contained" : "outlined"}
+                  selected={fanSpeed === 4}
+                  onClick={() => handleFanSpeedChange(4)}
+                >
+                  Auto
+                </FanSpeedButton>
               </Box>
             </Box>
             
-            {/* Energy Saving Mode */}
-            <Box width="100%" mt={2} display="flex" alignItems="center" justifyContent="space-between">
-              <Typography variant="body2" color="textSecondary">
-                Energy Saving
-              </Typography>
-              <Switch 
-                checked={energySaving} 
-                onChange={handleEnergySavingToggle}
-                color="success"
-              />
-            </Box>
           </Box>
         </Grid>
 
