@@ -3,14 +3,20 @@ import { Box, Typography, Paper, Grid, Button, Snackbar, Alert, Dialog, DialogTi
 import SecurityIcon from '@mui/icons-material/Security';
 import LockIcon from '@mui/icons-material/Lock';
 import DeviceHubIcon from '@mui/icons-material/DeviceHub';
+import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import WifiIcon from '@mui/icons-material/Wifi';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import BackupIcon from '@mui/icons-material/Backup';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import { styled } from '@mui/system';
+import IconButton from '@mui/material/IconButton';
 import ApiService from '../services/ApiService';
+import CircularProgress from '@mui/material/CircularProgress';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -32,11 +38,12 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [newAirconName, setNewAirconName] = useState('');
   const [newDeviceName, setNewDeviceName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editingAircon, setEditingAircon] = useState(false);
   // Advanced feature local states (placeholders until backend endpoints wired)
   const [showMeasuredTemps, setShowMeasuredTemps] = useState(false);
   const [quietNightMode, setQuietNightMode] = useState(false);
   const [autoFanSpeed, setAutoFanSpeed] = useState(false);
-  const [comfortMode, setComfortMode] = useState('myZone'); // 'myZone' | 'climateControl' | 'myMode'
+  const [comfortMode, setComfortMode] = useState('myZone'); // 'myZone' | 'myTemp' | 'myAuto'
   // Newly added state placeholders mirroring native advanced setup features
   const [activationDialogOpen, setActivationDialogOpen] = useState(false);
   const [activationCode, setActivationCode] = useState('');
@@ -47,6 +54,10 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [backupMode, setBackupMode] = useState('none'); // none | manage | restore
   const [timeDateDialogOpen, setTimeDateDialogOpen] = useState(false);
   const [timeDateValue, setTimeDateValue] = useState('');
+  const [zonesList, setZonesList] = useState([]);
+  const [editingZoneId, setEditingZoneId] = useState(null);
+  const [editingZoneName, setEditingZoneName] = useState('');
+  const [updatingZones, setUpdatingZones] = useState(false);
 
   useEffect(() => {
     ApiService.startAirconPolling();
@@ -60,15 +71,67 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
         setQuietNightMode(!!data.energySaving);
         // Simulated access to paired accounts count (placeholder field)
         const ghCount = data._raw?.system?.googleHomePairedAccounts || 0;
-        setPairedGoogleAccounts(ghCount);
+        try {
+          setPairedGoogleAccounts(ghCount);
+        } catch (_) {
+          // ignore if that state isn't present in this build
+        }
+
+        // Derive comfort mode from backend info flags when available
+        try {
+          const raw = data._raw;
+          const airconId = raw && raw.aircons ? Object.keys(raw.aircons || {})[0] : null;
+          const info = airconId ? (raw.aircons?.[airconId]?.info || {}) : {};
+          if (info.myAutoModeEnabled) {
+            setComfortMode('myAuto');
+          } else if (info.climateControlModeEnabled) {
+            setComfortMode('myTemp');
+          } else {
+            setComfortMode('myZone');
+          }
+        } catch (err) {
+          // ignore and leave existing comfortMode
+        }
       }
     });
-    return () => unsub();
+    const unsubZones = ApiService.subscribeZones(async (data, { error }) => {
+      if (error) return;
+      if (data && data.zones) {
+        // Try to read constants from cached aircon info first
+        let constants = [];
+        try {
+          const cachedAir = ApiService.getCachedAircon ? ApiService.getCachedAircon() : null;
+          if (cachedAir && cachedAir._raw) {
+            const system = cachedAir._raw;
+            const airconId = Object.keys(system.aircons || {})[0];
+            const info = system.aircons?.[airconId]?.info || {};
+            constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
+          } else {
+            const system = await ApiService.getSystem();
+            const airconId = Object.keys(system.aircons || {})[0];
+            const info = system.aircons?.[airconId]?.info || {};
+            constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
+          }
+        } catch (err) {
+          // ignore and fall back to zone.type mapping
+          constants = [];
+        }
+
+        const newZones = data.zones.map(z => ({ ...z, isConstant: constants.includes(z.zoneNumber) }));
+        setZonesList(newZones);
+      }
+    });
+
+    return () => {
+      try { unsub(); } catch(_) {}
+      try { unsubZones(); } catch(_) {}
+    };
   }, []);
 
   const handleAction = (action) => {
     switch (action) {
       case 'renameAircon':
+        setNewAirconName(aircon?.name || '');
         setRenameAirconOpen(true);
         break;
       case 'renameDevice':
@@ -115,6 +178,30 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     }
   };
 
+  const handleSetComfortMode = async (mode) => {
+    // Determine payload based on requested mode
+    let payload = {};
+    if (mode === 'myZone') {
+      payload = { myAutoModeEnabled: false, climateControlModeEnabled: false };
+    } else if (mode === 'myTemp' || mode === 'mytemp') {
+      payload = { myAutoModeEnabled: false, climateControlModeEnabled: true };
+    } else if (mode === 'myAuto' || mode === 'myauto') {
+      payload = { myAutoModeEnabled: true, climateControlModeEnabled: false };
+    } else {
+      // default fallback
+      payload = { myAutoModeEnabled: false, climateControlModeEnabled: false };
+    }
+
+    // Optimistically set local state then call API
+    setComfortMode(mode);
+    try {
+      await ApiService.updateAircon(payload);
+      setSnackbar({ open: true, message: `Comfort mode set: ${mode}`, severity: 'success' });
+    } catch (err) {
+      setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+    }
+  };
+
   const submitRenameAircon = async () => {
     if (!newAirconName) return setSnackbar({ open: true, message: 'Name cannot be empty', severity: 'warning' });
     setSaving(true);
@@ -122,6 +209,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
       await ApiService.updateAircon({ name: newAirconName });
       setSnackbar({ open: true, message: 'Aircon renamed', severity: 'success' });
       setRenameAirconOpen(false);
+      setEditingAircon(false);
       // give ApiService a moment to refresh; local cache will update subscribers
     } catch (err) {
       setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
@@ -165,7 +253,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   return (
     <StyledPaper elevation={1}>
       <Box display="flex" flexDirection="column">
-        <Typography variant="h6" sx={{ mb: 2 }}>{aircon?.zoneName || 'Advanced Setup'}</Typography>
+        <Typography variant="h6" sx={{ mb: 2 }}>{aircon?.airconName || 'Advanced Setup'}</Typography>
         <Box mb={1}>
           <Chip label={aircon?.systemStatus === 'active' ? 'System Active' : 'Standby'} color={aircon?.systemStatus === 'active' ? 'success' : 'default'} size="small" />
         </Box>
@@ -191,26 +279,214 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           <Typography variant="subtitle2">Comfort Mode</Typography>
           <Grid container spacing={1}>
             <Grid item>
-              <Button size="small" variant={comfortMode === 'myZone' ? 'contained' : 'outlined'} onClick={() => { setComfortMode('myZone'); setSnackbar({ open: true, message: 'Comfort: My Zone (placeholder)', severity: 'info' }); }}>My Zone</Button>
+              <Button size="small" variant={comfortMode === 'myZone' ? 'contained' : 'outlined'} onClick={() => handleSetComfortMode('myZone')}>My Zone</Button>
             </Grid>
             <Grid item>
-              <Button size="small" variant={comfortMode === 'climateControl' ? 'contained' : 'outlined'} onClick={() => { setComfortMode('climateControl'); setSnackbar({ open: true, message: 'Comfort: Climate Control (placeholder)', severity: 'info' }); }}>Climate Control</Button>
+              <Button size="small" variant={comfortMode === 'myTemp' ? 'contained' : 'outlined'} onClick={() => handleSetComfortMode('myTemp')}>My Temp</Button>
             </Grid>
             <Grid item>
-              <Button size="small" variant={comfortMode === 'myMode' ? 'contained' : 'outlined'} onClick={() => { setComfortMode('myMode'); setSnackbar({ open: true, message: 'Comfort: My Mode (placeholder)', severity: 'info' }); }}>My Mode</Button>
+              <Button size="small" variant={comfortMode === 'myAuto' ? 'contained' : 'outlined'} onClick={() => handleSetComfortMode('myAuto')}>My Auto</Button>
             </Grid>
           </Grid>
         </Box>
         <Box mt={2}>
-            <Grid container spacing={2}>
-        <Grid item xs={12} md={12}>
+          <Grid container spacing={2} alignItems="flex-start">
+          <Grid item xs={12} md={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
               <Box display="flex" alignItems="center" gap={1}>
                 <SecurityIcon fontSize="small" />
                 <Typography variant="caption" color="text.secondary">AirCon Name</Typography>
               </Box>
-              <Typography variant="body2">Name: {aircon?.name}</Typography>
-              <Button size="small" sx={{ mt: 1 }} onClick={() => handleAction('renameAircon')}>Edit</Button>
+              <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+                {editingAircon ? (
+                  <TextField
+                    size="small"
+                    value={newAirconName}
+                    onChange={e => setNewAirconName(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        submitRenameAircon();
+                      } else if (e.key === 'Escape') {
+                        setEditingAircon(false);
+                        setNewAirconName(aircon?.airconName || '');
+                      }
+                    }}
+                    sx={{ flex: 1 }}
+                    autoFocus
+                  />
+                ) : (
+                  <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{aircon?.airconName}</Typography>
+                )}
+
+                {editingAircon ? (
+                  <>
+                    <Button size="small" onClick={submitRenameAircon} variant="contained" disabled={saving}>OK</Button>
+                    <Button size="small" onClick={() => { setEditingAircon(false); setNewAirconName(aircon?.airconName || ''); }} disabled={saving}>Cancel</Button>
+                  </>
+                ) : (
+                  <IconButton size="small" onClick={() => { setNewAirconName(aircon?.airconName || ''); setEditingAircon(true); }}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+          {/* Zones configuration section */}
+          <Grid item xs={12} md={12}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box display="flex" alignItems="center" gap={1}>
+                  <DeviceHubIcon fontSize="small" />
+                  <Typography variant="subtitle2">Zones Configuration</Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="caption" color="text.secondary">Max 3 constant zones</Typography>
+                  <IconButton size="small" onClick={async () => {
+                    setUpdatingZones(true);
+                    try {
+                      // Trigger immediate refresh
+                      ApiService.refreshAircon();
+                      ApiService.refreshZones();
+                      // Wait briefly for cache to update
+                      await new Promise(r => setTimeout(r, 500));
+                      const system = await ApiService.getSystem();
+                      const airconId = Object.keys(system.aircons || {})[0];
+                      const info = system.aircons?.[airconId]?.info || {};
+                      const constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
+                      const zonesData = await ApiService.getZones();
+                      const newZones = (zonesData.zones || []).map(z => ({ ...z, isConstant: constants.includes(z.zoneNumber) }));
+                      setZonesList(newZones);
+                      setSnackbar({ open: true, message: 'Zones refreshed', severity: 'success' });
+                    } catch (err) {
+                      setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+                    } finally {
+                      setUpdatingZones(false);
+                    }
+                  }}>
+                    {updatingZones ? <CircularProgress size={18} /> : <RefreshIcon fontSize="small" />}
+                  </IconButton>
+                </Box>
+              </Box>
+
+              <Box mt={2}>
+                {zonesList && zonesList.length ? (
+                  zonesList.map(zone => (
+                    <Box key={zone.id} display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
+                      <Typography variant="body2" sx={{ width: 48 }}>{zone.zoneNumber}</Typography>
+                      {editingZoneId === zone.id ? (
+                        <Box display="flex" alignItems="center" sx={{ flex: 1 }}>
+                          <TextField
+                            size="small"
+                            value={editingZoneName}
+                            onChange={(e) => setEditingZoneName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                // save
+                                const newName = editingZoneName?.trim();
+                                if (!newName) { setSnackbar({ open: true, message: 'Zone name cannot be empty', severity: 'warning' }); return; }
+                                (async () => {
+                                  try {
+                                    await ApiService.updateZone({ id: zone.id, name: newName });
+                                    setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, name: newName } : z));
+                                    setSnackbar({ open: true, message: 'Zone name updated', severity: 'success' });
+                                    setEditingZoneId(null);
+                                  } catch (err) {
+                                    setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+                                  }
+                                })();
+                              } else if (e.key === 'Escape') {
+                                // cancel
+                                setEditingZoneId(null);
+                                setEditingZoneName('');
+                              }
+                            }}
+                            sx={{ flex: 1 }}
+                            autoFocus
+                          />
+                          <IconButton size="small" onClick={async () => {
+                            const newName = editingZoneName?.trim();
+                            if (!newName) { setSnackbar({ open: true, message: 'Zone name cannot be empty', severity: 'warning' }); return; }
+                            try {
+                              await ApiService.updateZone({ id: zone.id, name: newName });
+                              setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, name: newName } : z));
+                              setSnackbar({ open: true, message: 'Zone name updated', severity: 'success' });
+                              setEditingZoneId(null);
+                              setEditingZoneName('');
+                            } catch (err) {
+                              setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+                            }
+                          }}>
+                            <CheckIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" onClick={() => { setEditingZoneId(null); setEditingZoneName(''); }}>
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ) : (
+                        <Box display="flex" alignItems="center" sx={{ flex: 1 }}>
+                          <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{zone.name}</Typography>
+                          <IconButton size="small" onClick={(e) => { e.stopPropagation(); setEditingZoneId(zone.id); setEditingZoneName(zone.name); }}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            size="small"
+                            checked={!!zone.isConstant}
+                            onChange={async () => {
+                              const currentlyConstants = zonesList.filter(z => z.isConstant).length;
+                              const turningOn = !zone.isConstant;
+                              if (turningOn && currentlyConstants >= 3) {
+                                setSnackbar({ open: true, message: 'Maximum of 3 constant zones allowed', severity: 'warning' });
+                                return;
+                              }
+                              // Optimistic update
+                              setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, isConstant: !z.isConstant } : z));
+                              try {
+
+                                // Compute updated constant zone numbers (unique), assigning this zone to first available slot when turning on
+                                const currentConstants = zonesList.filter(z => z.isConstant).map(z => z.zoneNumber);
+                                let updatedConstants;
+                                if (turningOn) {
+                                  // add if not present
+                                  updatedConstants = Array.from(new Set([...currentConstants, zone.zoneNumber]));
+                                } else {
+                                  // remove
+                                  updatedConstants = currentConstants.filter(n => n !== zone.zoneNumber);
+                                }
+                                // limit to 3
+                                updatedConstants = updatedConstants.slice(0, 3);
+
+                                // Build explicit slots with 0 for unused
+                                const airconPayload = {
+                                  constant1: updatedConstants[0] || 0,
+                                  constant2: updatedConstants[1] || 0,
+                                  constant3: updatedConstants[2] || 0,
+                                  noOfConstants: updatedConstants.length
+                                };
+
+                                // Send to ApiService.updateAircon so the info object contains constants (slots 1..3)
+                                await ApiService.updateAircon(airconPayload);
+
+                                setSnackbar({ open: true, message: 'Zone constant flag updated', severity: 'success' });
+                              } catch (err) {
+                                // revert optimistic update
+                                setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, isConstant: zone.isConstant } : z));
+                                setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+                              }
+                            }}
+                          />
+                        }
+                        label="Constant"
+                      />
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2" color="text.secondary">No zones available</Typography>
+                )}
+              </Box>
             </Paper>
           </Grid>
           </Grid>
@@ -343,7 +619,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
             autoFocus
             margin="dense"
           />
-          <Typography variant="caption" color="text.secondary">Placeholder only – backend activation not yet implemented.</Typography>
+          <Typography variant="caption" color="text.secondary">Placeholder only - backend activation not yet implemented.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setActivationDialogOpen(false)}>Cancel</Button>
@@ -363,7 +639,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
             autoFocus
             margin="dense"
           />
-          <Typography variant="caption" color="text.secondary">Placeholder only – no backend call yet.</Typography>
+          <Typography variant="caption" color="text.secondary">Placeholder only - no backend call yet.</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTimeDateDialogOpen(false)}>Cancel</Button>

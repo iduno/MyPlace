@@ -65,7 +65,7 @@ class ApiService {
         timerValue: Math.max(aircon.countDownToOff || 0, aircon.countDownToOn || 0),
         mode: aircon.mode || 'cool',
         systemStatus: aircon.state === 'on' ? 'active' : 'standby',
-        zoneName: aircon.name || 'AC',
+        airconName: aircon.name || 'AC',
         energySaving: aircon.quietNightModeEnabled || false,
         zones: data.aircons[airconId]?.zones || {},
         _raw: data,
@@ -171,7 +171,7 @@ class ApiService {
       timerValue: Math.max(aircon.countDownToOff || 0, aircon.countDownToOn || 0),
       mode: aircon.mode || 'cool',
       systemStatus: aircon.state === 'on' ? 'active' : 'standby',
-      zoneName: aircon.name || 'AC',
+      airconName: aircon.name || 'AC',
       energySaving: aircon.quietNightModeEnabled || false,
       zones: systemData.aircons[airconId]?.zones || {},
       _raw: systemData,
@@ -250,9 +250,13 @@ class ApiService {
             // Allow setting the display name for the aircon and device
             , ...(airconData.name && { name: airconData.name })
             , ...(airconData.deviceName && { deviceName: airconData.deviceName })
-          },
-          timestamp: new Date().toISOString()
-        }
+            // Constant zones (up to three)
+            , ...(airconData.constant1 !== undefined && { constant1: airconData.constant1 })
+            , ...(airconData.constant2 !== undefined && { constant2: airconData.constant2 })
+            , ...(airconData.constant3 !== undefined && { constant3: airconData.constant3 })
+          }
+        },
+        ...(airconData.name && {system: {name: airconData.name}})
       };
       
       // Log what we're sending for debugging
@@ -405,7 +409,7 @@ class ApiService {
     };
   }
 
-  // (Removed duplicate zone polling – handled by unified system polling)
+  // (Removed duplicate zone polling - handled by unified system polling)
   
   /**
    * Update zone settings
@@ -422,10 +426,10 @@ class ApiService {
       
       // Create zone update structure matching the DataZone Java class
       const zoneUpdate = {
-        state: zoneData.isOpen ? 'open' : 'close',
-        setTemp: zoneData.temperature,
-        value: zoneData.damperValue, // This is the damper percentage
-        ...(zoneData.name && { name: zoneData.name }),
+        ...(zoneData.isOpen !== undefined && {state: zoneData.isOpen ? 'open' : 'close'}),
+        ...(zoneData.temperature !== undefined && {setTemp: zoneData.temperature}),
+        ...(zoneData.damperValue !== undefined && {value: zoneData.damperValue}), // This is the damper percentage
+        ...(zoneData.name !== undefined && { name: zoneData.name }),
         ...(zoneData.minDamper !== undefined && { minDamper: zoneData.minDamper }),
         ...(zoneData.maxDamper !== undefined && { maxDamper: zoneData.maxDamper }),
         ...(zoneData.following !== undefined && { following: zoneData.following }),
@@ -439,8 +443,7 @@ class ApiService {
         [airconId]: {
           zones: {
             [zoneData.id]: zoneUpdate
-          },
-          timestamp: new Date().toISOString()
+          }
         }
       };
       

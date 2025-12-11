@@ -170,8 +170,9 @@ const AirconFragment = () => {
   // New state variables
   const [mode, setMode] = useState('cool'); // cool, heat, fan, auto, dry
   const [systemStatus, setSystemStatus] = useState('standby'); // active, standby, error
-  const [zoneName, setZoneName] = useState('Room'); // Zone/room name
+  const [airconName, setAirconName] = useState('Aircon'); // Zone/room name
   const [updating, setUpdating] = useState(false); // For update operations in progress
+  const [myAutoEnabled, setMyAutoEnabled] = useState(false);
 
   // Subscribe to ApiService polling cache
   useEffect(() => {
@@ -195,7 +196,16 @@ const AirconFragment = () => {
       setTimerValue((data.timerValue || 0) / 60.0);
       setMode(data.mode || 'cool');
       setSystemStatus(data.systemStatus || 'standby');
-      setZoneName(data.zoneName || 'Room');
+      setAirconName(data.airconName || 'Room');
+      // derive myAutoModeEnabled from raw system info if present
+      try {
+        const raw = data._raw;
+        const airconId = raw && raw.aircons ? Object.keys(raw.aircons || {})[0] : null;
+        const info = airconId ? (raw.aircons?.[airconId]?.info || {}) : {};
+        setMyAutoEnabled(!!info.myAutoModeEnabled);
+      } catch (err) {
+        // ignore
+      }
       setLoading(false);
       setError(null);
     });
@@ -401,7 +411,7 @@ const AirconFragment = () => {
             color: '#424242',
           }}
         >
-          {zoneName}
+          {airconName}
         </Typography>
         
         <Box display="flex" alignItems="center">
@@ -566,10 +576,12 @@ const AirconFragment = () => {
                   <WaterDropIcon sx={{ mr: 1 }} />
                   Dry
                 </ModeButton>
-                <ModeButton value="myauto" aria-label="auto mode">
-                  <AutoAwesomeIcon sx={{ mr: 1 }} />
-                  Auto
-                </ModeButton>
+                {myAutoEnabled && (
+                  <ModeButton value="myauto" aria-label="auto mode">
+                    <AutoAwesomeIcon sx={{ mr: 1 }} />
+                    Auto
+                  </ModeButton>
+                )}
               </ToggleButtonGroup>
             </Box>
           </ModesContainer>

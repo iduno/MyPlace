@@ -28,10 +28,6 @@ import AirIcon from '@mui/icons-material/Air';
 import StarIcon from '@mui/icons-material/Star';
 import LockIcon from '@mui/icons-material/Lock';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import TextField from '@mui/material/TextField';
 
 // Styled components
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -89,8 +85,7 @@ const ZoneFragment = () => {
   const [zones, setZones] = useState([]);
   const [selectedZoneId, setSelectedZoneId] = useState(null);
   const [systemId, setSystemId] = useState('');
-  const [editingZoneId, setEditingZoneId] = useState(null);
-  const [editingZoneName, setEditingZoneName] = useState('');
+  
   
   // Subscribe to zone polling cache
   useEffect(() => {
@@ -361,8 +356,6 @@ const ZoneFragment = () => {
                 >
                   <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
                     <Box display="flex" alignItems="center" sx={{ minWidth: 0 }}>
-                      {zone.isMaster && <StarIcon color="secondary" fontSize="small" sx={{ mr: 0.5 }} />}
-                      {zone.isConstant && <LockIcon color="warning" fontSize="small" sx={{ mr: 0.5 }} />}
                       <Typography
                         variant="subtitle2"
                         sx={{
@@ -378,40 +371,18 @@ const ZoneFragment = () => {
                           if (!zone.isMaster) updateZoneData(zone.id, { isMaster: true });
                         }}
                       >
-                        {editingZoneId === zone.id ? (
-                          <Box display="flex" alignItems="center" sx={{ width: '100%' }}>
-                            <TextField
-                              size="small"
-                              value={editingZoneName}
-                              onChange={(e) => setEditingZoneName(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  // submit
-                                  updateZoneData(zone.id, { name: editingZoneName });
-                                  setEditingZoneId(null);
-                                } else if (e.key === 'Escape') {
-                                  setEditingZoneId(null);
-                                }
-                              }}
-                              sx={{ mr: 1, flex: 1 }}
-                            />
-                            <IconButton size="small" onClick={() => { updateZoneData(zone.id, { name: editingZoneName }); setEditingZoneId(null); }}>
-                              <CheckIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton size="small" onClick={() => { setEditingZoneId(null); }}>
-                              <CloseIcon fontSize="small" />
-                            </IconButton>
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            sx={{
+                              flexBasis: { xs: '40%', sm: '35%', md: '30%', lg: '25%' },
+                              minWidth: { xs: '120px', sm: '160px' },
+                            }}
+                          >
+                            {zone.isMaster && <StarIcon color="secondary" fontSize="small" sx={{ mr: 0.5 }} />}
+                            {zone.isConstant && <LockIcon color="warning" fontSize="small" sx={{ mr: 0.5 }} />}
+                            <span style={{ display: 'inline-block', flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{zone.name}</span>
                           </Box>
-                        ) : (
-                          <Box display="flex" alignItems="center">
-                            <span style={{ display: 'inline-block', maxWidth: 220, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{zone.name}</span>
-                            {!zone.isMaster && (
-                              <IconButton size="small" onClick={(e) => { e.stopPropagation(); setEditingZoneId(zone.id); setEditingZoneName(zone.name); }} sx={{ ml: 1 }}>
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            )}
-                          </Box>
-                        )}
                       </Typography>
                     </Box>
                     <Switch

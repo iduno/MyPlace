@@ -216,7 +216,7 @@ public class AirconUpdateService {
             }
         }
 
-        // 4. (Optional) Unit type information or mid info – send mid info if any message was sent (mirrors legacy grouping)
+        // 4. (Optional) Unit type information or mid info - send mid info if any message was sent (mirrors legacy grouping)
         if (anyMessageSent.get()) {
             CANMessageAircon0aMidInformation mid = new CANMessageAircon0aMidInformation();
             populateHeader(mid, uid);
