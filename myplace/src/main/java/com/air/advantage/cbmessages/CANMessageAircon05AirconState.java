@@ -78,8 +78,8 @@ public class CANMessageAircon05AirconState extends CANMessageAircon {
     }
     public enum FreshAirStatus {
         NONE(0),
-        ON(1),
-        OFF(2);
+        OFF(1),
+        ON(2);
 
         private final int value;
 

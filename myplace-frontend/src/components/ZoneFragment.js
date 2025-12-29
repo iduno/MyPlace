@@ -375,8 +375,8 @@ const ZoneFragment = () => {
                             display="flex"
                             alignItems="center"
                             sx={{
-                              flexBasis: { xs: '40%', sm: '35%', md: '30%', lg: '25%' },
-                              minWidth: { xs: '120px', sm: '160px' },
+                              flexBasis: { xs: '30%', sm: '25%', md: '20%', lg: '15%' },
+                              minWidth: { xs: '90px', sm: '90px' },
                             }}
                           >
                             {zone.isMaster && <StarIcon color="secondary" fontSize="small" sx={{ mr: 0.5 }} />}
@@ -394,7 +394,6 @@ const ZoneFragment = () => {
                   </Box>
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
                     <Typography variant="caption" color="text.secondary">Cur: {zone.measuredTemp ? `${zone.measuredTemp}°` : 'N/A'}</Typography>
-                    <Typography variant="caption" color={zone.isOpen ? 'primary.main' : 'text.disabled'}>Set: {zone.temperature}°</Typography>
                   </Box>
                   <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
                     <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'down')} disabled={zone.temperature <= 16}>
@@ -409,7 +408,7 @@ const ZoneFragment = () => {
                     size="medium"
                     value={zone.damperValue}
                     onChange={(e,val) => handleDamperValueChange(zone.id, val)}
-                    disabled={zone.isConstant} // allow when closed now
+                    // disabled={zone.isConstant} // allow when closed now
                     min={zone.minDamper || 0}
                     max={zone.maxDamper || 100}
                     step={5}

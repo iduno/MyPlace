@@ -89,8 +89,12 @@ public class HandlerAirconCB extends Handler {
     }
 
     private void process(CANMessageAircon01ZoneInformation msg) {
-        // Use DataAircon as the top-level reference
-        DataAircon dataAircon = getOrCreateDataAircon(msg.getUid());
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) {
+            return;
+        }
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         String error = validateZoneMessage(msg, dataAirconInfo);
         if (!error.isEmpty()) {
@@ -124,6 +128,25 @@ public class HandlerAirconCB extends Handler {
                 " constant3 - " + msg.getConstantZone3() +
                 " filterCleanStatus - " + msg.getFilterCleanStatus());
         // Store or update the dataAircon as needed
+
+        CANMessageAircon0aMidInformation midInfo = new CANMessageAircon0aMidInformation();
+        midInfo.setUid(uid);
+        midInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        midInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        eventBus.publish("communication-send-can", midInfo);
+
+        CANMessageAircon01ZoneInformation cbStatus = new CANMessageAircon01ZoneInformation();
+        cbStatus.setUid(uid);
+        cbStatus.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        cbStatus.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        cbStatus.setNumZones(dataAirconInfo.noOfZones);
+        cbStatus.setNumConstantZones(dataAirconInfo.noOfConstantZones);
+        cbStatus.setConstantZone1(dataAirconInfo.constantZone1);
+        cbStatus.setConstantZone2(dataAirconInfo.constantZone2);
+        cbStatus.setConstantZone3(dataAirconInfo.constantZone3);
+        cbStatus.setFilterCleanStatus(dataAirconInfo.filterCleanStatus);
+
+        eventBus.publish("communication-send-can", cbStatus);
     }
 
     // Helper to get or create DataAircon (implement as needed)
@@ -357,7 +380,7 @@ public class HandlerAirconCB extends Handler {
             zoneState.setZoneNumber(zone.number);
             zoneState.setZoneState(CANMessageAircon03ZoneState.ZoneState.fromValue(zone.state.getValue()));
             zoneState.setZonePercent(zone.value);
-            zoneState.setZoneType(zone.type);
+            zoneState.setSensorType(zone.type);
             zoneState.setMeasuredTemp(zone.measuredTemp);
             zoneState.setSetTemp(zone.setTemp);
             
@@ -408,10 +431,99 @@ public class HandlerAirconCB extends Handler {
             return;
         }
 
-        // dataAircon.airconInfo.cbFWRevMajor = msg.getCbFwMajor();
-        // dataAircon.airconInfo.cbFWRevMinor = msg.getCbFwMinor();
-        // dataAircon.airconInfo.cbType = msg.getCbType();
-        // dataAircon.airconInfo.rfFWRevMajor = msg.getRfFwMajor();
+        uid = dataAircon.airconInfo.uid;
+        CANMessageAircon0aMidInformation midInfo = new CANMessageAircon0aMidInformation();
+        midInfo.setUid(uid);
+        midInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        midInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        eventBus.publish("communication-send-can", midInfo);
+
+        CANMessageAircon06CBStatus cbStatus = new CANMessageAircon06CBStatus();
+        cbStatus.setUid(uid);
+        cbStatus.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        cbStatus.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        cbStatus.setCbFwMajor(dataAircon.airconInfo.cbFWRevMajor);
+        cbStatus.setCbFwMinor(dataAircon.airconInfo.cbFWRevMinor);
+        cbStatus.setCbType(dataAircon.airconInfo.cbType);
+        eventBus.publish("communication-send-can", cbStatus);
+
+        CANMessageAircon02UnitTypeInformation unitTypeInfo = new CANMessageAircon02UnitTypeInformation();
+        unitTypeInfo.setUid(uid);
+        unitTypeInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        unitTypeInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        unitTypeInfo.setUnitType(CANMessageAircon02UnitTypeInformation.UnitType.FUJITSU);
+        unitTypeInfo.setActivationStatus(CodeStatus.NO_CODE);
+        eventBus.publish("communication-send-can", unitTypeInfo);
+
+        CANMessageAircon01ZoneInformation zoneInfo = new CANMessageAircon01ZoneInformation();
+        zoneInfo.setUid(uid);
+        zoneInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        zoneInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        zoneInfo.setDestination(0x0e);
+        zoneInfo.setNumZones(dataAircon.airconInfo.noOfZones);
+        zoneInfo.setNumConstantZones(dataAircon.airconInfo.noOfConstantZones);
+        zoneInfo.setConstantZone1(dataAircon.airconInfo.constantZone1);
+        zoneInfo.setConstantZone2(dataAircon.airconInfo.constantZone2);
+        zoneInfo.setConstantZone3(dataAircon.airconInfo.constantZone3);
+        zoneInfo.setFilterCleanStatus(dataAircon.airconInfo.filterCleanStatus);
+        eventBus.publish("communication-send-can", zoneInfo);
+
+        for (DataZone zone : dataAircon.getZones().values()) {
+            if (zone == null) continue;
+            CANMessageAircon12ZoneSensorPairing zoneSensorPairing = new CANMessageAircon12ZoneSensorPairing();
+            zoneSensorPairing.setUid(uid);
+            zoneSensorPairing.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+            zoneSensorPairing.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+            zoneSensorPairing.setSensorUID(zone.sensorUid);
+            zoneSensorPairing.setInfoByte(zone.number);
+            zoneSensorPairing.setSensorMajorRev(0);
+            eventBus.publish("communication-send-can", zoneSensorPairing);
+
+            CANMessageAircon03ZoneState zoneState = new CANMessageAircon03ZoneState();
+            zoneState.setUid(uid);
+            zoneState.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+            zoneState.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+            zoneState.setZoneNumber(zone.number);
+            zoneState.setZoneState(CANMessageAircon03ZoneState.ZoneState.fromValue(zone.state.getValue()));
+            zoneState.setZonePercent(zone.value);
+            zoneState.setSensorType(zone.type);
+            zoneState.setMeasuredTemp(zone.measuredTemp);
+            zoneState.setSetTemp(zone.setTemp);
+            
+            eventBus.publish("communication-send-can", zoneState);
+
+            CANMessageAircon04ZoneConfiguration zoneConfig = new CANMessageAircon04ZoneConfiguration();
+            zoneConfig.setUid(uid);
+            zoneConfig.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+            zoneConfig.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+            
+            // Handle primitive values safely, avoiding unboxing errors
+            int zoneNumber = 0;
+            int minDamper = DataZone.DEFAULT_MINDAMPER;
+            int maxDamper = DataZone.DEFAULT_MAXDAMPER;
+            int motionStatus = DataZone.MOTION_STATE_NO_SENSOR;
+            int motionConfig = DataZone.DEFAULT_SETMOTIONCFG;
+            int zoneError = 0;
+            int rssi = 0;
+            
+            // Safely get values only if not null
+            if (zone.number != null) zoneNumber = zone.number;
+            if (zone.minDamper != null) minDamper = zone.minDamper;
+            if (zone.maxDamper != null) maxDamper = zone.maxDamper;
+            if (zone.motion != null) motionStatus = zone.motion;
+            if (zone.motionConfig != null) motionConfig = zone.motionConfig;
+            if (zone.error != null) zoneError = zone.error;
+            if (zone.rssi != null) rssi = zone.rssi;
+            
+            zoneConfig.setZoneNumber(zoneNumber);
+            zoneConfig.setMinDamper(minDamper);
+            zoneConfig.setMaxDamper(maxDamper);
+            zoneConfig.setMotionStatus(motionStatus);
+            zoneConfig.setMotionConfig(motionConfig);
+            zoneConfig.setZoneError(zoneError);
+            zoneConfig.setRssi(rssi);
+            eventBus.publish("communication-send-can", zoneConfig);
+        }
 
     }
 
@@ -570,6 +682,20 @@ public class HandlerAirconCB extends Handler {
                     break;
             }
         }
+
+        if (dataAircon.airconInfo.freshAirStatus != null) {
+            switch (dataAircon.airconInfo.freshAirStatus) {
+                case none:
+                    airconState.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.NONE);
+                    break;
+                case on:
+                    airconState.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.ON);
+                    break;
+                case off:
+                    airconState.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.OFF);
+                    break;
+            }
+        }
         
         // Set myZone (if available)
         airconState.setMyZoneId(dataAircon.airconInfo.myZone != null ? dataAircon.airconInfo.myZone : 0);
@@ -595,7 +721,7 @@ public class HandlerAirconCB extends Handler {
         
         // Set zone values
         zoneState.setZonePercent(zone.value != null ? zone.value : 100);
-        zoneState.setZoneType(zone.type != null ? zone.type : 0);
+        zoneState.setSensorType(zone.type != null ? zone.type : 0);
         zoneState.setSetTemp(zone.setTemp != null ? zone.setTemp : 25.0f);
         zoneState.setMeasuredTemp(zone.measuredTemp != null ? zone.measuredTemp : 0.0f);
         

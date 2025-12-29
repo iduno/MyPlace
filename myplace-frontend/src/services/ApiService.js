@@ -190,7 +190,7 @@ class ApiService {
     const zonesArray = Object.entries(aircon.zones).map(([id, zoneData]) => {
       const zoneNumber = zoneData.number || parseInt(id.replace('z',''));
       const isMaster = zoneNumber === masterZoneNumber;
-      const isConstant = zoneData.type === 0;
+      const isConstant = aircon.info?.constant1 == zoneNumber || aircon.info?.constant2 == zoneNumber || aircon.info?.constant3 == zoneNumber;
       return {
         id,
         name: zoneData.name || `Zone ${id}`,
@@ -359,7 +359,7 @@ class ApiService {
         const isMaster = zoneNumber === masterZoneNumber;
         
         // Check if this is a constant zone (type will be different)
-        const isConstant = zoneData.type === 0; // Assuming type 0 means constant zone
+        const isConstant = aircon.info?.constant1 == zoneNumber || aircon.info?.constant2 == zoneNumber || aircon.info?.constant3 == zoneNumber;
         
         return {
           id,

@@ -34,12 +34,16 @@ public class DataZone {
     public static final int MOTION_STATE_NO_SENSOR = 0;
     public static final float MOTOR_PERCENT_AT_TARGET = 30.0f;
     public static final float MOTOR_PERCENT_FULL_OPEN = 100.0f;
+
+    /* Sensor Type Relating to type field */
     public static final int SENSOR_TYPE_NO_SENSOR = 0;
     public static final int SENSOR_TYPE_RF = 1;
     public static final int SENSOR_TYPE_RF2CAN_BOOSTER = 3;
     public static final int SENSOR_TYPE_RF_X = 4;
     public static final int SENSOR_TYPE_VALUE_FOR_PERCENT_CONTROL = 0;
     public static final int SENSOR_TYPE_WIRED = 2;
+
+
     public static final float TEMPERATURE_DIFFERENCE_FULL_OPEN = 1.0f;
     public static final float TEMPERATURE_DIFFERENCE_TARGET = 0.0f;
     public static final int ZONE_CONTROL_TYPE_PERCENT = 1;

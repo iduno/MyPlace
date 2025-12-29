@@ -183,7 +183,7 @@ public class AirconUpdateService {
                     }
                     msg.setZonePercent(valueOr(oldValue, newZone.value, 100));
                     msg.setSetTemp(valueOr(0.0f, newZone.setTemp, 25.0f));
-                    msg.setZoneType(valueOr(0, newZone.type, 0));
+                    msg.setSensorType(valueOr(0, newZone.type, 0));
                     msg.setMeasuredTemp(valueOr(0.0f, newZone.measuredTemp, 0.0f));
                     eventBus.publish("communication-send-can", msg);
                     anyMessageSent.set(true);

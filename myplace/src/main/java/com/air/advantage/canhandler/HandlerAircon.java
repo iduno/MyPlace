@@ -215,7 +215,10 @@ public class HandlerAircon extends Handler {
             dataAircon.getZones().put(zoneKey, zone);
         }
         // Map fields
-        zone.name = zoneKey;
+        if (zone.name == null)
+        {
+            zone.name = zoneKey;
+        }
         switch (msg.getZoneState()) {
             case CLOSE:
                 zone.state = ZoneState.close;
@@ -223,14 +226,20 @@ public class HandlerAircon extends Handler {
             case OPEN:
                 zone.state = ZoneState.open;
                 break;
-            default:
-                zone.state = null; // or some default state
         }
-
-        zone.maxDamper = msg.getZonePercent(); // If you have a percent field
-        zone.type = msg.getZoneType(); // If you have a type field
-        zone.measuredTemp = msg.getMeasuredTemp();
-        zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        if (msg.getZonePercent() > 0)
+        {
+            zone.maxDamper =  msg.getZonePercent(); // If you have a percent field
+        }
+        zone.type = msg.getSensorType(); // If you have a type field
+        if (msg.getMeasuredTemp() > 0)
+        {
+            zone.measuredTemp = msg.getMeasuredTemp();
+        }
+        if (msg.getSetTemp() > 10 && msg.getSetTemp() < 50)
+        {
+            zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
+        }
         dataAircon.getZones().replace(zoneKey, zone);
         System.out.println("Processed ZoneState for UID " + uid + ", zone " + zoneKey);
     }

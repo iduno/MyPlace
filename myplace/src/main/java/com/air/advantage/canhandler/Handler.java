@@ -31,7 +31,7 @@ public abstract class Handler {
         else
         {
             if (message instanceof com.air.advantage.cbmessages.CANMessageLighting) {
-                new HandlerLighting(myMasterData,eventBus).process(message);
+                new HandlerLightingCB(myMasterData,eventBus).process(message);
             } else if (message instanceof com.air.advantage.cbmessages.CANMessageAircon) {
                 new HandlerAircon(myMasterData,eventBus).process(message);
             } else {
