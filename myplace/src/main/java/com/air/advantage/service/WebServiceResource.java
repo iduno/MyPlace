@@ -3,7 +3,6 @@ package com.air.advantage.service;
 import com.air.advantage.aaservice.data.JsonExporterViews;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.Message;
-import com.air.advantage.service.communication.CommunicationService;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -208,7 +207,7 @@ public class WebServiceResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setMySystem(com.air.advantage.aaservice.data.DataSystem incomingSystem) {
         try {
-            MyMasterData.masterData.system.updateSystem(incomingSystem);
+            airconUpdateService.applySystemUpdates(incomingSystem);
             return Response.ok("{\"ack\":true,\"request\":\"setMySystem\"}", MediaType.APPLICATION_JSON).build();
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)

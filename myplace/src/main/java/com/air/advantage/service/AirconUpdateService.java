@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.air.advantage.aaservice.data.DataAircon;
 import com.air.advantage.aaservice.data.DataAirconInfo;
+import com.air.advantage.aaservice.data.DataSystem;
 import com.air.advantage.aaservice.data.DataZone;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
@@ -30,12 +31,57 @@ public class AirconUpdateService {
     @Inject
     EventBus eventBus;
 
+    @Inject 
+    MyMasterData myMasterData;
+
     /**
      * Apply a map of Aircon updates (key = UID or alias) sending CAN messages for each changed aircon.
      */
     public void applyUpdates(Map<String, DataAircon> incomingMap) {
         if (incomingMap == null) return;
         incomingMap.forEach(this::applyUpdateForKey);
+        myMasterData.scheduleSave();
+    }
+
+    /**
+     * Apply a map of Aircon updates (key = UID or alias) sending CAN messages for each changed aircon.
+     */
+    public void applySystemUpdates(DataSystem incomingSystem) {
+        if (incomingSystem == null) return;
+        MyMasterData.masterData.system.updateSystem(incomingSystem);
+        initializeDefaultSystem();
+        myMasterData.scheduleSave();
+    }
+
+    /**
+     * Initialize system with default values
+     */
+    public void initializeDefaultSystem() {
+        DataSystem system = MyMasterData.masterData.system;
+        if (system.aaServiceRev == null) system.aaServiceRev = "";
+        if (system.drawLightsTab == null) system.drawLightsTab = false;
+        if (system.drawThingsTab == null) system.drawThingsTab = false;
+        if (system.hasAircons == null) system.hasAircons = true;
+        if (system.hasLights == null) system.hasLights = false;
+        if (system.hasLocks == null) system.hasLocks = false;
+        if (system.hasSensors == null) system.hasSensors = false;
+        if (system.hasThings == null) system.hasThings = false;
+        if (system.hasThingsBOG == null) system.hasThingsBOG = false;
+        if (system.hasThingsLight == null) system.hasThingsLight = false;
+        if (system.myAppRev == null) system.myAppRev = "";
+        if (system.name == null) system.name = "MyPlace";
+        if (system.needsUpdate == null) system.needsUpdate = false;
+        if (system.noOfAircons == null) system.noOfAircons = 1;
+        if (system.noOfSnapshots == null) system.noOfSnapshots = 0;
+        if (system.remoteAccessPairingEnabled == null) system.remoteAccessPairingEnabled = false;
+        if (system.showMeasuredTemp == null) system.showMeasuredTemp = true;
+        if (system.sysType == null) system.sysType = "MyAir5";
+        if (system.tspModel == null) system.tspModel = "";
+        if (system.allTspErrorCodes == null) system.allTspErrorCodes = new java.util.HashMap<>();
+        if (!system.allTspErrorCodes.containsKey("tspErrorCode")) {
+            system.allTspErrorCodes.put("tspErrorCode", "noError");
+        }
+        myMasterData.scheduleSave();
     }
 
     private void applyUpdateForKey(String key, DataAircon incoming) {
@@ -43,14 +89,15 @@ public class AirconUpdateService {
         DataAircon existing = MyMasterData.masterData.aircons.get(key);
         boolean isNew = existing == null;
         if (isNew) {
-            existing = DataAircon.create();
-            // Ensure uid present
-            if (incoming.airconInfo.uid != null) {
-                existing.airconInfo.uid = incoming.airconInfo.uid;
-            } else if (existing.airconInfo.uid == null) {
-                existing.airconInfo.uid = key; // fallback
-            }
-            MyMasterData.masterData.aircons.put(key, existing);
+            return;
+            // existing = DataAircon.create();
+            // // Ensure uid present
+            // if (incoming.airconInfo.uid != null) {
+            //     existing.airconInfo.uid = incoming.airconInfo.uid;
+            // } else if (existing.airconInfo.uid == null) {
+            //     existing.airconInfo.uid = key; // fallback
+            // }
+            // MyMasterData.masterData.aircons.put(key, existing);
         }
 
     // Non-null per class definition
@@ -228,7 +275,7 @@ public class AirconUpdateService {
     }
 
     private static void populateHeader(CANMessage msg, String uid) {
-        msg.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        msg.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
         msg.setSystemType(CANMessage.SystemType.CAN_AIRCON);
         msg.setUid(uid);
     }

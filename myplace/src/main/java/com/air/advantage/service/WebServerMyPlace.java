@@ -512,6 +512,10 @@ public class WebServerMyPlace {
                         request.response().setStatusCode(500).end("{\"error\":\"" + e.getMessage() + "\"}");
                     }
                 }
+                else
+                {
+                    request.response().setStatusCode(200).end("MyPlace Web Server");
+                }
                 } catch (Exception e) {
                     System.err.println("Error in raw request handler: " + e.getMessage());
                     request.response().setStatusCode(500).end();

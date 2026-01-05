@@ -24,11 +24,9 @@ import com.air.advantage.cbmessages.CANMessageAircon26RfDevicePairing;
 import com.air.advantage.cbmessages.CANMessageAircon27RfDeviceCalibration;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
-// TODO: Import or define DataAirconInfo and Zone classes for this handler
-// import your.package.DataAirconInfo;
-// import your.package.Zone;
 
 public class HandlerAircon extends Handler {
+    private static final long EXPIRY_TIME_SECONDS = 80;
     // Reference to AirconState data class (should be injected or managed)
     // private AirconState airconState;
      public HandlerAircon(MyMasterData myMasterData, EventBus eventBus) {
@@ -96,6 +94,10 @@ public class HandlerAircon extends Handler {
             System.out.println("Invalid CB JZ7 msg - " + error);
             return;
         }
+        
+        // Update expiry time
+        dataAirconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
         // Map fields from msg to dataAirconInfo
         dataAirconInfo.uid = msg.getUid();
         dataAirconInfo.noOfZones = msg.getNumZones();
@@ -104,14 +106,25 @@ public class HandlerAircon extends Handler {
         dataAirconInfo.constantZone2 = msg.getConstantZone2();
         dataAirconInfo.constantZone3 = msg.getConstantZone3();
         dataAirconInfo.filterCleanStatus = msg.getFilterCleanStatus();
-        // Update zones map if needed
+        // Update zones map - create zones if they don't exist
         if (dataAircon.getZones() != null) {
-            int currentSize = dataAircon.getZones().size();
             int numZones = msg.getNumZones();
+            // Create missing zones
+            for (int i = 1; i <= numZones; i++) {
+                String zoneKey = String.format("z%02d", i);
+                if (!dataAircon.getZones().containsKey(zoneKey)) {
+                    DataZone newZone = new DataZone();
+                    newZone.number = i;
+                    newZone.name = "Zone " + i;
+                    dataAircon.getZones().put(zoneKey, newZone);
+                }
+            }
+            // Remove zones beyond the count
+            int currentSize = dataAircon.getZones().size();
             if (numZones < currentSize) {
                 for (int i = numZones + 1; i <= currentSize; i++) {
                     String zoneKey = String.format("z%02d", i);
-                    dataAircon.getZones().remove(zoneKey); // Replace with your actual zone key logic if needed
+                    dataAircon.getZones().remove(zoneKey);
                 }
             }
         }
@@ -197,6 +210,10 @@ public class HandlerAircon extends Handler {
         }
         dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
         dataAirconInfo.cbFWRevMinor = msg.getFwMinor();
+        
+        // Update expiry time
+        dataAirconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
         System.out.println("Processed UnitTypeInformation for UID " + uid +
                 ": cbType=" + dataAirconInfo.cbType +
                 ", activationCodeStatus=" + dataAirconInfo.activationCodeStatus +
@@ -207,59 +224,122 @@ public class HandlerAircon extends Handler {
     private void process(CANMessageAircon03ZoneState msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
+        
         DataAircon dataAircon = getOrCreateDataAircon(uid);
-        String zoneKey = String.format("z%02d", msg.getZoneNumber());
+        DataAirconInfo info = dataAircon.airconInfo;
+        
+        // Update expiry time
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
+        // Validate zone number
+        int zoneNumber = msg.getZoneNumber();
+        if (zoneNumber < 1 || zoneNumber > 10) {
+            System.out.println("Rejected CB JZ11 - invalid zoneNumber: " + zoneNumber);
+            return;
+        }
+        
+        if (info.noOfZones != null && zoneNumber > info.noOfZones) {
+            System.out.println("Rejected CB JZ11 - zoneNumber too high: " + zoneNumber);
+            return;
+        }
+        
+        String zoneKey = String.format("z%02d", zoneNumber);
         DataZone zone = dataAircon.getZones().get(zoneKey);
         if (zone == null) {
             zone = new DataZone();
+            zone.number = zoneNumber;
+            zone.name = "Zone " + zoneNumber;
             dataAircon.getZones().put(zoneKey, zone);
         }
-        // Map fields
-        if (zone.name == null)
-        {
-            zone.name = zoneKey;
+        
+        // Map zone state
+        if (msg.getZoneState() != null) {
+            switch (msg.getZoneState()) {
+                case CLOSE:
+                    zone.state = ZoneState.close;
+                    break;
+                case OPEN:
+                    zone.state = ZoneState.open;
+                    break;
+            }
         }
-        switch (msg.getZoneState()) {
-            case CLOSE:
-                zone.state = ZoneState.close;
-                break;
-            case OPEN:
-                zone.state = ZoneState.open;
-                break;
+        
+        // Map zone percent (damper value)
+        int zonePercent = msg.getZonePercent();
+        if (zonePercent >= 0 && zonePercent <= 100) {
+            zone.value = zonePercent;
         }
-        if (msg.getZonePercent() > 0)
-        {
-            zone.maxDamper =  msg.getZonePercent(); // If you have a percent field
+        
+        // Map sensor type
+        zone.type = msg.getSensorType();
+        
+        // Map temperatures
+        float setTemp = msg.getSetTemp();
+        if (setTemp >= 10.0f && setTemp <= 50.0f) {
+            zone.setTemp = setTemp;
         }
-        zone.type = msg.getSensorType(); // If you have a type field
-        if (msg.getMeasuredTemp() > 0)
-        {
-            zone.measuredTemp = msg.getMeasuredTemp();
+        
+        float measuredTemp = msg.getMeasuredTemp();
+        if (measuredTemp > 0.0f && measuredTemp < 100.0f) {
+            zone.measuredTemp = measuredTemp;
         }
-        if (msg.getSetTemp() > 10 && msg.getSetTemp() < 50)
-        {
-            zone.setTemp = msg.getSetTemp(); // If you have a setTemp field
-        }
-        dataAircon.getZones().replace(zoneKey, zone);
-        System.out.println("Processed ZoneState for UID " + uid + ", zone " + zoneKey);
+        
+        System.out.println("Valid CB JZ11 message. UID - " + uid + 
+                " zoneNumber - " + zoneNumber + 
+                " state - " + zone.state +
+                " value - " + zone.value + "%" +
+                " type - " + zone.type +
+                " setTemp - " + zone.setTemp +
+                " measuredTemp - " + zone.measuredTemp);
     }
 
     private void process(CANMessageAircon04ZoneConfiguration msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
+        
         DataAircon dataAircon = getOrCreateDataAircon(uid);
-        String zoneKey = String.format("z%02d", msg.getZoneNumber());
+        DataAirconInfo info = dataAircon.airconInfo;
+        
+        // Update expiry time
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
+        // Validate zone number
+        int zoneNumber = msg.getZoneNumber();
+        if (zoneNumber < 1 || zoneNumber > 10) {
+            System.out.println("Rejected CB JZ13 - invalid zoneNumber: " + zoneNumber);
+            return;
+        }
+        
+        if (info.noOfZones != null && zoneNumber > info.noOfZones) {
+            System.out.println("Rejected CB JZ13 - zoneNumber too high: " + zoneNumber);
+            return;
+        }
+        
+        String zoneKey = String.format("z%02d", zoneNumber);
         DataZone zone = dataAircon.getZones().get(zoneKey);
         if (zone == null) {
             zone = new DataZone();
+            zone.number = zoneNumber;
+            zone.name = "Zone " + zoneNumber;
             dataAircon.getZones().put(zoneKey, zone);
         }
+        
+        // Map configuration fields
         zone.minDamper = msg.getMinDamper();
         zone.maxDamper = msg.getMaxDamper();
         zone.motion = msg.getMotionStatus();
         zone.motionConfig = msg.getMotionConfig();
         zone.error = msg.getZoneError();
-        System.out.println("Processed ZoneConfiguration for UID " + uid + ", zone " + zoneKey);
+        zone.rssi = msg.getRssi();
+        
+        System.out.println("Valid CB JZ13 message. UID - " + uid +
+                " zoneNumber - " + zoneNumber +
+                " minDamper - " + zone.minDamper +
+                " maxDamper - " + zone.maxDamper +
+                " motion - " + zone.motion +
+                " motionConfig - " + zone.motionConfig +
+                " error - " + zone.error +
+                " rssi - " + zone.rssi);
     }
 
     private void process(CANMessageAircon05AirconState msg) {
@@ -301,7 +381,18 @@ public class HandlerAircon extends Handler {
         }
 
         info.rfSysID = msg.getRfSysId();
-        System.out.println("Processed AirconState for UID " + uid);
+        
+        // Update expiry time
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
+        System.out.println("Valid CB JZ15 message. UID - " + uid +
+                " state - " + info.state +
+                " mode - " + info.mode +
+                " fan - " + info.fan +
+                " setTemp - " + info.setTemp +
+                " myZone - " + info.myZone +
+                " freshAirStatus - " + info.freshAirStatus +
+                " rfSysID - " + info.rfSysID);
     }
 
     private void process(CANMessageAircon06CBStatus msg) {
@@ -313,6 +404,13 @@ public class HandlerAircon extends Handler {
         info.cbFWRevMinor = msg.getCbFwMinor();
         info.cbType = msg.getCbType();
         // info.rfFWRevMajor = msg.getRfFwMajor(); // If you have this field
+
+        CANMessageAircon07CbStatusMessage cbStatus = new CANMessageAircon07CbStatusMessage();
+        cbStatus.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
+        cbStatus.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        cbStatus.setUid(uid);
+        eventBus.publish("communication-send-can", cbStatus);
+
         System.out.println("Processed CBStatus for UID " + uid);
     }
 
@@ -321,11 +419,20 @@ public class HandlerAircon extends Handler {
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
+        
         info.cbFWRevMajor = msg.getCbFwMajor();
         info.cbFWRevMinor = msg.getCbFwMinor();
         info.cbType = msg.getCbType();
-        // info.rfFWRevMajor = msg.getRfFwMajor(); // If you have this field
-        System.out.println("Processed CBStatusMessage for UID " + uid);
+        info.rfFWRevMajor = msg.getRfFwMajor();
+        
+        // Update expiry time
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
+        System.out.println("Valid CB JZ17 message. UID - " + uid +
+                " cbFWRevMajor - " + info.cbFWRevMajor +
+                " cbFWRevMinor - " + info.cbFWRevMinor +
+                " cbType - " + info.cbType +
+                " rfFWRevMajor - " + info.rfFWRevMajor);
     }
 
     private void process(CANMessageAircon08CBErrorStatus msg) {
@@ -333,8 +440,13 @@ public class HandlerAircon extends Handler {
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
+        
         info.airconErrorCode = msg.getErrorCode();
-        System.out.println("Processed CBErrorStatus for UID " + uid + ", errorCode=" + info.airconErrorCode);
+        
+        // Update expiry time
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        
+        System.out.println("Valid CB JZ22 message. UID - " + uid + " errorCode - " + info.airconErrorCode);
     }
 
     private void process(CANMessageAircon09ActivationCodeInformation msg) {

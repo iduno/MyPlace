@@ -13,12 +13,19 @@ public class CANMessageAircon08CBErrorStatus extends CANMessageAircon {
         CANMessageAircon08CBErrorStatus msg = new CANMessageAircon08CBErrorStatus();
         
         if (data.length >= offset + 10) {
-            char errChar1 = (char)ByteArray.parseHexValue(offset, data);
-            char errChar2 = (char)ByteArray.parseHexValue(offset + 2, data);
-            char errChar3 = (char)ByteArray.parseHexValue(offset + 4, data);
-            char errChar4 = (char)ByteArray.parseHexValue(offset + 6, data);
-            char errChar5 = (char)ByteArray.parseHexValue(offset + 8, data);
-            msg.errorCode = ("" + errChar1 + errChar2 + errChar3 + errChar4 + errChar5).stripTrailing();
+            char[] chars = new char[5];
+            chars[0] = (char)ByteArray.parseHexValue(offset, data);
+            chars[1] = (char)ByteArray.parseHexValue(offset + 2, data);
+            chars[2] = (char)ByteArray.parseHexValue(offset + 4, data);
+            chars[3] = (char)ByteArray.parseHexValue(offset + 6, data);
+            chars[4] = (char)ByteArray.parseHexValue(offset + 8, data);
+            // Build string skipping any null (\0) characters and then trim trailing whitespace
+            StringBuilder sb = new StringBuilder(5);
+            for (char c : chars) {
+                if (c == '\0') break; // stop at first null to preserve original semantics
+                sb.append(c);
+            }
+            msg.errorCode = sb.toString().stripTrailing();
         }
         return msg;
     }

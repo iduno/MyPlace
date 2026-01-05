@@ -173,6 +173,7 @@ const AirconFragment = () => {
   const [airconName, setAirconName] = useState('Aircon'); // Zone/room name
   const [updating, setUpdating] = useState(false); // For update operations in progress
   const [myAutoEnabled, setMyAutoEnabled] = useState(false);
+  const [freshAirStatus, setFreshAirStatus] = useState('none'); // none, on, off
 
   // Subscribe to ApiService polling cache
   useEffect(() => {
@@ -197,12 +198,13 @@ const AirconFragment = () => {
       setMode(data.mode || 'cool');
       setSystemStatus(data.systemStatus || 'standby');
       setAirconName(data.airconName || 'Room');
-      // derive myAutoModeEnabled from raw system info if present
+      // derive myAutoModeEnabled and freshAirStatus from raw system info if present
       try {
         const raw = data._raw;
         const airconId = raw && raw.aircons ? Object.keys(raw.aircons || {})[0] : null;
         const info = airconId ? (raw.aircons?.[airconId]?.info || {}) : {};
         setMyAutoEnabled(!!info.myAutoModeEnabled);
+        setFreshAirStatus((info.freshAirStatus || 'none').toLowerCase());
       } catch (err) {
         // ignore
       }
@@ -391,6 +393,16 @@ const AirconFragment = () => {
     }
   };
 
+  const handleFreshAirToggle = () => {
+    const newFreshAirStatus = freshAirStatus === 'on' ? 'off' : 'on';
+    
+    // Update server with new fresh air status immediately
+    updateAirconData({ freshAirStatus: newFreshAirStatus });
+    
+    // Update local state
+    setFreshAirStatus(newFreshAirStatus);
+  };
+
   return (
     <StyledPaper elevation={1}>
       {loading ? (
@@ -520,6 +532,31 @@ const AirconFragment = () => {
                 </FanSpeedButton>
               </Box>
             </Box>
+
+            {/* Fresh Air Toggle */}
+            {freshAirStatus && freshAirStatus !== 'none' && (
+              <Box width="100%">
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="body2" align="center" color="textSecondary" gutterBottom>
+                  FRESH AIR
+                </Typography>
+                <Box 
+                  display="flex" 
+                  justifyContent="center" 
+                  alignItems="center" 
+                  width="100%"
+                  sx={{
+                    marginTop: 1,
+                    padding: '0 10px'
+                  }}
+                >
+                  <PowerToggle 
+                    checked={freshAirStatus === 'on'} 
+                    onChange={handleFreshAirToggle} 
+                  />
+                </Box>
+              </Box>
+            )}
             
           </Box>
         </Grid>

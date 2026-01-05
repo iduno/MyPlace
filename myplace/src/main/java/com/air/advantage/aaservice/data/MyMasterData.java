@@ -62,8 +62,8 @@ public class MyMasterData {
         scheduleSave();
     }
 
-    private synchronized void scheduleSave() {
-        if (scheduledSave == null || scheduledSave.isDone()) {
+    public synchronized void scheduleSave() {
+        if (config.config().autoSave() == true && (scheduledSave == null || scheduledSave.isDone())) {
             scheduledSave = scheduler.schedule(this::saveConfig, config.config().saveDelayMinutes(), TimeUnit.MINUTES);
         }
     }

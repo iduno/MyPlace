@@ -256,7 +256,9 @@ class ApiService {
             , ...(airconData.constant3 !== undefined && { constant3: airconData.constant3 })
           }
         },
-        ...(airconData.name && {system: {name: airconData.name}})
+        // System-level properties
+        ...(airconData.name && {system: {name: airconData.name}}),
+        ...(airconData.postCode && {system: {postCode: airconData.postCode}})
       };
       
       // Log what we're sending for debugging
@@ -307,7 +309,7 @@ class ApiService {
    */
   async updateSystem(systemData) {
     try {
-      const response = await fetch(`${this.baseUrl}/system`, {
+      const response = await fetch(`${this.baseUrl}/setMySystem`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -319,7 +321,10 @@ class ApiService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      // Trigger an immediate refresh so cache is up-to-date after mutation
+      this.refreshSystem();
+      return result;
     } catch (error) {
       console.error('Error updating system data:', error);
       throw error;

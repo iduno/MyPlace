@@ -39,10 +39,13 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [newDeviceName, setNewDeviceName] = useState('');
   const [saving, setSaving] = useState(false);
   const [editingAircon, setEditingAircon] = useState(false);
+  const [editingPostcode, setEditingPostcode] = useState(false);
+  const [newPostcode, setNewPostcode] = useState('');
   // Advanced feature local states (placeholders until backend endpoints wired)
   const [showMeasuredTemps, setShowMeasuredTemps] = useState(false);
   const [quietNightMode, setQuietNightMode] = useState(false);
   const [autoFanSpeed, setAutoFanSpeed] = useState(false);
+  const [freshAirEnabled, setFreshAirEnabled] = useState(false);
   const [comfortMode, setComfortMode] = useState('myZone'); // 'myZone' | 'myTemp' | 'myAuto'
   // Newly added state placeholders mirroring native advanced setup features
   const [activationDialogOpen, setActivationDialogOpen] = useState(false);
@@ -77,7 +80,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           // ignore if that state isn't present in this build
         }
 
-        // Derive comfort mode from backend info flags when available
+        // Derive comfort mode and fresh air status from backend info flags when available
         try {
           const raw = data._raw;
           const airconId = raw && raw.aircons ? Object.keys(raw.aircons || {})[0] : null;
@@ -89,6 +92,9 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           } else {
             setComfortMode('myZone');
           }
+          // Fresh air is enabled if status is 'on' or 'off' (not 'none')
+          const freshAirStatus = (info.freshAirStatus || 'none').toLowerCase();
+          setFreshAirEnabled(freshAirStatus !== 'none');
         } catch (err) {
           // ignore and leave existing comfortMode
         }
@@ -206,11 +212,12 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     if (!newAirconName) return setSnackbar({ open: true, message: 'Name cannot be empty', severity: 'warning' });
     setSaving(true);
     try {
-      await ApiService.updateAircon({ name: newAirconName });
+      await ApiService.updateSystem({ name: newAirconName });
       setSnackbar({ open: true, message: 'Aircon renamed', severity: 'success' });
       setRenameAirconOpen(false);
       setEditingAircon(false);
-      // give ApiService a moment to refresh; local cache will update subscribers
+      // Trigger refresh to update display
+      ApiService.refreshAircon();
     } catch (err) {
       setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
     } finally {
@@ -225,6 +232,23 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
       await ApiService.updateAircon({ deviceName: newDeviceName });
       setSnackbar({ open: true, message: 'Device renamed', severity: 'success' });
       setRenameDeviceOpen(false);
+    } catch (err) {
+      setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitPostcode = async () => {
+    if (!newPostcode) return setSnackbar({ open: true, message: 'Postcode cannot be empty', severity: 'warning' });
+    setSaving(true);
+    try {
+      // Update system-level postcode
+      await ApiService.updateSystem({ postCode: newPostcode });
+      setSnackbar({ open: true, message: 'Postcode updated', severity: 'success' });
+      setEditingPostcode(false);
+      // Trigger refresh to update display
+      ApiService.refreshAircon();
     } catch (err) {
       setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
     } finally {
@@ -272,6 +296,19 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           </Grid>
           <Grid item xs={12} md={4}>
             <FormControlLabel control={<Switch checked={autoFanSpeed} onChange={(e) => { setAutoFanSpeed(e.target.checked); setSnackbar({ open: true, message: 'Auto Fan Speed updated (placeholder)', severity: 'info' }); }} />} label="Auto Fan Speed" />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <FormControlLabel control={<Switch checked={freshAirEnabled} onChange={async (e) => { 
+              const enabled = e.target.checked;
+              setFreshAirEnabled(enabled);
+              try {
+                await ApiService.updateAircon({ freshAirStatus: enabled ? 'off' : 'none' });
+                setSnackbar({ open: true, message: `Fresh Air system ${enabled ? 'enabled' : 'disabled'}`, severity: 'success' });
+              } catch (err) {
+                setFreshAirEnabled(!enabled);
+                setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+              }
+            }} />} label="Enable Fresh Air" />
           </Grid>
         </Grid>
 
@@ -499,9 +536,41 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Typography variant="caption" color="text.secondary">Postcode</Typography>
-              <Typography variant="body2">{aircon?._raw?.system?.postCode || 'Not set'}</Typography>
-              <Button size="small" sx={{ mt: 1 }} onClick={() => setSnackbar({ open: true, message: 'Set postcode (placeholder)', severity: 'info' })}>Edit</Button>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="caption" color="text.secondary">Postcode</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+                {editingPostcode ? (
+                  <TextField
+                    size="small"
+                    value={newPostcode}
+                    onChange={e => setNewPostcode(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        submitPostcode();
+                      } else if (e.key === 'Escape') {
+                        setEditingPostcode(false);
+                        setNewPostcode(aircon?._raw?.system?.postCode || '');
+                      }
+                    }}
+                    sx={{ flex: 1 }}
+                    autoFocus
+                  />
+                ) : (
+                  <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{aircon?._raw?.system?.postCode || 'Not set'}</Typography>
+                )}
+
+                {editingPostcode ? (
+                  <>
+                    <Button size="small" onClick={submitPostcode} variant="contained" disabled={saving}>OK</Button>
+                    <Button size="small" onClick={() => { setEditingPostcode(false); setNewPostcode(aircon?._raw?.system?.postCode || ''); }} disabled={saving}>Cancel</Button>
+                  </>
+                ) : (
+                  <IconButton size="small" onClick={() => { setNewPostcode(aircon?._raw?.system?.postCode || ''); setEditingPostcode(true); }}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Box>
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
@@ -607,6 +676,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           <Button onClick={submitRenameDevice} disabled={saving} variant="contained">Save</Button>
         </DialogActions>
       </Dialog>
+
       {/* Activation Code Dialog */}
       <Dialog open={activationDialogOpen} onClose={() => setActivationDialogOpen(false)} fullWidth>
         <DialogTitle>Enter Activation Code</DialogTitle>

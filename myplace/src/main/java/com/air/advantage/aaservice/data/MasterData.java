@@ -48,12 +48,17 @@ public class MasterData {
     public DataAircon getAirconByUID(String uid) {
         if (uid == null || uid.isEmpty()) return null;
         if (uid.equals("00000")) {
-            return this.aircons.get("ac1");
+            if (this.aircons.firstEntry() != null)
+            {
+                DataAircon aircon = this.aircons.firstEntry().getValue();
+                return aircon;
+            }
         }
         for (String key : this.aircons.keySet()) {
             DataAircon aircon = this.aircons.get(key);
             if (aircon == null) continue;
-            if (uid.equals(aircon.airconInfo.uid)) {
+            if (aircon.airconInfo.uid == null || uid.equals(aircon.airconInfo.uid)) {
+                aircon.airconInfo.uid = uid;
                 return aircon;
             }
             

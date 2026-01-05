@@ -14,5 +14,7 @@ public interface MyPlaceConfig {
         String path();
         @WithDefault("1")
         Long saveDelayMinutes();
+        @WithDefault("true")
+        Boolean autoSave();
     }
 }

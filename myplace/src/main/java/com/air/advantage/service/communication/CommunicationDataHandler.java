@@ -134,7 +134,7 @@ public class CommunicationDataHandler {
                 // Send initial ping message if in MYAIR mode
                 MessageCAN canMessage = new MessageCAN(MessageType.SET_CAN);
                 CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
-                airconStatus.setDeviceType(DeviceType.AIRCON_1);
+                airconStatus.setDeviceType(DeviceType.CONTROL_BOARD);
                 canMessage.getMessageCANBaseList().add(airconStatus);
                 sendMessage(canMessage);
             }
