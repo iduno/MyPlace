@@ -68,6 +68,9 @@ public class MasterData {
         int airconId = this.aircons.size() + 1; // Generate a new ID
 
         this.aircons.put("ac"+airconId, aircon);
+        this.system.hasAircons = true;
+        this.system.noOfAircons = this.aircons.size();
+        this.system.mid = uid;
         return aircon;
     }
 
@@ -88,6 +91,7 @@ public class MasterData {
                 }
             }
         }
+        
         // Deep copy snapshots
         for (String key : other.snapshots.keySet()) {
             SnapShot snapshot = other.snapshots.get(key);
@@ -103,7 +107,13 @@ public class MasterData {
             }
         }
         this.system.copyFrom(other.system); 
+        this.system.noOfAircons = this.aircons.size();
+        this.system.hasAircons = (this.system.noOfAircons > 0);
+        if (this.system.hasAircons)
+        {
+            this.system.mid = this.aircons.firstEntry().getValue().airconInfo.uid;
+        }
         this.myLights.copyFrom(other.myLights);
-
+        this.system.hasLights = (!this.myLights.lights.isEmpty());
     }
 }

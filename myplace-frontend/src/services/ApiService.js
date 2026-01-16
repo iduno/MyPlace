@@ -66,7 +66,7 @@ class ApiService {
         mode: aircon.mode || 'cool',
         systemStatus: aircon.state === 'on' ? 'active' : 'standby',
         airconName: aircon.name || 'AC',
-        energySaving: aircon.quietNightModeEnabled || false,
+        quietNightModeEnabled: aircon.quietNightModeEnabled || false,
         zones: data.aircons[airconId]?.zones || {},
         _raw: data,
         _fetchedAt: Date.now()
@@ -172,7 +172,7 @@ class ApiService {
       mode: aircon.mode || 'cool',
       systemStatus: aircon.state === 'on' ? 'active' : 'standby',
       airconName: aircon.name || 'AC',
-      energySaving: aircon.quietNightModeEnabled || false,
+      quietNightModeEnabled: aircon.quietNightModeEnabled || false,
       zones: systemData.aircons[airconId]?.zones || {},
       _raw: systemData,
       _fetchedAt: systemData._fetchedAt
@@ -241,9 +241,11 @@ class ApiService {
             ...(airconData.fan && { fan: airconData.fan }),
             ...(airconData.setTemp && { setTemp: airconData.setTemp }),
             ...(airconData.myZone && { myZone: airconData.myZone }),
+            ...(airconData.noOfZones && { noOfZones: airconData.noOfZones }),
             ...(airconData.myAutoModeEnabled !== undefined && { myAutoModeEnabled: airconData.myAutoModeEnabled }),
             ...(airconData.aaAutoFanModeEnabled !== undefined && { aaAutoFanModeEnabled: airconData.aaAutoFanModeEnabled }),
             ...(airconData.climateControlModeEnabled !== undefined && { climateControlModeEnabled: airconData.climateControlModeEnabled }),
+            ...(airconData.quietNightModeEnabled !== undefined && { quietNightModeEnabled: airconData.quietNightModeEnabled }),
             ...(airconData.freshAirStatus && { freshAirStatus: airconData.freshAirStatus }),
             ...(airconData.countDownToOff !== undefined && { countDownToOff: airconData.countDownToOff }),
             ...(airconData.countDownToOn !== undefined && { countDownToOn: airconData.countDownToOn })
@@ -256,9 +258,6 @@ class ApiService {
             , ...(airconData.constant3 !== undefined && { constant3: airconData.constant3 })
           }
         },
-        // System-level properties
-        ...(airconData.name && {system: {name: airconData.name}}),
-        ...(airconData.postCode && {system: {postCode: airconData.postCode}})
       };
       
       // Log what we're sending for debugging

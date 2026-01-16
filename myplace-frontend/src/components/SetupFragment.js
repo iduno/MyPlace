@@ -46,6 +46,8 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [quietNightMode, setQuietNightMode] = useState(false);
   const [autoFanSpeed, setAutoFanSpeed] = useState(false);
   const [freshAirEnabled, setFreshAirEnabled] = useState(false);
+  const [zonesCount, setZonesCount] = useState(null);
+  const [zoneSaving, setZoneSaving] = useState(false);
   const [comfortMode, setComfortMode] = useState('myZone'); // 'myZone' | 'myTemp' | 'myAuto'
   // Newly added state placeholders mirroring native advanced setup features
   const [activationDialogOpen, setActivationDialogOpen] = useState(false);
@@ -71,7 +73,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
       }
       if (data) setAircon(data);
       if (data) {
-        setQuietNightMode(!!data.energySaving);
+        setQuietNightMode(!!data.quietNightModeEnabled);
         // Simulated access to paired accounts count (placeholder field)
         const ghCount = data._raw?.system?.googleHomePairedAccounts || 0;
         try {
@@ -97,6 +99,26 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           setFreshAirEnabled(freshAirStatus !== 'none');
         } catch (err) {
           // ignore and leave existing comfortMode
+        }
+        // Initialize showMeasuredTemps from system-level flag if present
+        try {
+          const sys = data._raw && data._raw.system ? data._raw.system : null;
+          if (sys && typeof sys.showMeasuredTemp !== 'undefined') {
+            setShowMeasuredTemps(!!sys.showMeasuredTemp);
+          }
+          // Initialize zonesCount from aircon info.noOfZones if present
+          try {
+            const airconId = data._raw && data._raw.aircons ? Object.keys(data._raw.aircons || {})[0] : null;
+            const info = airconId ? (data._raw.aircons?.[airconId]?.info || {}) : {};
+            const infoCount = info?.noOfZones;
+            if (typeof infoCount !== 'undefined' && infoCount !== null) {
+              setZonesCount(Number(infoCount));
+            }
+          } catch (err) {
+            // ignore
+          }
+        } catch (err) {
+          // ignore
         }
       }
     });
@@ -212,7 +234,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     if (!newAirconName) return setSnackbar({ open: true, message: 'Name cannot be empty', severity: 'warning' });
     setSaving(true);
     try {
-      await ApiService.updateSystem({ name: newAirconName });
+      await ApiService.updateAircon({ name: newAirconName });
       setSnackbar({ open: true, message: 'Aircon renamed', severity: 'success' });
       setRenameAirconOpen(false);
       setEditingAircon(false);
@@ -289,10 +311,37 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
         <Typography variant="subtitle1" gutterBottom>System Options</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-            <FormControlLabel control={<Switch checked={showMeasuredTemps} onChange={(e) => { setShowMeasuredTemps(e.target.checked); setSnackbar({ open: true, message: 'Measured temps toggle (placeholder)', severity: 'info' }); }} />} label="Show Measured Temps" />
+            <FormControlLabel control={<Switch checked={showMeasuredTemps} onChange={async (e) => { 
+              const enabled = e.target.checked;
+              // Optimistic update
+              setShowMeasuredTemps(enabled);
+              try {
+                await ApiService.updateSystem({ showMeasuredTemp: enabled });
+                setSnackbar({ open: true, message: `Show measured temps ${enabled ? 'enabled' : 'disabled'}`, severity: 'success' });
+                // Refresh cached aircon to pick up change
+                ApiService.refreshAircon();
+              } catch (err) {
+                // Revert optimistic change
+                setShowMeasuredTemps(!enabled);
+                setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+              }
+            }} />} label="Show Measured Temps" />
           </Grid>
           <Grid item xs={12} md={4}>
-            <FormControlLabel control={<Switch checked={quietNightMode} onChange={(e) => { setQuietNightMode(e.target.checked); setSnackbar({ open: true, message: 'Quiet Night Mode updated (placeholder)', severity: 'info' }); }} />} label="Quiet Night Mode" />
+            <FormControlLabel control={<Switch checked={quietNightMode} onChange={async (e) => { 
+              const enabled = e.target.checked;
+              // Optimistic update
+              setQuietNightMode(enabled);
+              try {
+                await ApiService.updateAircon({ quietNightModeEnabled: enabled });
+                setSnackbar({ open: true, message: `Quiet Night Mode ${enabled ? 'enabled' : 'disabled'}`, severity: 'success' });
+                ApiService.refreshAircon();
+              } catch (err) {
+                // revert
+                setQuietNightMode(!enabled);
+                setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+              }
+            }} />} label="Quiet Night Mode" />
           </Grid>
           <Grid item xs={12} md={4}>
             <FormControlLabel control={<Switch checked={autoFanSpeed} onChange={(e) => { setAutoFanSpeed(e.target.checked); setSnackbar({ open: true, message: 'Auto Fan Speed updated (placeholder)', severity: 'info' }); }} />} label="Auto Fan Speed" />
@@ -309,6 +358,34 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                 setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
               }
             }} />} label="Enable Fresh Air" />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper variant="outlined" sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="caption">Number of Zones</Typography>
+              <TextField
+                size="small"
+                type="number"
+                inputProps={{ min: 1, max: 10 }}
+                value={zonesCount === null ? '' : zonesCount}
+                onChange={(e) => setZonesCount(e.target.value === '' ? null : Number(e.target.value))}
+                sx={{ width: 100 }}
+              />
+              <Button size="small" variant="contained" disabled={zoneSaving} onClick={async () => {
+                if (zonesCount === null || isNaN(zonesCount)) { setSnackbar({ open: true, message: 'Enter a valid number of zones', severity: 'warning' }); return; }
+                if (zonesCount < 1 || zonesCount > 10) { setSnackbar({ open: true, message: 'Zones must be between 1 and 10', severity: 'warning' }); return; }
+                // Optimistic update not much to change locally other than showing feedback
+                setZoneSaving(true);
+                try {
+                  await ApiService.updateAircon({ noOfZones: zonesCount });
+                  setSnackbar({ open: true, message: `Number of zones set to ${zonesCount}`, severity: 'success' });
+                  ApiService.refreshAircon();
+                } catch (err) {
+                  setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+                } finally {
+                  setZoneSaving(false);
+                }
+              }}>Set</Button>
+            </Paper>
           </Grid>
         </Grid>
 

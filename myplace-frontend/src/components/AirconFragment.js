@@ -260,7 +260,7 @@ const AirconFragment = () => {
         setTemp: temperature,
         fan: mapFanSpeedToString(fanSpeed),
         mode: mode,
-        // myAutoModeEnabled: energySaving,
+        // myAutoModeEnabled: quietNightModeEnabled,
         countDownToOff: (power && timerEnabled) ? Math.round(timerValue * 60) : 0, // Convert hours to minutes
         countDownToOn: (!power && timerEnabled) ? Math.round(timerValue * 60) : 0, // Convert hours to minutes
         ...overrideData // Override with any specific values passed

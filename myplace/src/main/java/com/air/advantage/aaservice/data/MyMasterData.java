@@ -43,6 +43,7 @@ public class MyMasterData {
         System.out.println("Using save delay: " + config.config().saveDelayMinutes() + " minutes");
         
         try {
+            initializeDefaultSystem();
             loadConfig();
             System.out.println("MyMasterData initialization completed successfully");
         } catch (Exception e) {
@@ -70,7 +71,9 @@ public class MyMasterData {
 
     private synchronized void saveConfig() {
         try (FileWriter writer = new FileWriter(config.config().path())) {
-            objectMapper.writeValue(writer, MyMasterData.masterData);
+            // write only properties annotated for the SaveThis view
+            objectMapper.writerWithView(JsonExporterViews.SaveThis.class)
+                    .writeValue(writer, MyMasterData.masterData);
         } catch (IOException e) {
             throw new RuntimeException("Failed to save config", e);
         }
@@ -88,6 +91,35 @@ public class MyMasterData {
                 throw new RuntimeException("Failed to load config", e);
             }
         }
+    }
+
+
+    /**
+     * Initialize system with default values
+     */
+    public void initializeDefaultSystem() {
+        DataSystem system = MyMasterData.masterData.system;
+        system.aaServiceRev = config.system().aaServiceRev();
+        system.name = config.system().name();
+        system.myAppRev = config.system().myAppRev();
+        system.sysType = config.system().sysType();
+        system.tspModel = config.system().tspModel();
+        system.tspIp = config.system().tspIp();
+        system.drawLightsTab = false;
+        system.drawThingsTab = false;
+        system.hasAircons = false;
+        system.hasLights = false;
+        system.hasLocks = false;
+        system.hasSensors = false;
+        system.hasThings = false;
+        system.hasThingsBOG = false;
+        system.hasThingsLight = false;
+        system.needsUpdate = false;
+        system.noOfAircons = 0;
+        system.noOfSnapshots = 0;
+        system.remoteAccessPairingEnabled = false;
+        system.showMeasuredTemp = false;
+        system.allTspErrorCodes = new java.util.HashMap<>();
     }
 
     public void shutdown() {

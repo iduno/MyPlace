@@ -122,6 +122,7 @@ public class DataAirconInfo {
     @Nullable
     @SerializedName("enabled")
     @JsonProperty("enabled")
+    @JsonView(JsonExporterViews.Export.class)
     public Boolean enabled;
 
     @JsonExporter(saveThis = false)
@@ -132,6 +133,7 @@ public class DataAirconInfo {
     @Nullable
     @SerializedName("fan")
     @JsonProperty("fan")
+    @JsonView(JsonExporterViews.Export.class)
     public DataAircon.FanStatus fan;
 
     @JsonExporter(saveThis = false)
@@ -145,12 +147,14 @@ public class DataAirconInfo {
     @Nullable
     @SerializedName("freshAirStatus")
     @JsonProperty("freshAirStatus")
+    @JsonView(JsonExporterViews.Export.class)
     public DataAircon.FreshAirStatus freshAirStatus;
 
     @JsonExporter(saveThis = false)
     @Nullable
     @SerializedName("mode")
     @JsonProperty("mode")
+    @JsonView(JsonExporterViews.Export.class)
     public AirconMode mode;
 
     @Nullable
@@ -168,6 +172,7 @@ public class DataAirconInfo {
     @Nullable
     @SerializedName("myAutoModeCurrentSetMode")
     @JsonProperty("myAutoModeCurrentSetMode")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public AirconMode myAutoModeCurrentSetMode;
 
     @Nullable
@@ -186,6 +191,7 @@ public class DataAirconInfo {
     @Nullable
     @SerializedName("myFanSpeedIsRunning")
     @JsonProperty("myFanSpeedIsRunning")
+    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean myFanSpeedIsRunning;
 
     @JsonExporter(saveThis = false)

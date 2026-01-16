@@ -172,6 +172,179 @@
                     "value": 100
                 }
             }
+        },
+        "ac2": {
+            "info": {
+                "aaAutoFanModeEnabled": false,
+                "activationCodeStatus": "noCode",
+                "airconErrorCode": "",
+                "cbFWRevMajor": 8,
+                "cbFWRevMinor": 20,
+                "cbType": 1,
+                "climateControlModeEnabled": false,
+                "climateControlModeIsRunning": false,
+                "constant1": 1,
+                "constant2": 0,
+                "constant3": 0,
+                "countDownToOff": 0,
+                "countDownToOn": 0,
+                "dbFWRevMajor": 0,
+                "dbFWRevMinor": 0,
+                "fan": "high",
+                "filterCleanStatus": 0,
+                "freshAirStatus": "off",
+                "mode": "heat",
+                "myAutoModeCurrentSetMode": "heat",
+                "myAutoModeEnabled": false,
+                "myAutoModeIsRunning": false,
+                "myZone": 1,
+                "name": "AC",
+                "noOfConstants": 1,
+                "noOfZones": 7,
+                "quietNightModeEnabled": false,
+                "quietNightModeIsRunning": false,
+                "rfFWRevMajor": 0,
+                "rfSysID": 6,
+                "setTemp": 24,
+                "state": "off",
+                "uid": "23456",
+                "unitType": 17
+            },
+            "zones": {
+                "z01": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 21.5,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 01",
+                    "number": 1,
+                    "rssi": 42,
+                    "setTemp": 22,
+                    "state": "open",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                },
+                "z02": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 19.6,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 02",
+                    "number": 2,
+                    "rssi": 44,
+                    "setTemp": 21,
+                    "state": "close",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                },
+                "z03": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 100,
+                    "measuredTemp": 18.3,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 03",
+                    "number": 3,
+                    "rssi": 41,
+                    "setTemp": 22,
+                    "state": "open",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                },
+                "z04": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 80,
+                    "measuredTemp": 18.8,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 04",
+                    "number": 4,
+                    "rssi": 40,
+                    "setTemp": 22,
+                    "state": "close",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                },
+                "z05": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 80,
+                    "measuredTemp": 20.6,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 05",
+                    "number": 5,
+                    "rssi": 58,
+                    "setTemp": 22,
+                    "state": "open",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                },
+                "z06": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 80,
+                    "measuredTemp": 17.6,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 06",
+                    "number": 6,
+                    "rssi": 46,
+                    "setTemp": 22,
+                    "state": "close",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                },
+                "z07": {
+                    "error": 0,
+                    "followers": [
+                    ],
+                    "following": 0,
+                    "maxDamper": 80,
+                    "measuredTemp": 20.2,
+                    "minDamper": 0,
+                    "motion": 0,
+                    "motionConfig": 1,
+                    "name": "Room 07",
+                    "number": 7,
+                    "rssi": 43,
+                    "setTemp": 22,
+                    "state": "open",
+                    "tempSensorClash": false,
+                    "type": 1,
+                    "value": 100
+                }
+            }
         }
     },
     "myAddOns": {
@@ -181,14 +354,182 @@
         ]
     },
     "myLights": {
+        "alarms": {
+        },
+        "alarmsOrder": [
+        ],
         "groups": {
+            "g0": {
+                "id": "g0",
+                "lightsOrder": [
+                    "b700001",
+                    "b700002",
+                    "b700003",
+                    "1d01001",
+                    "2001001",
+                    "2001002",
+                    "2001003"
+                ],
+                "name": "Living",
+                "state": "on"
+            },
+            "g4ea84": {
+                "id": "g4ea84",
+                "lightsOrder": [
+                    "b700006"
+                ],
+                "name": "Garage",
+                "state": "off"
+            },
+            "g8cd93": {
+                "id": "g8cd93",
+                "lightsOrder": [
+                    "1e01004"
+                ],
+                "name": "Outdoor",
+                "state": "off"
+            },
+            "g8faf1": {
+                "id": "g8faf1",
+                "lightsOrder": [
+                    "2501005",
+                    "1e01003",
+                    "1d01002",
+                    "2501006",
+                    "2501003",
+                    "1e01002",
+                    "1e01001"
+                ],
+                "name": "Bedrooms",
+                "state": "on"
+            }
         },
         "groupsOrder": [
+            "g0",
+            "g4ea84",
+            "g8cd93",
+            "g8faf1"
         ],
         "lights": {
+            "1d01001": {
+                "id": "1d01001",
+                "name": "Open Area",
+                "state": "off",
+                "value": 50
+            },
+            "1d01002": {
+                "id": "1d01002",
+                "name": "Master",
+                "state": "off",
+                "value": 60
+            },
+            "1e01001": {
+                "id": "1e01001",
+                "name": "Study",
+                "state": "off",
+                "value": 70
+            },
+            "1e01002": {
+                "id": "1e01002",
+                "name": "Utility",
+                "state": "off",
+                "value": 100
+            },
+            "1e01003": {
+                "id": "1e01003",
+                "name": "Corridor",
+                "state": "on",
+                "value": 50
+            },
+            "1e01004": {
+                "id": "1e01004",
+                "name": "Patio",
+                "state": "off",
+                "value": 40
+            },
+            "2001001": {
+                "id": "2001001",
+                "name": "Dining",
+                "relay": true,
+                "state": "off"
+            },
+            "2001002": {
+                "id": "2001002",
+                "name": "Pantry",
+                "relay": true,
+                "state": "off"
+            },
+            "2001003": {
+                "id": "2001003",
+                "name": "Kitchen",
+                "state": "off",
+                "value": 100
+            },
+            "2501003": {
+                "id": "2501003",
+                "name": "Toilet",
+                "state": "off",
+                "value": 100
+            },
+            "2501005": {
+                "id": "2501005",
+                "name": "Bath Fan",
+                "relay": true,
+                "state": "off"
+            },
+            "2501006": {
+                "id": "2501006",
+                "name": "Bathroom",
+                "state": "off",
+                "value": 90
+            },
+            "b700001": {
+                "id": "b700001",
+                "name": "Lounge",
+                "state": "off",
+                "value": 60
+            },
+            "b700002": {
+                "id": "b700002",
+                "name": "Entryway",
+                "state": "on",
+                "value": 60
+            },
+            "b700003": {
+                "id": "b700003",
+                "name": "Lounge",
+                "relay": true,
+                "state": "off"
+            },
+            "b700006": {
+                "id": "b700006",
+                "name": "Garage",
+                "state": "off",
+                "value": 100
+            }
         },
+        "scenes": {
+            "s4": {
+                "activeDays": 127,
+                "id": "s4",
+                "lights": {
+                    "1e01003": {
+                        "id": "1e01003",
+                        "state": "on",
+                        "value": 10
+                    }
+                },
+                "name": "Sunset",
+                "startTime": 1127,
+                "timerEnabled": true
+            }
+        },
+        "scenesOrder": [
+        ],
         "system": {
-            "sunsetTime": "05:00 PM"
+            "lastUsedLightId": "",
+            "numberClicks": 0,
+            "sunsetTime": "06:47 PM"
         }
     },
     "myMonitors": {
@@ -231,12 +572,12 @@
         "deviceIds": [],
         "deviceIdsV2": null,
         "deviceNames": null,
-        "drawLightsTab": false,
+        "drawLightsTab": true,
         "drawThingsTab": false,
         "garageDoorReminderWaitTime": 2,
         "garageDoorSecurityPinEnabled": true,
         "hasAircons": true,
-        "hasLights": false,
+        "hasLights": true,
         "hasLocks": false,
         "hasSensors": false,
         "hasThings": false,
@@ -250,7 +591,7 @@
         "myAppRev": "15.1084",
         "name": "MyPlace",
         "needsUpdate": false,
-        "noOfAircons": 1,
+        "noOfAircons": 2,
         "noOfSnapshots": 0,
         "postCode": "6000",
         "remoteAccessPairingEnabled": true,

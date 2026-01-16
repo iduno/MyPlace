@@ -15,6 +15,7 @@ import com.air.advantage.cbmessages.CANMessageAircon03ZoneState;
 import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
 import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
 import com.air.advantage.cbmessages.CANMessageAircon0aMidInformation;
+import com.air.advantage.config.MyPlaceConfig;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -34,6 +35,9 @@ public class AirconUpdateService {
     @Inject 
     MyMasterData myMasterData;
 
+    @Inject
+    MyPlaceConfig config;
+
     /**
      * Apply a map of Aircon updates (key = UID or alias) sending CAN messages for each changed aircon.
      */
@@ -49,38 +53,6 @@ public class AirconUpdateService {
     public void applySystemUpdates(DataSystem incomingSystem) {
         if (incomingSystem == null) return;
         MyMasterData.masterData.system.updateSystem(incomingSystem);
-        initializeDefaultSystem();
-        myMasterData.scheduleSave();
-    }
-
-    /**
-     * Initialize system with default values
-     */
-    public void initializeDefaultSystem() {
-        DataSystem system = MyMasterData.masterData.system;
-        if (system.aaServiceRev == null) system.aaServiceRev = "";
-        if (system.drawLightsTab == null) system.drawLightsTab = false;
-        if (system.drawThingsTab == null) system.drawThingsTab = false;
-        if (system.hasAircons == null) system.hasAircons = true;
-        if (system.hasLights == null) system.hasLights = false;
-        if (system.hasLocks == null) system.hasLocks = false;
-        if (system.hasSensors == null) system.hasSensors = false;
-        if (system.hasThings == null) system.hasThings = false;
-        if (system.hasThingsBOG == null) system.hasThingsBOG = false;
-        if (system.hasThingsLight == null) system.hasThingsLight = false;
-        if (system.myAppRev == null) system.myAppRev = "";
-        if (system.name == null) system.name = "MyPlace";
-        if (system.needsUpdate == null) system.needsUpdate = false;
-        if (system.noOfAircons == null) system.noOfAircons = 1;
-        if (system.noOfSnapshots == null) system.noOfSnapshots = 0;
-        if (system.remoteAccessPairingEnabled == null) system.remoteAccessPairingEnabled = false;
-        if (system.showMeasuredTemp == null) system.showMeasuredTemp = true;
-        if (system.sysType == null) system.sysType = "MyAir5";
-        if (system.tspModel == null) system.tspModel = "";
-        if (system.allTspErrorCodes == null) system.allTspErrorCodes = new java.util.HashMap<>();
-        if (!system.allTspErrorCodes.containsKey("tspErrorCode")) {
-            system.allTspErrorCodes.put("tspErrorCode", "noError");
-        }
         myMasterData.scheduleSave();
     }
 
