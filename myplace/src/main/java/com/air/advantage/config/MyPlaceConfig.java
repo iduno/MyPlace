@@ -39,3 +39,4 @@ public interface MyPlaceConfig {
         @WithDefault("127.0.0.1")
         String tspIp();
     }
+}
