@@ -87,4 +87,26 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
     public void setSensorType(int zoneType) { this.sensorType = zoneType; }
     public void setSetTemp(float setTemp) { this.setTemp = setTemp; }
     public void setMeasuredTemp(float measuredTemp) { this.measuredTemp = measuredTemp; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon03ZoneState)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon03ZoneState that = (CANMessageAircon03ZoneState) o;
+        if (zoneNumber != that.zoneNumber) return false;
+        if (zonePercent != that.zonePercent) return false;
+        if (sensorType != that.sensorType) return false;
+        if (Float.compare(that.setTemp, setTemp) != 0) return false;
+        return Float.compare(that.measuredTemp, measuredTemp) == 0 && zoneState == that.zoneState;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = java.util.Objects.hash(super.hashCode(), zoneNumber, zoneState, zonePercent, sensorType);
+        result = 31 * result + Float.hashCode(setTemp);
+        result = 31 * result + Float.hashCode(measuredTemp);
+        return result;
+    }
+
 }

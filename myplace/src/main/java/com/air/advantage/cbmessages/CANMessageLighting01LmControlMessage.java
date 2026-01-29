@@ -163,4 +163,21 @@ public class CANMessageLighting01LmControlMessage extends CANMessageLighting {
     public void setBrightnessLevel(int brightnessLevel) {
         this.brightnessLevel = brightnessLevel;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting01LmControlMessage)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting01LmControlMessage that = (CANMessageLighting01LmControlMessage) o;
+        if (roomNumber != that.roomNumber) return false;
+        if (brightnessLevel != that.brightnessLevel) return false;
+        return lightState == that.lightState;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), roomNumber, lightState, brightnessLevel);
+    }
+
 }

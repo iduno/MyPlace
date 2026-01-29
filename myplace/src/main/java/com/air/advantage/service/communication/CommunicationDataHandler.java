@@ -101,7 +101,7 @@ public class CommunicationDataHandler {
         long now = System.currentTimeMillis();
         long elapsed = now - lastMessageTime.get();
         if (elapsed >= 1000) {
-            LOG.trace("Sending ping to check connection");
+            LOG.debug("Sending ping to check connection");
             lastMessageTime.set(System.currentTimeMillis());
             Message pingMessage = new MessagePing();
             communicationManager.send(pingMessage);
@@ -205,7 +205,7 @@ public class CommunicationDataHandler {
     
     @ConsumeEvent("communication-data")
     public void handleData(Message data) {
-        LOG.trace("Processing communication data: " + data);
+        LOG.debug("Processing communication data: " + data);
         lastMessageTime.set(System.currentTimeMillis());
         if (config.runMode() == CommunicationConfig.RunMode.MYAIR) {
             if (data instanceof MessagePing) {
@@ -217,11 +217,11 @@ public class CommunicationDataHandler {
                 }
                 if (sendAck) {
                     sendAck = false;
-                    LOG.trace("Received ping message, sending ACK");
+                    LOG.debug("Received ping message, sending ACK");
                     MessageCAN canMessage = new MessageCAN(MessageType.ACK_CAN,MessageCAN.AckType.ACK);
                     communicationManager.send(canMessage);
                 } else {
-                    LOG.trace("Received ping message, but not sending ACK");
+                    LOG.debug("Received ping message, but not sending ACK");
                     Message canMessage = messageQueue.pop();
                     if (canMessage == null) {
                         MessageCAN cm = new MessageCAN(MessageType.SET_CAN);
@@ -241,7 +241,7 @@ public class CommunicationDataHandler {
             else if (data instanceof MessageCAN) {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();
                 for (CANMessage canMessage : canMessages) {
-                    LOG.trace("Processing CAN message: " + canMessage);
+                    LOG.debug("Processing CAN message: " + canMessage);
                     Handler.dispatch(canMessage,myMasterData, eventBus);
                 }
             
@@ -252,14 +252,14 @@ public class CommunicationDataHandler {
             if (data instanceof MessageCAN) {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();
                 for (CANMessage canMessage : canMessages) {
-                    LOG.trace("Processing CAN message: " + canMessage);
+                    LOG.debug("Processing CAN message: " + canMessage);
                     Handler.dispatch(canMessage,myMasterData, eventBus);
                 }
             
             }
             else if (data instanceof MessageGetSystemData) {
                 MessageGetSystemData systemData = (MessageGetSystemData) data;
-                LOG.trace("Received system data: " + systemData);
+                LOG.debug("Received system data: " + systemData);
                 Message messageGetSystemData = new MessageGetSystemData(MessageType.CAN2_IN_USE);
                 sendMessage(messageGetSystemData);
                 // Handle system data as needed

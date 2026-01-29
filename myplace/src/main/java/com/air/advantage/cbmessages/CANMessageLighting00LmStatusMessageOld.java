@@ -99,4 +99,21 @@ public class CANMessageLighting00LmStatusMessageOld extends CANMessageLighting {
     public void setVersion(int version) {
         this.version = version;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting00LmStatusMessageOld)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting00LmStatusMessageOld that = (CANMessageLighting00LmStatusMessageOld) o;
+        if (version != that.version) return false;
+        if (!java.util.Arrays.equals(roomExists, that.roomExists)) return false;
+        return java.util.Arrays.equals(validRooms, that.validRooms);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), java.util.Arrays.hashCode(roomExists), java.util.Arrays.hashCode(validRooms), version);
+    }
+
 }

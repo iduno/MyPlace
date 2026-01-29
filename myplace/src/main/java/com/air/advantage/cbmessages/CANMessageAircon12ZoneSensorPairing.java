@@ -61,4 +61,21 @@ public class CANMessageAircon12ZoneSensorPairing extends CANMessageAircon {
     public void setSensorMajorRev(int sensorMajorRev) {
         this.sensorMajorRev = sensorMajorRev;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon12ZoneSensorPairing)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon12ZoneSensorPairing that = (CANMessageAircon12ZoneSensorPairing) o;
+        if (infoByte != that.infoByte) return false;
+        if (sensorMajorRev != that.sensorMajorRev) return false;
+        return java.util.Objects.equals(sensorUID, that.sensorUID);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), sensorUID, infoByte, sensorMajorRev);
+    }
+
 }

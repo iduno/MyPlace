@@ -117,5 +117,18 @@ public class CANMessageAircon extends CANMessage {
         return offset;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon that = (CANMessageAircon) o;
+        return this.messageType == that.messageType;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), messageType);
+    }
 
 }

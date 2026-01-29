@@ -152,4 +152,23 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
     public void setInfoByte(int infoByte) {
         this.infoByte = infoByte;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting02LmStatusMessage)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting02LmStatusMessage that = (CANMessageLighting02LmStatusMessage) o;
+        if (majorFWVersion != that.majorFWVersion) return false;
+        if (minorFWVersion != that.minorFWVersion) return false;
+        if (infoByte != that.infoByte) return false;
+        if (!java.util.Arrays.equals(roomExists, that.roomExists)) return false;
+        return java.util.Arrays.equals(validRooms, that.validRooms) && java.util.Arrays.equals(relayRooms, that.relayRooms);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), majorFWVersion, minorFWVersion, java.util.Arrays.hashCode(roomExists), java.util.Arrays.hashCode(validRooms), java.util.Arrays.hashCode(relayRooms), infoByte);
+    }
+
 }

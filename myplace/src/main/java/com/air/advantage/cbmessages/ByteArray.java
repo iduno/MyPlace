@@ -32,6 +32,9 @@ public class ByteArray {
         if (b >= 'a' && b <= 'f') {
             return b - 'a' + 10;
         }
+        if (b >= 'A' && b <= 'F') {
+            return b - 'A' + 10;
+        }
         return -1;
     }
 

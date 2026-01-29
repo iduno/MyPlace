@@ -65,4 +65,25 @@ public class CANMessageAircon04ZoneConfiguration extends CANMessageAircon {
     public void setMotionConfig(int motionConfig) { this.motionConfig = motionConfig; }
     public void setZoneError(int zoneError) { this.zoneError = zoneError; }
     public void setRssi(int rssi) { this.rssi = rssi; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon04ZoneConfiguration)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon04ZoneConfiguration that = (CANMessageAircon04ZoneConfiguration) o;
+        return zoneNumber == that.zoneNumber &&
+                minDamper == that.minDamper &&
+                maxDamper == that.maxDamper &&
+                motionStatus == that.motionStatus &&
+                motionConfig == that.motionConfig &&
+                zoneError == that.zoneError &&
+                rssi == that.rssi;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), zoneNumber, minDamper, maxDamper, motionStatus, motionConfig, zoneError, rssi);
+    }
+
 }

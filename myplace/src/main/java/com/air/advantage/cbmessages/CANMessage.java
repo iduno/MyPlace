@@ -1,5 +1,8 @@
 package com.air.advantage.cbmessages;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class CANMessage {
 
     public enum SystemType {
@@ -204,5 +207,23 @@ public class CANMessage {
         }
         sb.append('}');
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CANMessage that = (CANMessage) o;
+        if (systemType != that.systemType) return false;
+        if (deviceType != that.deviceType) return false;
+        if (!java.util.Objects.equals(uid, that.uid)) return false;
+        return Arrays.equals(payload, that.payload);
+    }
+
+    @Override
+        public int hashCode() {
+            int result = Objects.hash(systemType, deviceType, uid);
+            result = 31 * result + Arrays.hashCode(payload);
+            return result;
     }
 }

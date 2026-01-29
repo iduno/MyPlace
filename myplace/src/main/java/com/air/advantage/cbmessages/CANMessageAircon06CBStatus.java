@@ -56,4 +56,19 @@ public class CANMessageAircon06CBStatus extends CANMessageAircon {
     public void setCbFwMinor(int cbFwMinor) { this.cbFwMinor = cbFwMinor; }
     public void setCbType(int cbType) { this.cbType = cbType; }
     public void setRfFwMajor(int rfFwMajor) { this.rfFwMajor = rfFwMajor; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon06CBStatus)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon06CBStatus that = (CANMessageAircon06CBStatus) o;
+        return cbFwMajor == that.cbFwMajor && cbFwMinor == that.cbFwMinor && cbType == that.cbType && rfFwMajor == that.rfFwMajor;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), cbFwMajor, cbFwMinor, cbType, rfFwMajor);
+    }
+
 }

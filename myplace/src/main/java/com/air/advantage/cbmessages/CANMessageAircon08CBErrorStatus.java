@@ -44,4 +44,19 @@ public class CANMessageAircon08CBErrorStatus extends CANMessageAircon {
     public String getErrorCode() { return errorCode; }
     
     public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon08CBErrorStatus)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon08CBErrorStatus that = (CANMessageAircon08CBErrorStatus) o;
+        return java.util.Objects.equals(errorCode, that.errorCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), errorCode);
+    }
+
 }

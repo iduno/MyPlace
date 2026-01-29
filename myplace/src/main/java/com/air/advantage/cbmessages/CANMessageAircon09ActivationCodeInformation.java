@@ -54,4 +54,19 @@ public class CANMessageAircon09ActivationCodeInformation extends CANMessageAirco
     public void setActivationTimeDays(int activationTimeDays) {
         this.activationTimeDays = activationTimeDays;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon09ActivationCodeInformation)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon09ActivationCodeInformation that = (CANMessageAircon09ActivationCodeInformation) o;
+        return action == that.action && unlockCode == that.unlockCode && activationTimeDays == that.activationTimeDays;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), action, unlockCode, activationTimeDays);
+    }
+
 }

@@ -60,4 +60,19 @@ public class CANMessageLighting17Rm2AddDevice extends CANMessageLighting {
     public void setInfoByte(int infoByte) {
         this.infoByte = infoByte;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting17Rm2AddDevice)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting17Rm2AddDevice that = (CANMessageLighting17Rm2AddDevice) o;
+        return majorFWVersion == that.majorFWVersion && minorFWVersion == that.minorFWVersion && infoByte == that.infoByte;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), majorFWVersion, minorFWVersion, infoByte);
+    }
+
 }

@@ -163,4 +163,27 @@ public class CANMessageAircon05AirconState extends CANMessageAircon {
     public void setMyZoneId(int myZoneId) { this.myZoneId = myZoneId; }
     public void setFreshAirStatus(FreshAirStatus freshAirStatus) { this.freshAirStatus = freshAirStatus; }
     public void setRfSysId(int rfSysId) { this.rfSysId = rfSysId; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon05AirconState)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon05AirconState that = (CANMessageAircon05AirconState) o;
+        if (rfSysId != that.rfSysId) return false;
+        if (myZoneId != that.myZoneId) return false;
+        if (Float.compare(that.setTemp, setTemp) != 0) return false;
+        if (systemState != that.systemState) return false;
+        if (systemMode != that.systemMode) return false;
+        if (systemFan != that.systemFan) return false;
+        return freshAirStatus == that.freshAirStatus;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = java.util.Objects.hash(super.hashCode(), systemState, systemMode, systemFan, myZoneId, freshAirStatus, rfSysId);
+        result = 31 * result + Float.hashCode(setTemp);
+        return result;
+    }
+
 }

@@ -93,4 +93,22 @@ public class CANMessageAircon02UnitTypeInformation extends CANMessageAircon {
     public void setActivationStatus(CodeStatus activationStatus) { this.activationStatus = activationStatus; }
     public void setFwMajor(int fwMajor) { this.fwMajor = fwMajor; }
     public void setFwMinor(int fwMinor) { this.fwMinor = fwMinor; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon02UnitTypeInformation)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon02UnitTypeInformation that = (CANMessageAircon02UnitTypeInformation) o;
+        if (fwMajor != that.fwMajor) return false;
+        if (fwMinor != that.fwMinor) return false;
+        if (unitType != that.unitType) return false;
+        return activationStatus == that.activationStatus;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), unitType, activationStatus, fwMajor, fwMinor);
+    }
+
 }

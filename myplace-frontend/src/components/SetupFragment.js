@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Box, Typography, Paper, Grid, Button, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch, FormControlLabel, Divider, Chip } from '@mui/material';
 import SecurityIcon from '@mui/icons-material/Security';
 import LockIcon from '@mui/icons-material/Lock';
@@ -47,6 +47,9 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [autoFanSpeed, setAutoFanSpeed] = useState(false);
   const [freshAirEnabled, setFreshAirEnabled] = useState(false);
   const [zonesCount, setZonesCount] = useState(null);
+  const [editingZones, setEditingZones] = useState(false);
+  const [editingZonesCount, setEditingZonesCount] = useState(null);
+  const editingZonesRef = useRef(false);
   const [zoneSaving, setZoneSaving] = useState(false);
   const [comfortMode, setComfortMode] = useState('myZone'); // 'myZone' | 'myTemp' | 'myAuto'
   // Newly added state placeholders mirroring native advanced setup features
@@ -63,6 +66,11 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [editingZoneId, setEditingZoneId] = useState(null);
   const [editingZoneName, setEditingZoneName] = useState('');
   const [updatingZones, setUpdatingZones] = useState(false);
+  const [systemName, setSystemName] = useState('');
+  const [editingSystem, setEditingSystem] = useState(false);
+  const [newSystemName, setNewSystemName] = useState('');
+  const editingSystemRef = useRef(false);
+  const [systemSaving, setSystemSaving] = useState(false);
 
   useEffect(() => {
     ApiService.startAirconPolling();
@@ -106,13 +114,25 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           if (sys && typeof sys.showMeasuredTemp !== 'undefined') {
             setShowMeasuredTemps(!!sys.showMeasuredTemp);
           }
+          // Initialize system name from system object when available
+          try {
+            const sysName = data._raw?.system?.name || data._raw?.systemInfo?.id || data._raw?.system?.id || '';
+            if (sysName && !editingSystemRef.current) {
+              setSystemName(sysName);
+            }
+          } catch (err) {
+            // ignore
+          }
           // Initialize zonesCount from aircon info.noOfZones if present
           try {
             const airconId = data._raw && data._raw.aircons ? Object.keys(data._raw.aircons || {})[0] : null;
             const info = airconId ? (data._raw.aircons?.[airconId]?.info || {}) : {};
             const infoCount = info?.noOfZones;
             if (typeof infoCount !== 'undefined' && infoCount !== null) {
-              setZonesCount(Number(infoCount));
+              // Only update zonesCount from backend when the user is not actively editing it
+              if (!editingZonesRef.current) {
+                setZonesCount(Number(infoCount));
+              }
             }
           } catch (err) {
             // ignore
@@ -155,6 +175,16 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
       try { unsubZones(); } catch(_) {}
     };
   }, []);
+
+  // keep editing ref updated when editingZones changes
+  useEffect(() => {
+    editingZonesRef.current = editingZones;
+  }, [editingZones]);
+
+  // keep editing ref updated when editingSystem changes
+  useEffect(() => {
+    editingSystemRef.current = editingSystem;
+  }, [editingSystem]);
 
   const handleAction = (action) => {
     switch (action) {
@@ -296,15 +326,84 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     setSnackbar({ open: true, message: 'Time & Date set (placeholder)', severity: 'success' });
   };
 
+  const submitSystemName = async () => {
+    const nameToSave = newSystemName?.trim();
+    if (!nameToSave) return setSnackbar({ open: true, message: 'System name cannot be empty', severity: 'warning' });
+    setSystemSaving(true);
+    try {
+      await ApiService.updateSystem({ name: nameToSave });
+      setSnackbar({ open: true, message: 'System name updated', severity: 'success' });
+      setEditingSystem(false);
+      setNewSystemName('');
+      ApiService.refreshSystem();
+    } catch (err) {
+      setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+    } finally {
+      setSystemSaving(false);
+    }
+  };
+
+  const submitZones = async () => {
+    const valueToSave = editingZonesCount;
+    if (valueToSave === null || isNaN(valueToSave)) { setSnackbar({ open: true, message: 'Enter a valid number of zones', severity: 'warning' }); return; }
+    if (valueToSave < 1 || valueToSave > 10) { setSnackbar({ open: true, message: 'Zones must be between 1 and 10', severity: 'warning' }); return; }
+    setZoneSaving(true);
+    try {
+      await ApiService.updateAircon({ noOfZones: valueToSave });
+      setSnackbar({ open: true, message: `Number of zones set to ${valueToSave}`, severity: 'success' });
+      setEditingZones(false);
+      setEditingZonesCount(null);
+      ApiService.refreshAircon();
+    } catch (err) {
+      setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+    } finally {
+      setZoneSaving(false);
+    }
+  };
+
   return (
     <StyledPaper elevation={1}>
       <Box display="flex" flexDirection="column">
-        <Typography variant="h6" sx={{ mb: 2 }}>{aircon?.airconName || 'Advanced Setup'}</Typography>
-        <Box mb={1}>
-          <Chip label={aircon?.systemStatus === 'active' ? 'System Active' : 'Standby'} color={aircon?.systemStatus === 'active' ? 'success' : 'default'} size="small" />
-        </Box>
+        <Grid item xs={12} md={12}>
+          <Paper variant="outlined" sx={{ p: 2, mb: 1 }}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <DeviceHubIcon fontSize="small" />
+              <Typography variant="caption" color="text.secondary">System Name</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+              {editingSystem ? (
+                <TextField
+                  size="small"
+                  value={newSystemName}
+                  onChange={e => setNewSystemName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      submitSystemName();
+                    } else if (e.key === 'Escape') {
+                      setEditingSystem(false);
+                      setNewSystemName(systemName || aircon?._raw?.system?.name || '');
+                    }
+                  }}
+                  sx={{ flex: 1 }}
+                  autoFocus
+                />
+              ) : (
+                <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{systemName || aircon?._raw?.system?.name || aircon?._raw?.systemInfo?.id || 'System'}</Typography>
+              )}
 
-
+              {editingSystem ? (
+                <>
+                  <Button size="small" onClick={submitSystemName} variant="contained" disabled={systemSaving}>OK</Button>
+                  <Button size="small" onClick={() => { setEditingSystem(false); setNewSystemName(systemName || aircon?._raw?.system?.name || ''); }} disabled={systemSaving}>Cancel</Button>
+                </>
+              ) : (
+                <IconButton size="small" onClick={() => { setNewSystemName(systemName || aircon?._raw?.system?.name || ''); setEditingSystem(true); }}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
         <Divider sx={{ my: 3 }} />
 
         {/* Toggles Section */}
@@ -358,34 +457,6 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                 setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
               }
             }} />} label="Enable Fresh Air" />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Paper variant="outlined" sx={{ p: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="caption">Number of Zones</Typography>
-              <TextField
-                size="small"
-                type="number"
-                inputProps={{ min: 1, max: 10 }}
-                value={zonesCount === null ? '' : zonesCount}
-                onChange={(e) => setZonesCount(e.target.value === '' ? null : Number(e.target.value))}
-                sx={{ width: 100 }}
-              />
-              <Button size="small" variant="contained" disabled={zoneSaving} onClick={async () => {
-                if (zonesCount === null || isNaN(zonesCount)) { setSnackbar({ open: true, message: 'Enter a valid number of zones', severity: 'warning' }); return; }
-                if (zonesCount < 1 || zonesCount > 10) { setSnackbar({ open: true, message: 'Zones must be between 1 and 10', severity: 'warning' }); return; }
-                // Optimistic update not much to change locally other than showing feedback
-                setZoneSaving(true);
-                try {
-                  await ApiService.updateAircon({ noOfZones: zonesCount });
-                  setSnackbar({ open: true, message: `Number of zones set to ${zonesCount}`, severity: 'success' });
-                  ApiService.refreshAircon();
-                } catch (err) {
-                  setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
-                } finally {
-                  setZoneSaving(false);
-                }
-              }}>Set</Button>
-            </Paper>
           </Grid>
         </Grid>
 
@@ -441,6 +512,47 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                   <IconButton size="small" onClick={() => { setNewAirconName(aircon?.airconName || ''); setEditingAircon(true); }}>
                     <EditIcon fontSize="small" />
                   </IconButton>
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+            
+          <Grid item xs={12} md={12}>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <SensorsIcon fontSize="small" />
+                <Typography variant="caption" color="text.secondary">Number of Zones</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+                {editingZones ? (
+                  <>
+                    <TextField
+                      size="small"
+                      type="number"
+                      inputProps={{ min: 1, max: 10 }}
+                      value={editingZonesCount === null ? '' : editingZonesCount}
+                      onChange={(e) => setEditingZonesCount(e.target.value === '' ? null : Number(e.target.value))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setEditingZones(false);
+                          setEditingZonesCount(null);
+                        } else if (e.key === 'Enter') {
+                          submitZones();
+                        }
+                      }}
+                      sx={{ flex: 1 }}
+                      autoFocus
+                    />
+                    <Button size="small" onClick={submitZones} variant="contained" disabled={zoneSaving}>OK</Button>
+                    <Button size="small" onClick={() => { setEditingZones(false); setEditingZonesCount(null); }} sx={{ ml: 1 }}>Cancel</Button>
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body2" sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{zonesCount === null ? 'Not set' : zonesCount}</Typography>
+                    <IconButton size="small" onClick={() => { setEditingZones(true); setEditingZonesCount(zonesCount); }}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </>
                 )}
               </Box>
             </Paper>

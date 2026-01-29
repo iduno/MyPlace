@@ -5,19 +5,24 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.air.advantage.aaservice.data.DataAircon;
+import com.air.advantage.aaservice.data.DataAircon.SystemState;
 import com.air.advantage.aaservice.data.DataAirconInfo;
 import com.air.advantage.aaservice.data.DataSystem;
 import com.air.advantage.aaservice.data.DataZone;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
+import com.air.advantage.cbmessages.CANMessage.DeviceType;
 import com.air.advantage.cbmessages.CANMessageAircon01ZoneInformation;
 import com.air.advantage.cbmessages.CANMessageAircon03ZoneState;
 import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
 import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
+import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
 import com.air.advantage.cbmessages.CANMessageAircon0aMidInformation;
 import com.air.advantage.config.MyPlaceConfig;
 
+import io.vertx.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -37,6 +42,54 @@ public class AirconUpdateService {
 
     @Inject
     MyPlaceConfig config;
+
+    @Inject
+    Vertx vertx;
+
+    private long systemTimerId;
+
+    @PostConstruct
+    public void initialize() {
+        if (vertx != null) {
+            systemTimerId = vertx.setPeriodic(60000, id -> systemTimer());
+        }
+    }
+    
+
+    private void systemTimer() {
+        myMasterData.masterData.aircons.forEach((key, aircon) -> {
+            String uid = aircon.airconInfo.uid;
+
+            CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
+            airconStatus.setDeviceType(DeviceType.CONTROL_BOARD);
+            eventBus.publish("communication-send-can", airconStatus);
+
+            DataAircon dataAircon = null;
+            if (aircon.airconInfo.countDownToOff > 0) {
+                aircon.airconInfo.countDownToOff--;
+                if (aircon.airconInfo.countDownToOff == 0) {
+                    dataAircon = DataAircon.create();
+                    dataAircon.airconInfo.state = SystemState.off;
+                    dataAircon.airconInfo.countDownToOff = 0;
+                    dataAircon.airconInfo.countDownToOn = 0;
+                }
+            }
+            if (aircon.airconInfo.countDownToOn > 0) {
+                aircon.airconInfo.countDownToOn--;
+                if (aircon.airconInfo.countDownToOn == 0) {
+                    dataAircon = DataAircon.create();
+                    dataAircon.airconInfo.state = SystemState.on;
+                    dataAircon.airconInfo.countDownToOff = 0;
+                    dataAircon.airconInfo.countDownToOn = 0;
+                }
+            }
+
+            if (dataAircon != null) {
+                applyUpdateForKey(key, dataAircon);
+                myMasterData.scheduleSave();
+            }
+        });
+    }
 
     /**
      * Apply a map of Aircon updates (key = UID or alias) sending CAN messages for each changed aircon.
@@ -118,7 +171,8 @@ public class AirconUpdateService {
                 changed(oldInfo.mode, newInfo.mode) ||
                 changed(oldInfo.fan, newInfo.fan) ||
                 changed(oldInfo.setTemp, newInfo.setTemp) ||
-                changed(oldInfo.myZone, newInfo.myZone);
+                changed(oldInfo.myZone, newInfo.myZone) ||
+                changed(oldInfo.freshAirStatus, newInfo.freshAirStatus);
         if (airconStateChanged || isNew) {
             CANMessageAircon05AirconState msg = new CANMessageAircon05AirconState();
             populateHeader(msg, uid);
@@ -150,6 +204,14 @@ public class AirconUpdateService {
             }
             msg.setSetTemp(valueOr(oldInfo.setTemp, newInfo.setTemp, 25.0f));
             msg.setMyZoneId(valueOrZero(newInfo.myZone, oldInfo.myZone));
+            DataAircon.FreshAirStatus freshAirStatus = valueOr(oldInfo.freshAirStatus, newInfo.freshAirStatus);
+            if (freshAirStatus != null) switch (freshAirStatus) {
+                case none -> msg.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.NONE);
+                case on -> msg.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.ON);
+                case off -> msg.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.OFF);
+                default -> msg.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.NONE);
+            }
+
             eventBus.publish("communication-send-can", msg);
             anyMessageSent.set(true);
         }

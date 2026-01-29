@@ -112,4 +112,19 @@ public class CANMessageLighting16Rm2StatusMessage extends CANMessageLighting {
     public void setInfoByte(int infoByte) {
         this.infoByte = infoByte;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting16Rm2StatusMessage)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting16Rm2StatusMessage that = (CANMessageLighting16Rm2StatusMessage) o;
+        return dip1State == that.dip1State && dip2State == that.dip2State && dip3State == that.dip3State && dip4State == that.dip4State && dip5State == that.dip5State && dip6State == that.dip6State && infoByte == that.infoByte;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), dip1State, dip2State, dip3State, dip4State, dip5State, dip6State, infoByte);
+    }
+
 }

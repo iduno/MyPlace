@@ -83,4 +83,18 @@ public class CANMessageLighting extends CANMessage{
         return offset;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting that = (CANMessageLighting) o;
+        return this.messageType == that.messageType;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), messageType);
+    }
+
 }

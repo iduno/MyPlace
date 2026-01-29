@@ -156,4 +156,28 @@ public class CANMessageLighting15Rm2ControlMessage extends CANMessageLighting {
     public boolean isPoll() {
         return isPoll;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageLighting15Rm2ControlMessage)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageLighting15Rm2ControlMessage that = (CANMessageLighting15Rm2ControlMessage) o;
+        return roomNumber == that.roomNumber &&
+               lightState == that.lightState &&
+               switchState == that.switchState &&
+               dimLevel == that.dimLevel &&
+               nodeDipState == that.nodeDipState &&
+               dimOffset == that.dimOffset &&
+               statusState == that.statusState &&
+               lowBattery == that.lowBattery &&
+               isCalibrated == that.isCalibrated &&
+               isPoll == that.isPoll;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), roomNumber, lightState, switchState, dimLevel, nodeDipState, dimOffset, statusState, lowBattery, isCalibrated, isPoll);
+    }
+
 }

@@ -54,4 +54,19 @@ public class CANMessageAircon26RfDevicePairing extends CANMessageAircon {
     public void setChannelNo(int channelNo) {
         this.channelNo = channelNo;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon26RfDevicePairing)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon26RfDevicePairing that = (CANMessageAircon26RfDevicePairing) o;
+        return pairingControl == that.pairingControl && rfDeviceType == that.rfDeviceType && channelNo == that.channelNo;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), pairingControl, rfDeviceType, channelNo);
+    }
+
 }

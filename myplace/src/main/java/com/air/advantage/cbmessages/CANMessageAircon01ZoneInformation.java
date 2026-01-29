@@ -117,4 +117,25 @@ public class CANMessageAircon01ZoneInformation extends CANMessageAircon {
     public void setFilterCleanStatus(int filterCleanStatus) {
         this.filterCleanStatus = filterCleanStatus;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon01ZoneInformation)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon01ZoneInformation that = (CANMessageAircon01ZoneInformation) o;
+        return destination == that.destination &&
+                numZones == that.numZones &&
+                numConstantZones == that.numConstantZones &&
+                constantZone1 == that.constantZone1 &&
+                constantZone2 == that.constantZone2 &&
+                constantZone3 == that.constantZone3 &&
+                filterCleanStatus == that.filterCleanStatus;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), destination, numZones, numConstantZones, constantZone1, constantZone2, constantZone3, filterCleanStatus);
+    }
+
 }

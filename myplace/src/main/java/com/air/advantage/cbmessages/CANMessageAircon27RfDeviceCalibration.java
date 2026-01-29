@@ -60,4 +60,19 @@ public class CANMessageAircon27RfDeviceCalibration extends CANMessageAircon {
     public void setUpDownPosition(int upDownPosition) {
         this.upDownPosition = upDownPosition;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon27RfDeviceCalibration)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon27RfDeviceCalibration that = (CANMessageAircon27RfDeviceCalibration) o;
+        return calibrationControl == that.calibrationControl && channelNo == that.channelNo && upDownPosition == that.upDownPosition;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), calibrationControl, channelNo, upDownPosition);
+    }
+
 }

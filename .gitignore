@@ -1,8 +1,8 @@
 # Ignore build output directories
 target/
 */target/
-
 test/
+logs/
 
 # Ignore Java1 compiled files
 *.class

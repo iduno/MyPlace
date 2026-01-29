@@ -111,12 +111,24 @@ public class HandlerAirconCB extends Handler {
         dataAirconInfo.filterCleanStatus = msg.getFilterCleanStatus();
         // Update zones map if needed
         if (dataAircon.getZones() != null) {
-            int currentSize = dataAircon.getZones().size();
+
             int numZones = msg.getNumZones();
+            // Create missing zones
+            for (int i = 1; i <= numZones; i++) {
+                String zoneKey = String.format("z%02d", i);
+                if (!dataAircon.getZones().containsKey(zoneKey)) {
+                    DataZone newZone = new DataZone();
+                    newZone.number = i;
+                    newZone.name = "Zone " + i;
+                    dataAircon.getZones().put(zoneKey, newZone);
+                }
+            }
+            // Remove zones beyond the count
+            int currentSize = dataAircon.getZones().size();
             if (numZones < currentSize) {
                 for (int i = numZones + 1; i <= currentSize; i++) {
-                    String zoneName = String.format("z%02d", i);
-                    dataAircon.getZones().remove(zoneName); // Replace with your actual zone key logic if needed
+                    String zoneKey = String.format("z%02d", i);
+                    dataAircon.getZones().remove(zoneKey);
                 }
             }
         }

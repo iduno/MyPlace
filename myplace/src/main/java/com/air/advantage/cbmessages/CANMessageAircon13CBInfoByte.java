@@ -29,4 +29,19 @@ public class CANMessageAircon13CBInfoByte extends CANMessageAircon {
     public int getInfoByte() { return infoByte; }
     
     public void setInfoByte(int infoByte) { this.infoByte = infoByte; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon13CBInfoByte)) return false;
+        if (!super.equals(o)) return false;
+        CANMessageAircon13CBInfoByte that = (CANMessageAircon13CBInfoByte) o;
+        return infoByte == that.infoByte;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode(), infoByte);
+    }
+
 }

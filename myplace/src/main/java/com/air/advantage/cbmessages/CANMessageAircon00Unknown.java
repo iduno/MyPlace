@@ -15,4 +15,16 @@ public class CANMessageAircon00Unknown extends CANMessageAircon {
         // No fields to serialize for this message
         return offset + 14;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CANMessageAircon00Unknown)) return false;
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(super.hashCode());
+    }
 }
