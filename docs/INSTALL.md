@@ -84,7 +84,19 @@ If mDNS (`.local`) doesn't resolve, use the IP address.
 
 ---
 
-## 4. Install OpenJDK 17, Maven and Git
+## 4. Enable Serial. RS485 / CAN HAT notes
+*** Important: If using Serial ensure login shell is disabled over serial ***
+
+Hardware setups vary by HAT/device. See specific documentation for device. 
+
+- Ensure any device tree overlays required by the HAT are enabled in `/boot/config.txt` (check HAT docs).
+- If your HAT uses UART, Enable serial and disable the login shell  via `raspi-config` → Interface Options → Serial). 
+- If the HAT uses SPI/CAN, enable SPI (`raspi-config` → Interface Options → SPI).
+- The RS485 transceiver usually exposes a `/dev/tty*` device (e.g. `/dev/ttyAMA0` or `/dev/ttyS0`). Confirm by running `dmesg` or `ls /dev/tty*` after attaching the HAT.
+
+---
+
+## 5. Install OpenJDK 17, Maven and Git
 
 Update packages and install required software:
 
@@ -94,7 +106,7 @@ sudo apt update && sudo apt full-upgrade -y
 sudo apt install -y openjdk-17-jdk-headless
 # Verify java
 java -version
-# Install Maven and Git
+# Install Maven and Git if building on PI.
 sudo apt install -y maven git
 # Verify
 mvn -v
@@ -105,7 +117,7 @@ Note: Raspberry Pi OS package repos provide OpenJDK 17. OpenJDK 21+ are not curr
 
 ---
 
-## 5. Pull the code from GitHub
+## 6. Pull the code from GitHub
 
 Clone the repo under a suitable directory (e.g. `/home/aircon/projects`):
 
@@ -118,7 +130,9 @@ cd MyPlace
 
 ---
 
-## 6. Build the project
+## 7. Build the project
+
+*** A PI Zero does not have enough memory to build. Requires building on another computer. ***
 
 From the repository root run:
 
@@ -128,7 +142,7 @@ mvn clean install package
 
 Notes:
 - The build will produce artifacts in the `myplace/target` and `myplace/target/quarkus-app` directories depending on project packaging.
-- Large builds may take significant time on a Pi Zero W. Consider building on a faster machine (x86) and copying the assembled `quarkus-app` folder or final jar to the Pi.
+- Large builds may take significant time on a Pi. Consider building on a faster machine (x86) and copying the assembled `quarkus-app` folder or final jar to the Pi.
 
 Optional faster workflow:
 - Build on your PC and then `rsync` or `scp` the `quarkus-app`/jar to the Pi.
@@ -136,12 +150,49 @@ Optional faster workflow:
 
 ---
 
-## 7. Create a systemd service to run the server
+## 8. Create a systemd service to run the server
 
-Below is a generic example. Adjust `ExecStart` to the actual runnable produced by your build (jar, quarkus-app runner, or a shell wrapper). Place the service file at `/etc/systemd/system/airconpi.service`.
+Create an install folder allow access for the executing user:
+
+```bash
+sudo mkdir -p /opt/airconpi
+sudo chown aircon /opt/airconpi
+sudo chgrp aircon /opt/airconpi
+```
+
+Copy the `myplace/target/quarkus-app` directory to `/opt/airconpi` and check the folder has the required files and folders:
+
+```bash
+ls /opt/airconpi/
+# app  lib  quarkus quarkus-run.jar
+```
+
+create the folder `/opt/airconpi/config` and add `application.properties` file
+
+```bash
+mkdir -p /opt/airconpi/config
+pico /opt/airconpi/config/application.properties
+```
+
+```ini
+communication.serial.port=/dev/serial0
+communication.serial.baud-rate=57600
+communication.runmode=MYAIR
+communication.type=SERIAL
+communication.autoconnect=true
+communication.http.server.port=2025
+myplace.config.path=config/myplace.json
+
+quarkus.http.host=0.0.0.0
+quarkus.http.port=8080
+```
+
+Below is a generic example for a systemd config. Adjust `ExecStart` to the actual runnable produced by your build (jar, quarkus-app runner, or a shell wrapper). Place the service file at `/etc/systemd/system/airconpi.service`.
 
 Example service (edit paths as required):
-
+```bash
+sudo pico /etc/systemd/system/airconpi.service
+```
 ```ini
 [Unit]
 Description=AirconPi MyPlace service
@@ -149,11 +200,8 @@ After=network.target
 
 [Service]
 User=aircon
-WorkingDirectory=/home/aircon/projects/MyPlace/myplace
-# Example using the assembled quarkus app launcher
-# ExecStart=/usr/bin/java -jar /home/aircon/projects/MyPlace/myplace/target/quarkus-app/quarkus-run.jar
-# Or if the build produces a runner jar or custom launcher, point to it.
-ExecStart=/usr/bin/java -jar /home/aircon/projects/MyPlace/myplace/target/quarkus-app/quarkus-run.jar
+WorkingDirectory=/opt/airconpi
+ExecStart=/usr/bin/java -jar /opt/airconpi/quarkus-run.jar
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=5
@@ -179,42 +227,9 @@ Placeholder: ![](systemd-service-example.png)
 
 ---
 
-## 8. RS485 / CAN HAT notes
 
-Hardware setups vary by HAT. General suggestions:
-- Ensure any device tree overlays required by the HAT are enabled in `/boot/config.txt` (check HAT docs). Example:
+## 9. Security notes
 
-```conf
-dtoverlay=pi3-miniuart-bt
-# or a hat-specific overlay like dtoverlay=spi0-1cs
-```
-
-- Enable serial console if your HAT uses UART (disable the Linux serial console if necessary via `raspi-config` → Interface Options → Serial). Allow the serial port for application use.
-- If the HAT uses SPI/CAN, enable SPI (`raspi-config` → Interface Options → SPI).
-- The RS485 transceiver usually exposes a `/dev/tty*` device (e.g. `/dev/ttyAMA0` or `/dev/ttyS0`). Confirm by running `dmesg` or `ls /dev/tty*` after attaching the HAT.
-
-Add wiring photos and hat orientation here.
-
-Placeholder: ![](hat-orientation.jpg)
-
----
-
-## 9. What to add to documentation (suggestions)
-
-- Hardware photos: Pi Zero W with HAT attached, wiring to RS485/CAN adaptor, terminal block wiring.
-- A short wiring diagram showing TX/RX/DE/RE or CAN_H/L connections.
-- Example `config.json` snippets for connecting to RS485/CAN devices.
-- Example log output showing successful startup and device detection.
-- A small troubleshooting section (common failures and how to check serial, overlay, permissions).
-- A note about building on a faster machine and copying artifacts to the Pi (speeds up deployments).
-- A short section about backing up the SD card image once a working system is configured.
-
----
-
-## 10. Security notes
-
-- Change the default password for the `pi` account.
-- Consider creating a dedicated system user (e.g. `aircon`) and running the service under that account.
-- If exposing the service to a wider network, consider firewall rules and HTTPS.
+- Standard service does not have authentication and anyone on the network can access the portal.
 
 ---
