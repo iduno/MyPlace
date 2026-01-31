@@ -12,6 +12,7 @@
     
     <artifactId>myplace-frontend</artifactId>
     <name>MyPlace Frontend</name>
+    <packaging>pom</packaging>
     
     <properties>
         <node.version>v25.5.0</node.version>
