@@ -37,7 +37,11 @@
       "type": "node",
       "request": "launch",
       "name": "Run MYAIR Application",
-      "runtimeExecutable": "mvn",
+      "runtimeExecutable": "${workspaceFolder}/myplace/mvnw",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
+      },
+      "preLaunchTask": "Run MyPlace MYAIR",
       "args": [
         "quarkus:dev",
         "-Ddebug=false",
@@ -51,7 +55,10 @@
       "type": "node",
       "request": "launch",
       "name": "Run CB Application",
-      "runtimeExecutable": "mvn",
+      "runtimeExecutable": "${workspaceFolder}/myplace/mvnw",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
+      },
       "args": [
         "quarkus:dev",
         "-Ddebug=false",
@@ -65,7 +72,11 @@
       "type": "node",
       "request": "launch",
       "name": "Run TCP MYAIR Application",
-      "runtimeExecutable": "mvn",
+      "runtimeExecutable": "${workspaceFolder}/myplace/mvnw",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
+      },
+      "preLaunchTask": "Run TCP MyPlace MYAIR",
       "args": [
         "quarkus:dev",
         "-Ddebug=false",
@@ -79,7 +90,11 @@
       "type": "node",
       "request": "launch",
       "name": "Run TCP CB Application",
-      "runtimeExecutable": "mvn",
+      "runtimeExecutable": "${workspaceFolder}/myplace/mvnw",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
+      },
+      "preLaunchTask": "Run TCP MyPlace CB",
       "args": [
         "quarkus:dev",
         "-Ddebug=false",

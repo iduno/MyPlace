@@ -11,8 +11,8 @@
     <properties>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.28.1</quarkus.platform.version> <!-- reference https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom for latest version -->
-        <compiler-plugin.version>3.11.0</compiler-plugin.version>
+        <quarkus.platform.version>3.31.1</quarkus.platform.version> <!-- reference https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom for latest version -->
+        <compiler-plugin.version>3.14.1</compiler-plugin.version>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
@@ -32,25 +32,7 @@
         </dependencies>
     </dependencyManagement>
 
-    <build>
-		<plugins>
-			<plugin>
-				<groupId>${quarkus.platform.group-id}</groupId>
-				<artifactId>quarkus-maven-plugin</artifactId>
-				<version>${quarkus.platform.version}</version>
-				<extensions>true</extensions>
-				<executions>
-					<execution>
-						<goals>
-							<goal>build</goal>
-							<goal>generate-code</goal>
-							<goal>generate-code-tests</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+
 
     <profiles>
 		<profile>
@@ -68,4 +50,14 @@
             </modules>
 		</profile>
 	</profiles>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

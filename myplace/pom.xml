@@ -38,12 +38,7 @@
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
             </dependency>
-            <dependency>
-                <groupId>jakarta.platform</groupId>
-                <artifactId>jakarta.jakartaee-api</artifactId>
-                <version>10.0.0</version> <!-- Replace with the version you are using -->
-                
-            </dependency>
+
 
             <dependency>
               <groupId>com.fazecast</groupId>
@@ -79,14 +74,10 @@
             
             <dependency>
                 <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-junit5</artifactId>
+                <artifactId>quarkus-junit</artifactId>
                 <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-junit5-mockito</artifactId>
-                <scope>test</scope>
-            </dependency>
+ 
         </dependencies>
 
     <build>
