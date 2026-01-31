@@ -6,7 +6,7 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import com.air.advantage.cbmessages.Message;
-import com.air.advantage.config.CommunicationConfig;
+import com.air.advantage.config.MyPlaceConfig.CommunicationConfig;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
 import com.fazecast.jSerialComm.SerialPortMessageListener;

@@ -1,5 +1,7 @@
 package com.air.advantage.cbmessages;
 
+import java.util.Objects;
+
 public class Message {
 
     MessageType messageType;
@@ -146,6 +148,21 @@ public class Message {
             return bodyData.length;
         }
         return 0;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Message)) return false;
+        Message other = (Message) o;
+        return messageType == other.messageType
+                && Objects.equals(crcValid, other.crcValid)
+                && Objects.equals(data, other.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(messageType, crcValid, data);
     }
 
 }

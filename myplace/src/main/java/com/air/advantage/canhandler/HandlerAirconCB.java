@@ -391,6 +391,95 @@ public class HandlerAirconCB extends Handler {
         zoneInfo.setFilterCleanStatus(dataAircon.airconInfo.filterCleanStatus);
         eventBus.publish("communication-send-can", zoneInfo);
 
+        // Send 05 message (AirconState)
+        CANMessageAircon05AirconState airconState = new CANMessageAircon05AirconState();
+        airconState.setUid(uid);
+        airconState.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        airconState.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+        
+        // Set airconState properties based on dataAircon
+        if (dataAircon.airconInfo.state != null) {
+            if (dataAircon.airconInfo.state == DataAircon.SystemState.on) {
+                airconState.setSystemState(CANMessageAircon05AirconState.SystemState.ON);
+            } else {
+                airconState.setSystemState(CANMessageAircon05AirconState.SystemState.OFF);
+            }
+        }
+        
+        // Set temperature
+        airconState.setSetTemp(dataAircon.airconInfo.setTemp != null ? dataAircon.airconInfo.setTemp : 25.0f);
+        
+        // Convert mode if available
+        if (dataAircon.airconInfo.mode != null) {
+            switch (dataAircon.airconInfo.mode) {
+                case cool:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.COOL);
+                    break;
+                case heat:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.HEAT);
+                    break;
+                case vent:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.VENT);
+                    break;
+                case dry:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.DRY);
+                    break;
+                case auto:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.AUTO);
+                    break;
+                case myauto:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.MYAUTO);
+                    break;
+                default:
+                    airconState.setSystemMode(CANMessageAircon05AirconState.SystemMode.AUTO);
+                    break;
+
+            }
+        }
+        
+        // Set fan status
+        if (dataAircon.airconInfo.fan != null) {
+            switch (dataAircon.airconInfo.fan) {
+                case low:
+                    airconState.setSystemFan(CANMessageAircon05AirconState.FanState.LOW);
+                    break;
+                case medium:
+                    airconState.setSystemFan(CANMessageAircon05AirconState.FanState.MEDIUM);
+                    break;
+                case high:
+                    airconState.setSystemFan(CANMessageAircon05AirconState.FanState.HIGH);
+                    break;
+                case auto:
+                    airconState.setSystemFan(CANMessageAircon05AirconState.FanState.AUTO);
+                    break;
+                case autoAA:
+                    airconState.setSystemFan(CANMessageAircon05AirconState.FanState.AUTOAA);
+                    break;
+                default:
+                    airconState.setSystemFan(CANMessageAircon05AirconState.FanState.AUTO);
+                    break;
+            }
+        }
+
+        if (dataAircon.airconInfo.freshAirStatus != null) {
+            switch (dataAircon.airconInfo.freshAirStatus) {
+                case none:
+                    airconState.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.NONE);
+                    break;
+                case on:
+                    airconState.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.ON);
+                    break;
+                case off:
+                    airconState.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.OFF);
+                    break;
+            }
+        }
+        
+        // Set myZone (if available)
+        airconState.setMyZoneId(dataAircon.airconInfo.myZone != null ? dataAircon.airconInfo.myZone : 0);
+        
+        eventBus.publish("communication-send-can", airconState);
+
         for (DataZone zone : dataAircon.getZones().values()) {
             if (zone == null) continue;
             CANMessageAircon12ZoneSensorPairing zoneSensorPairing = new CANMessageAircon12ZoneSensorPairing();

@@ -175,12 +175,12 @@ pico /opt/airconpi/config/application.properties
 ```
 
 ```ini
-communication.serial.port=/dev/serial0
-communication.serial.baud-rate=57600
-communication.runmode=MYAIR
-communication.type=SERIAL
-communication.autoconnect=true
-communication.http.server.port=2025
+myplace.communication.serial.port=/dev/serial0
+myplace.communication.serial.baud-rate=57600
+myplace.communication.runmode=MYAIR
+myplace.communication.type=SERIAL
+myplace.communication.autoconnect=true
+myplace.communication.http.server.port=2025
 myplace.config.path=config/myplace.json
 
 quarkus.http.host=0.0.0.0

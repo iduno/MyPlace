@@ -18,7 +18,7 @@ import com.air.advantage.cbmessages.Message.MessageType;
 import com.air.advantage.cbmessages.MessageCAN;
 import com.air.advantage.cbmessages.MessageGetSystemData;
 import com.air.advantage.cbmessages.MessagePing;
-import com.air.advantage.config.CommunicationConfig;
+import com.air.advantage.config.MyPlaceConfig;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
@@ -48,7 +48,7 @@ public class CommunicationDataHandler {
     CommunicationManager communicationManager;
 
     @Inject
-    CommunicationConfig config;
+    MyPlaceConfig config;
 
     @Inject
     MyMasterData myMasterData;
@@ -79,10 +79,10 @@ public class CommunicationDataHandler {
         sendAck = false;
         
         // If auto-connect is enabled, initiate the connection
-        if (config.autoconnect()) {
+        if (config.communication().autoconnect()) {
             connect();
         }
-        if (config.runMode() == CommunicationConfig.RunMode.CB) {
+        if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.CB) {
             pingTimerId = vertx.setPeriodic(10000, id -> pingTimer());
         }
     }
@@ -130,7 +130,7 @@ public class CommunicationDataHandler {
         if (success) {
             LOG.info("Successfully connected to: ");
             isConnected.set(true);
-            if (config.runMode() == CommunicationConfig.RunMode.MYAIR) {
+            if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.MYAIR) {
                 // Send initial ping message if in MYAIR mode
                 MessageCAN canMessage = new MessageCAN(MessageType.SET_CAN);
                 CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
@@ -155,10 +155,10 @@ public class CommunicationDataHandler {
     }
     
     private void startReconnectionTimer() {
-        LOG.info("Starting reconnection timer with interval: " + config.reconnectInterval() + "ms");
+        LOG.info("Starting reconnection timer with interval: " + config.communication().reconnectInterval() + "ms");
         stopReconnectionTimer(); // Stop any existing timer
         
-        reconnectTimerId = vertx.setTimer(config.reconnectInterval(), id -> attemptReconnection());
+        reconnectTimerId = vertx.setTimer(config.communication().reconnectInterval(), id -> attemptReconnection());
     }
     
     private void attemptReconnection() {
@@ -170,10 +170,10 @@ public class CommunicationDataHandler {
         
         reconnectAttempts++;
         LOG.info("Attempting reconnection (" + reconnectAttempts + 
-                (config.maxReconnectAttempts() > 0 ? "/" + config.maxReconnectAttempts() : "") + ")");
+                (config.communication().maxReconnectAttempts() > 0 ? "/" + config.communication().maxReconnectAttempts() : "") + ")");
         
         // Check if we've exceeded the maximum number of attempts
-        if (config.maxReconnectAttempts() > 0 && reconnectAttempts > config.maxReconnectAttempts()) {
+        if (config.communication().maxReconnectAttempts() > 0 && reconnectAttempts > config.communication().maxReconnectAttempts()) {
             LOG.warn("Maximum reconnection attempts reached, giving up");
             isReconnecting.set(false);
             return;
@@ -188,11 +188,11 @@ public class CommunicationDataHandler {
                 isReconnecting.set(false);
             } else {
                 LOG.warn("Reconnection failed, scheduling next attempt");
-                reconnectTimerId = vertx.setTimer(config.reconnectInterval(), id -> attemptReconnection());
+                reconnectTimerId = vertx.setTimer(config.communication().reconnectInterval(), id -> attemptReconnection());
             }
         } catch (Exception e) {
             LOG.error("Error during reconnection attempt: " + e.getMessage(), e);
-            reconnectTimerId = vertx.setTimer(config.reconnectInterval(), id -> attemptReconnection());
+            reconnectTimerId = vertx.setTimer(config.communication().reconnectInterval(), id -> attemptReconnection());
         }
     }
     
@@ -207,7 +207,7 @@ public class CommunicationDataHandler {
     public void handleData(Message data) {
         LOG.debug("Processing communication data: " + data);
         lastMessageTime.set(System.currentTimeMillis());
-        if (config.runMode() == CommunicationConfig.RunMode.MYAIR) {
+        if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.MYAIR) {
             if (data instanceof MessagePing) {
                 try {
                     Thread.sleep(200);
@@ -247,7 +247,7 @@ public class CommunicationDataHandler {
             
             }
         }
-        else if (config.runMode() == CommunicationConfig.RunMode.CB)
+        else if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.CB)
         {
             if (data instanceof MessageCAN) {
                 List<CANMessage> canMessages = ((MessageCAN) data).getMessageCANBaseList();

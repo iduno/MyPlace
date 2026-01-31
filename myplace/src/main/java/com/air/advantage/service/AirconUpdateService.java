@@ -11,7 +11,6 @@ import com.air.advantage.aaservice.data.DataSystem;
 import com.air.advantage.aaservice.data.DataZone;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
-import com.air.advantage.cbmessages.CANMessage.DeviceType;
 import com.air.advantage.cbmessages.CANMessageAircon01ZoneInformation;
 import com.air.advantage.cbmessages.CANMessageAircon03ZoneState;
 import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
@@ -20,10 +19,11 @@ import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
 import com.air.advantage.cbmessages.CANMessageAircon0aMidInformation;
 import com.air.advantage.config.MyPlaceConfig;
 
+import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 /**
@@ -48,8 +48,7 @@ public class AirconUpdateService {
 
     private long systemTimerId;
 
-    @PostConstruct
-    public void initialize() {
+    public void onStart(@Observes StartupEvent ev) {
         if (vertx != null) {
             systemTimerId = vertx.setPeriodic(60000, id -> systemTimer());
         }
@@ -61,7 +60,7 @@ public class AirconUpdateService {
             String uid = aircon.airconInfo.uid;
 
             CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
-            airconStatus.setDeviceType(DeviceType.CONTROL_BOARD);
+            populateHeader(airconStatus, "00000");
             eventBus.publish("communication-send-can", airconStatus);
 
             DataAircon dataAircon = null;
@@ -308,9 +307,14 @@ public class AirconUpdateService {
         existing.copyFrom(incoming);
     }
 
-    private static void populateHeader(CANMessage msg, String uid) {
-        msg.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
-        msg.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+    private void populateHeader(CANMessage msg, String uid) {
+        if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.MYAIR) {
+            msg.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+            msg.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
+        } else {
+            msg.setSystemType(CANMessage.SystemType.CAN_AIRCON);
+            msg.setDeviceType(CANMessage.DeviceType.AIRCON_1);
+        }
         msg.setUid(uid);
     }
 

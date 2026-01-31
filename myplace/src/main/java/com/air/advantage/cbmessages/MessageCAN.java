@@ -2,6 +2,7 @@ package com.air.advantage.cbmessages;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MessageCAN extends Message {
     public enum AckType {
@@ -120,5 +121,19 @@ public class MessageCAN extends Message {
             data[currentOffset++] = ' '; // Add space between messages
         }
         return currentOffset - offset;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MessageCAN)) return false;
+        if (!super.equals(o)) return false;
+        MessageCAN that = (MessageCAN) o;
+        return ackType == that.ackType && Objects.equals(messageCANBaseList, that.messageCANBaseList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), ackType, messageCANBaseList);
     }
 }

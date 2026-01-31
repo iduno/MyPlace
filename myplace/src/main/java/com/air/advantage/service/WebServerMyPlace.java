@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import com.air.advantage.config.CommunicationConfig;
+import com.air.advantage.config.MyPlaceConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -48,7 +48,7 @@ public class WebServerMyPlace {
     Vertx vertx;
     
     @Inject
-    CommunicationConfig communicationConfig;
+    MyPlaceConfig config;
     
     @Inject
     WebServiceResource webServiceResource;
@@ -318,7 +318,7 @@ public class WebServerMyPlace {
     }
 
     public void configServer(@Observes StartupEvent ev) {
-        Integer serverPort = communicationConfig.http().serverPort().orElse(null);
+        Integer serverPort = config.communication().http().serverPort().orElse(null);
         
         // Only start the server if a port is configured
         if (serverPort == null) {
@@ -329,9 +329,9 @@ public class WebServerMyPlace {
         System.out.println("Configuring custom HTTP server options on port " + serverPort);
 
         HttpServerOptions options = new HttpServerOptions();
-        options.setMaxInitialLineLength(communicationConfig.http().maxLineLength());
-        options.setMaxHeaderSize(communicationConfig.http().maxHeaderSize());
-        options.setDecoderInitialBufferSize(communicationConfig.http().decoderBufferSize());
+        options.setMaxInitialLineLength(config.communication().http().maxLineLength());
+        options.setMaxHeaderSize(config.communication().http().maxHeaderSize());
+        options.setDecoderInitialBufferSize(config.communication().http().decoderBufferSize());
 
         io.vertx.core.Vertx coreVertx = vertx.getDelegate();
         io.vertx.core.http.HttpClient client = coreVertx.createHttpClient();

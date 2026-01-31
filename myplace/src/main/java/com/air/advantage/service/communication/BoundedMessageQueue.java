@@ -26,12 +26,24 @@ public class BoundedMessageQueue<T> {
     }
 
     public synchronized void push(T item) {
+        // Do not add duplicates: use equals() to compare existing elements
+        for (int i = 0; i < size; i++) {
+            int idx = (head + i) % capacity;
+            T existing = elements[idx];
+            if (existing == null && item == null) {
+                return;
+            }
+            if (existing != null && existing.equals(item)) {
+                return;
+            }
+        }
+
         if (size == capacity) {
             // Queue is full, remove oldest element
             head = (head + 1) % capacity;
             size--;
         }
-        
+
         elements[tail] = item;
         tail = (tail + 1) % capacity;
         size++;

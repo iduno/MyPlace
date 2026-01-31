@@ -6,6 +6,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import com.air.advantage.cbmessages.Message;
+import com.air.advantage.config.MyPlaceConfig;
 
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
@@ -30,6 +31,9 @@ public class CommunicationManager {
     
     @Inject
     Vertx vertx;
+
+    @Inject
+    MyPlaceConfig config;
     
     @Inject
     @ConfigProperty(name = "communication.autoconnect", defaultValue = "false")
@@ -47,7 +51,7 @@ public class CommunicationManager {
         LOG.info("Initializing Communication Manager");
         communicationService.initialize();
         
-        if (autoConnect) {
+        if (config.communication().autoconnect()) {
             LOG.info("Auto-connecting");
             open("auto");
         }
@@ -57,6 +61,7 @@ public class CommunicationManager {
     }
     
     private void startHeartbeatTimer() {
+        long heartbeatInterval = config.communication().heartbeatInterval();
         if (heartbeatInterval > 0) {
             LOG.info("Starting connection heartbeat with interval: " + heartbeatInterval + "ms");
             heartbeatTimerId = vertx.setPeriodic(heartbeatInterval, id -> checkConnectionStatus());
