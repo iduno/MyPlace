@@ -1,5 +1,7 @@
 package com.air.advantage.canhandler;
 
+import org.jboss.logging.Logger;
+
 import com.air.advantage.aaservice.data.DataLight;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
@@ -14,6 +16,7 @@ import com.air.advantage.cbmessages.CANMessageLighting17Rm2AddDevice;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
 public class HandlerLighting extends Handler {
+    private static final Logger LOG = Logger.getLogger(HandlerLighting.class);
     private static final long RF_EXPIRY_TIME_SECONDS = 70;
     private static final long NON_RF_EXPIRY_TIME_SECONDS = 260;
     
@@ -43,18 +46,18 @@ public class HandlerLighting extends Handler {
 
     private void processLighting(CANMessageLighting lightingMsg) {
         // Fallback for unhandled lighting message types
-        System.out.println("Unhandled lighting message type: " + lightingMsg.getClass().getSimpleName());
+        LOG.warn("Unhandled lighting message type: " + lightingMsg.getClass().getSimpleName());
     }
     
     // JZ0 - Old LM Status Message (deprecated, use JZ2)
     private void process(CANMessageLighting00LmStatusMessageOld msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) {
-            System.out.println("Rejected old LM status message - invalid UID");
+            LOG.debug("Rejected old LM status message - invalid UID");
             return;
         }
         
-        System.out.println("Warning: Received deprecated JZ0 message for UID " + uid + 
+        LOG.warn("Warning: Received deprecated JZ0 message for UID " + uid + 
                 ", consider upgrading firmware to use JZ2");
         
         // Process as best we can with old format
@@ -64,13 +67,13 @@ public class HandlerLighting extends Handler {
     private void process(CANMessageLighting01LmControlMessage msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) {
-            System.out.println("Rejected LM control message - invalid UID");
+            LOG.debug("Rejected LM control message - invalid UID");
             return;
         }
         
         int roomNumber = msg.getRoomNumber();
         if (roomNumber < 1 || roomNumber > 63) {
-            System.out.println("Rejected LM control message - invalid room number: " + roomNumber);
+            LOG.debug("Rejected LM control message - invalid room number: " + roomNumber);
             return;
         }
         
@@ -87,7 +90,7 @@ public class HandlerLighting extends Handler {
         light.value = percentValue;
         light.moduleType = "LM";
         
-        System.out.println("Valid LM control message. UID - " + uid + 
+        LOG.debug("Valid LM control message. UID - " + uid + 
                 " room - " + roomNumber + 
                 " state - " + lightState + 
                 " brightness - " + brightnessLevel);
@@ -97,7 +100,7 @@ public class HandlerLighting extends Handler {
     private void process(CANMessageLighting02LmStatusMessage msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) {
-            System.out.println("Rejected LM status message - invalid UID");
+            LOG.debug("Rejected LM status message - invalid UID");
             return;
         }
         
@@ -110,7 +113,7 @@ public class HandlerLighting extends Handler {
         boolean[] relayRooms = msg.getRelayRooms();
         int version = msg.getMajorFWVersion();
         
-        System.out.println("Valid LM setup message (JZ2). UID - " + uid + 
+        LOG.debug("Valid LM setup message (JZ2). UID - " + uid + 
                 " version - " + version + "." + msg.getMinorFWVersion());
         
         // Process each room
@@ -132,7 +135,7 @@ public class HandlerLighting extends Handler {
                     light.value = 80; // Default brightness
                 }
                 
-                System.out.println("Enabled light - room " + roomNumber + 
+                LOG.debug("Enabled light - room " + roomNumber + 
                         " type: " + light.deviceType + 
                         " valid: " + validRooms[i]);
             }
@@ -143,13 +146,13 @@ public class HandlerLighting extends Handler {
     private void process(CANMessageLighting15Rm2ControlMessage msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) {
-            System.out.println("Rejected RM2 control message - invalid UID");
+            LOG.debug("Rejected RM2 control message - invalid UID");
             return;
         }
         
         int roomNumber = msg.getRoomNumber();
         if (roomNumber < 1 || roomNumber > 6) {
-            System.out.println("Rejected RM2 control message - invalid room/channel number: " + roomNumber);
+            LOG.debug("Rejected RM2 control message - invalid room/channel number: " + roomNumber);
             return;
         }
         
@@ -173,7 +176,7 @@ public class HandlerLighting extends Handler {
         
         light.moduleType = "RM2";
         
-        System.out.println("Valid RM2 control message. UID - " + uid + 
+        LOG.debug("Valid RM2 control message. UID - " + uid + 
                 " channel - " + roomNumber + 
                 " state - " + state + 
                 " dimLevel - " + dimLevel);
@@ -183,13 +186,13 @@ public class HandlerLighting extends Handler {
     private void process(CANMessageLighting16Rm2StatusMessage msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) {
-            System.out.println("Rejected RM2 status message - invalid UID");
+            LOG.debug("Rejected RM2 status message - invalid UID");
             return;
         }
         
         int infoByte = msg.getInfoByte();
         
-        System.out.println("JZ38 RM2 module info byte: " + infoByte + " for uid:" + uid);
+        LOG.debug("JZ38 RM2 module info byte: " + infoByte + " for uid:" + uid);
         
         boolean isRF = isRFModule(msg.getSystemType());
         long expiryTime = System.currentTimeMillis() + 
@@ -221,7 +224,7 @@ public class HandlerLighting extends Handler {
                     light.state = "off";
                 }
                 
-                System.out.println("Enabled RM2 channel " + roomNumber + 
+                LOG.debug("Enabled RM2 channel " + roomNumber + 
                         " dipState: " + dipState + 
                         " deviceType: " + deviceType);
             }
@@ -232,7 +235,7 @@ public class HandlerLighting extends Handler {
     private void process(CANMessageLighting17Rm2AddDevice msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) {
-            System.out.println("Rejected RM2 add device message - invalid UID");
+            LOG.debug("Rejected RM2 add device message - invalid UID");
             return;
         }
         
@@ -240,8 +243,8 @@ public class HandlerLighting extends Handler {
         int minorVersion = msg.getMinorFWVersion();
         int infoByte = msg.getInfoByte();
         
-        System.out.println("JZ39 info byte: " + infoByte + " for uid:" + uid);
-        System.out.println("Valid RM2 setup message JZ39. UID - " + uid + 
+        LOG.debug("JZ39 info byte: " + infoByte + " for uid:" + uid);
+        LOG.debug("Valid RM2 setup message JZ39. UID - " + uid + 
                 " version - " + majorVersion + "." + minorVersion);
         
         // Determine module type from infoByte
@@ -254,7 +257,7 @@ public class HandlerLighting extends Handler {
             moduleType = "RM2";
         }
         
-        System.out.println("Module type: " + moduleType + " firmware: " + majorVersion + "." + minorVersion);
+        LOG.debug("Module type: " + moduleType + " firmware: " + majorVersion + "." + minorVersion);
     }
     
     // Helper methods

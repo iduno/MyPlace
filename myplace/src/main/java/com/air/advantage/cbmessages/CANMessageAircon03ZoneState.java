@@ -4,7 +4,7 @@ public class CANMessageAircon03ZoneState extends CANMessageAircon {
     private int zoneNumber;
     private ZoneState zoneState;
     private int zonePercent;
-    private int sensorType;
+    private int sensorType; //0=No Sensor, 1=RF, 2=Wired, 3=RF2CAN Booster, 4=RF_X
     private float setTemp;
     private float measuredTemp;
 

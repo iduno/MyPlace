@@ -230,9 +230,26 @@ const ZoneFragment = () => {
   };
 
   // Handle damper value change
-  const handleDamperValueChange = (zoneId, value) => {
+  const handleDamperValueChange = (zoneId, direction) => {
+    const zone = zones.find(z => z.id === zoneId);
+    if (!zone) return;
+    
+    const minDamper = zone.minDamper || 0;
+    const maxDamper = zone.maxDamper || 100;
+    const step = 5;
+    
+    let newValue = zone.damperValue;
+    
+    if (direction === 'up' && zone.damperValue < maxDamper) {
+      newValue = Math.min(zone.damperValue + step, maxDamper);
+    } else if (direction === 'down' && zone.damperValue > minDamper) {
+      newValue = Math.max(zone.damperValue - step, minDamper);
+    } else {
+      return; // No change needed
+    }
+    
     // Update server with new damper value
-    updateZoneData(zoneId, { damperValue: value });
+    updateZoneData(zoneId, { damperValue: newValue });
   };
 
   // Handle zone open/close toggle
@@ -276,63 +293,7 @@ const ZoneFragment = () => {
             </Typography>
           </Box>
         </Box>
-        
-        {/* Zone Summary */}
-        <Box mb={3} p={2} bgcolor="#f0f7ff" borderRadius={2}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                ZONES SUMMARY
-              </Typography>
-              <Typography variant="h6">
-                {zones.filter(z => z.isOpen).length} of {zones.length} Zones Open
-              </Typography>
-              {zones.find(z => z.isMaster) && (
-                <Typography variant="body2" color="text.secondary" mt={1}>
-                  Master Zone: {zones.find(z => z.isMaster)?.name || 'None'}
-                </Typography>
-              )}
-              {zones.filter(z => z.isConstant).length > 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  Constant Zones: {zones.filter(z => z.isConstant).length}
-                </Typography>
-              )}
-            </Grid>
-            
-            <Grid item xs={12} md={8}>
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap',
-                  justifyContent: 'flex-end',
-                  gap: 1
-                }}
-              >
-                {zones.map(zone => (
-                  <Box 
-                    key={zone.id}
-                    sx={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 'bold',
-                      bgcolor: zone.isOpen ? 'primary.main' : '#e0e0e0',
-                      color: zone.isOpen ? 'white' : 'text.secondary',
-                      border: zone.isMaster ? '2px solid' : 'none',
-                      borderColor: 'secondary.main'
-                    }}
-                  >
-                    {zone.zoneNumber}
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-                
+          
         {/* All Zones List */}
         <Box mb={2}>
           <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', letterSpacing: '.5px' }}>
@@ -392,38 +353,31 @@ const ZoneFragment = () => {
                       color="primary"
                     />
                   </Box>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                    <Typography variant="caption" color="text.secondary">Cur: {zone.measuredTemp ? `${zone.measuredTemp}°` : 'N/A'}</Typography>
+                  <Box mb={0.5}>
+                    <Typography variant="caption" color="text.secondary">{zone.measuredTemp ? `${zone.measuredTemp}°` : 'N/A'}</Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">{zone.damperValue}%</Typography>
                   </Box>
-                  <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
-                    <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'down')} disabled={zone.temperature <= 16}>
-                      <ArrowDownwardIcon fontSize="inherit" />
-                    </IconButton>
-                    <Typography variant="h6" sx={{ mx: 0.5, fontWeight: 'bold', color: 'primary.main' }}>{zone.temperature}°</Typography>
-                    <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'up')} disabled={zone.temperature >= 32}>
-                      <ArrowUpwardIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
-                  <Slider
-                    size="medium"
-                    value={zone.damperValue}
-                    onChange={(e,val) => handleDamperValueChange(zone.id, val)}
-                    // disabled={zone.isConstant} // allow when closed now
-                    min={zone.minDamper || 0}
-                    max={zone.maxDamper || 100}
-                    step={5}
-                    valueLabelDisplay="auto"
-                    valueLabelFormat={(v) => `${v}%`}
-                    sx={{
-                      mt: 0.5,
-                      width: { xs: '15%', sm: '15%', md: '15%' },
-                      alignSelf: 'center',
-                      '& .MuiSlider-track': { height: 4 },
-                      '& .MuiSlider-rail': { height: 4 },
-                      '& .MuiSlider-thumb': { width: 14, height: 14 },
-                      '& .MuiSlider-valueLabel': { fontSize: '0.65rem', top: -6 }
-                    }}
-                  />
+                  {zone.type === 0 ? (
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                      <IconButton size="small" onClick={() => handleDamperValueChange(zone.id, 'down')} disabled={zone.damperValue <= (zone.minDamper || 0)}>
+                        <ArrowDownwardIcon fontSize="inherit" />
+                      </IconButton>
+                      <Typography variant="body1" sx={{ mx: 0.5, fontWeight: 'bold' }}>{zone.damperValue}%</Typography>
+                      <IconButton size="small" onClick={() => handleDamperValueChange(zone.id, 'up')} disabled={zone.damperValue >= (zone.maxDamper || 100)}>
+                        <ArrowUpwardIcon fontSize="inherit" />
+                      </IconButton>
+                    </Box>
+                  ) : (
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                      <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'down')} disabled={zone.temperature <= 16}>
+                        <ArrowDownwardIcon fontSize="inherit" />
+                      </IconButton>
+                      <Typography variant="h6" sx={{ mx: 0.5, fontWeight: 'bold', color: 'primary.main' }}>{zone.temperature}°</Typography>
+                      <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'up')} disabled={zone.temperature >= 32}>
+                        <ArrowUpwardIcon fontSize="inherit" />
+                      </IconButton>
+                    </Box>
+                  )}
                   <Typography variant="caption" color="text.secondary" sx={{ display:'block', mt: 0.5, textAlign:'right', ml:'auto' }}>
                     {zone.isMaster ? 'Master zone' : zone.isConstant ? 'Constant zone' : zone.isOpen ? 'Open' : 'Closed'}
                   </Typography>
@@ -433,48 +387,6 @@ const ZoneFragment = () => {
           </Grid>
         </Box>
 
-  {/* Zone Summary and Actions */}
-  <Box mt={2} p={2} bgcolor="#ffffff" borderRadius={2} boxShadow="0px 2px 4px rgba(0,0,0,0.05)">
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <Box>
-                <Typography variant="body1" gutterBottom>
-                  {openZones} of {totalZones} zones open
-                </Typography>
-                <Typography variant="body2" color="textSecondary" fontSize="0.75rem">
-                  Last updated: {new Date().toLocaleTimeString()}
-                </Typography>
-                {zones.find(z => z.isMaster) && (
-                  <Box 
-                    mt={1} 
-                    p={1} 
-                    bgcolor="#f5f5f5" 
-                    borderRadius={1} 
-                    display="inline-flex" 
-                    alignItems="center"
-                  >
-                    <ThermostatIcon color="secondary" fontSize="small" sx={{ mr: 0.5 }} />
-                    <Typography variant="body2" color="secondary.dark">
-                      System controlled by {zones.find(z => z.isMaster)?.name || 'Master Zone'}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                variant="outlined"
-                onClick={fetchZoneStatus}
-                disabled={updating}
-                startIcon={updating ? <CircularProgress size={18} /> : <RefreshIcon />}
-                size="small"
-              >
-                {updating ? 'Refreshing...' : 'Refresh'}
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
       </>
       )}
       

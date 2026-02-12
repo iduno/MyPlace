@@ -64,7 +64,7 @@ public class AirconUpdateService {
             eventBus.publish("communication-send-can", airconStatus);
 
             DataAircon dataAircon = null;
-            if (aircon.airconInfo.countDownToOff > 0) {
+            if (aircon.airconInfo.countDownToOff != null && aircon.airconInfo.countDownToOff > 0) {
                 aircon.airconInfo.countDownToOff--;
                 if (aircon.airconInfo.countDownToOff == 0) {
                     dataAircon = DataAircon.create();
@@ -73,7 +73,7 @@ public class AirconUpdateService {
                     dataAircon.airconInfo.countDownToOn = 0;
                 }
             }
-            if (aircon.airconInfo.countDownToOn > 0) {
+            if (aircon.airconInfo.countDownToOn != null && aircon.airconInfo.countDownToOn > 0) {
                 aircon.airconInfo.countDownToOn--;
                 if (aircon.airconInfo.countDownToOn == 0) {
                     dataAircon = DataAircon.create();

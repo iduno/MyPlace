@@ -1,5 +1,7 @@
 package com.air.advantage.canhandler;
 
+import org.jboss.logging.Logger;
+
 import com.air.advantage.aaservice.data.DataAircon;
 import com.air.advantage.aaservice.data.DataAircon.AirconMode;
 import com.air.advantage.aaservice.data.DataAirconInfo;
@@ -30,6 +32,7 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 // import your.package.Zone;
 
 public class HandlerAirconCB extends Handler {
+    private static final Logger LOG = Logger.getLogger(HandlerAirconCB.class);
     // Reference to AirconState data class (should be injected or managed)
     // private AirconState airconState;
      public HandlerAirconCB(MyMasterData myMasterData, EventBus eventBus) {
@@ -98,7 +101,7 @@ public class HandlerAirconCB extends Handler {
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         String error = validateZoneMessage(msg, dataAirconInfo);
         if (!error.isEmpty()) {
-            System.out.println("Invalid CB JZ7 msg - " + error);
+            LOG.debug("Invalid CB JZ7 msg - " + error);
             return;
         }
         // Map fields from msg to dataAirconInfo
@@ -120,6 +123,14 @@ public class HandlerAirconCB extends Handler {
                     DataZone newZone = new DataZone();
                     newZone.number = i;
                     newZone.name = "Zone " + i;
+                    newZone.type = 0;
+                    newZone.state = DataAircon.ZoneState.close; // default state
+                    newZone.measuredTemp = 0.0f; // default temp
+                    newZone.setTemp = 0.0f; // default set temp
+                    newZone.value = 100; // default damper
+                    newZone.maxDamper = 100; // default max damper
+                    newZone.minDamper = 0; // default min damper
+
                     dataAircon.getZones().put(zoneKey, newZone);
                 }
             }
@@ -132,7 +143,7 @@ public class HandlerAirconCB extends Handler {
                 }
             }
         }
-        System.out.println("Valid CB JZ7 message. UID - " + msg.getUid() +
+        LOG.debug("Valid CB JZ7 message. UID - " + msg.getUid() +
                 " noOfZones - " + msg.getNumZones() +
                 " noOfConstants - " + msg.getNumConstantZones() +
                 " constant1 - " + msg.getConstantZone1() +
@@ -212,7 +223,7 @@ public class HandlerAirconCB extends Handler {
             uid = ((CANMessageAircon) msg).getUid();
         }
         if (uid == null || uid.isEmpty()) {
-            System.out.println("UnitTypeInformation: UID not found, cannot update DataAirconInfo");
+            LOG.debug("UnitTypeInformation: UID not found, cannot update DataAirconInfo");
             return;
         }
         DataAircon dataAircon = getOrCreateDataAircon(uid);

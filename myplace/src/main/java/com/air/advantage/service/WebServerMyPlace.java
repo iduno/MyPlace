@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 import com.air.advantage.config.MyPlaceConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,6 +44,8 @@ import jakarta.ws.rs.core.Response;
  */
 @ApplicationScoped
 public class WebServerMyPlace {
+
+    private static final Logger LOG = Logger.getLogger(WebServerMyPlace.class);
 
     @Inject
     Vertx vertx;
@@ -322,11 +325,11 @@ public class WebServerMyPlace {
         
         // Only start the server if a port is configured
         if (serverPort == null) {
-            System.out.println("Custom HTTP server disabled - no port configured");
+            LOG.info("Custom HTTP server disabled - no port configured");
             return;
         }
         
-        System.out.println("Configuring custom HTTP server options on port " + serverPort);
+        LOG.info("Configuring custom HTTP server options on port " + serverPort);
 
         HttpServerOptions options = new HttpServerOptions();
         options.setMaxInitialLineLength(config.communication().http().maxLineLength());
@@ -342,7 +345,7 @@ public class WebServerMyPlace {
         // Set the request handler
         httpServer.requestHandler(request -> {
             try {
-                System.out.println("[RawRequestHandler] Received request: " + request.uri());
+                LOG.trace("[RawRequestHandler] Received request: " + request.uri());
 
                 String uri = request.uri();
                 int queryIndex = uri.indexOf('?');
@@ -370,7 +373,7 @@ public class WebServerMyPlace {
                 Method webServiceMethod = findWebServiceMethod(path, request.method());
                 
                 if (webServiceMethod != null) {
-                    System.out.println("  Found matching WebService method: " + webServiceMethod.getName());
+                    LOG.trace("  Found matching WebService method: " + webServiceMethod.getName());
                     
                     // Special handling for GET requests with json parameter
                     String jsonBody = null;
@@ -437,7 +440,7 @@ public class WebServerMyPlace {
                                                 request.response().end(entity.toString());
                                             }
                                         } catch (IOException e) {
-                                            System.err.println("Error serializing response: " + e.getMessage());
+                                            LOG.error("Error serializing response: " + e.getMessage());
                                             request.response().setStatusCode(500).end("{\"error\":\"Error serializing response\"}");
                                         }
                                     } else {
@@ -448,11 +451,11 @@ public class WebServerMyPlace {
                                     request.response().setStatusCode(204).end();
                                 }
                             } catch (Exception e) {
-                                System.err.println("Error invoking web service method: " + e.getMessage());
+                                LOG.error("Error invoking web service method: " + e.getMessage());
                                 request.response().setStatusCode(500).end("{\"error\":\"" + e.getMessage() + "\"}");
                             }
                         }).onFailure(err -> {
-                            System.err.println("Error reading request body: " + err.getMessage());
+                            LOG.error("Error reading request body: " + err.getMessage());
                             request.response().setStatusCode(400).end("{\"error\":\"Error reading request body\"}");
                         });
                         
@@ -496,7 +499,7 @@ public class WebServerMyPlace {
                                         request.response().end(entity.toString());
                                     }
                                 } catch (IOException e) {
-                                    System.err.println("Error serializing response: " + e.getMessage());
+                                    LOG.error("Error serializing response: " + e.getMessage());
                                     request.response().setStatusCode(500).end("{\"error\":\"Error serializing response\"}");
                                 }
                             } else {
@@ -508,7 +511,7 @@ public class WebServerMyPlace {
                         }
                         
                     } catch (Exception e) {
-                        System.err.println("Error invoking web service method: " + e.getMessage());
+                        LOG.error("Error invoking web service method: " + e.getMessage(), e);
                         request.response().setStatusCode(500).end("{\"error\":\"" + e.getMessage() + "\"}");
                     }
                 }
@@ -517,13 +520,13 @@ public class WebServerMyPlace {
                     request.response().setStatusCode(200).end("MyPlace Web Server");
                 }
                 } catch (Exception e) {
-                    System.err.println("Error in raw request handler: " + e.getMessage());
+                    LOG.error("Error in raw request handler: " + e.getMessage(), e);
                     request.response().setStatusCode(500).end();
                 }
             })
             .listen(serverPort);
 
-        System.out.println("Custom HTTP server listening on port " + serverPort);
+        LOG.info("Custom HTTP server listening on port " + serverPort);
     }
     
     /**
@@ -532,16 +535,16 @@ public class WebServerMyPlace {
      */
     public void onShutdown(@Observes ShutdownEvent ev) {
         if (httpServer != null) {
-            System.out.println("Shutting down custom HTTP server");
+            LOG.info("Shutting down custom HTTP server");
             try {
                 // Use a CountDownLatch to wait for server close completion
                 java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
                 
                 httpServer.close(result -> {
                     if (result.succeeded()) {
-                        System.out.println("Custom HTTP server closed successfully");
+                        LOG.info("Custom HTTP server closed successfully");
                     } else {
-                        System.err.println("Error closing custom HTTP server: " + result.cause().getMessage());
+                        LOG.error("Error closing custom HTTP server: " + result.cause().getMessage());
                     }
                     latch.countDown();
                 });
@@ -549,7 +552,7 @@ public class WebServerMyPlace {
                 // Wait for a maximum of 5 seconds for the server to close
                 latch.await(5, java.util.concurrent.TimeUnit.SECONDS);
             } catch (Exception e) {
-                System.err.println("Exception during HTTP server shutdown: " + e.getMessage());
+                LOG.error("Exception during HTTP server shutdown: " + e.getMessage());
             }
         }
     }

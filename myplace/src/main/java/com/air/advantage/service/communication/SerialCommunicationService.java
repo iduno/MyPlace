@@ -6,6 +6,8 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import com.air.advantage.cbmessages.Message;
+import com.air.advantage.cbmessages.MessageCAN;
+import com.air.advantage.cbmessages.MessagePing;
 import com.air.advantage.config.MyPlaceConfig.CommunicationConfig;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;
@@ -114,8 +116,23 @@ public class SerialCommunicationService implements CommunicationService {
                 parser.parse(buffer);
                 Message message = parser.pollMessage();
                 while (message != null) {
+                    boolean logDebug = false;
+                    if (message instanceof MessageCAN) {
+                        if (!((MessageCAN) message).getMessageCANBaseList().isEmpty()) {
+                            logDebug = true;
+                        
+                        }
+                    }
+                    else if (!(message instanceof MessagePing)) {
+                        logDebug = true;
+                    }
 
-                        LOG.info("Received message from serial port: " + message.getClass().getSimpleName() + " : " + message.data);
+                    if (logDebug) {
+                        LOG.debug("Received message from serial port: " + message.getClass().getSimpleName() + " : " + message.data);
+                    }
+                    else {
+                        LOG.trace("Received message from serial port: " + message.getClass().getSimpleName() + " : " + message.data);
+                    }
 
                     eventBus.publish("communication-data", message);
                     message = parser.pollMessage();
@@ -133,7 +150,24 @@ public class SerialCommunicationService implements CommunicationService {
                 int written = serialPort.writeBytes(bytes, writtenLen);
                 //LOG.debug("Sent " + written + " bytes to serial port");
                 String dta = new String(bytes, 0, writtenLen, java.nio.charset.StandardCharsets.UTF_8);
-                LOG.info("Sent message to serial port: " + data.getClass().getSimpleName() + " : " + dta);
+
+                boolean logDebug = false;
+                if (data instanceof MessageCAN) {
+                    if (!((MessageCAN) data).getMessageCANBaseList().isEmpty()) {
+                        logDebug = true;
+                    
+                    }
+                }
+                else if (!(data instanceof MessagePing)) {
+                    logDebug = true;
+                }
+
+                if (logDebug) {
+                    LOG.debug("Sent message to serial port: " + data.getClass().getSimpleName() + " : " + dta);
+                }
+                else {
+                    LOG.trace("Sent message to serial port: " + data.getClass().getSimpleName() + " : " + dta);
+                }
                 return written == writtenLen;
             } catch (Exception e) {
                 LOG.error("Error writing to serial port: " + e.getMessage(), e);

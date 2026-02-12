@@ -1,5 +1,7 @@
 package com.air.advantage.canhandler;
 
+import org.jboss.logging.Logger;
+
 import com.air.advantage.aaservice.data.DataAircon;
 import com.air.advantage.aaservice.data.DataAircon.ZoneState;
 import com.air.advantage.aaservice.data.DataAirconInfo;
@@ -26,6 +28,7 @@ import com.air.advantage.cbmessages.CANMessageAircon27RfDeviceCalibration;
 import io.vertx.mutiny.core.eventbus.EventBus;
 
 public class HandlerAircon extends Handler {
+    private static final Logger LOG = Logger.getLogger(HandlerAircon.class);
     private static final long EXPIRY_TIME_SECONDS = 80;
     // Reference to AirconState data class (should be injected or managed)
     // private AirconState airconState;
@@ -91,7 +94,7 @@ public class HandlerAircon extends Handler {
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         String error = validateZoneMessage(msg, dataAirconInfo);
         if (!error.isEmpty()) {
-            System.out.println("Invalid CB JZ7 msg - " + error);
+            LOG.warn("Invalid CB JZ7 msg - " + error);
             return;
         }
         
@@ -128,7 +131,7 @@ public class HandlerAircon extends Handler {
                 }
             }
         }
-        System.out.println("Valid CB JZ7 message. UID - " + msg.getUid() +
+        LOG.debug("Valid CB JZ7 message. UID - " + msg.getUid() +
                 " noOfZones - " + msg.getNumZones() +
                 " noOfConstants - " + msg.getNumConstantZones() +
                 " constant1 - " + msg.getConstantZone1() +
@@ -183,7 +186,7 @@ public class HandlerAircon extends Handler {
             uid = ((CANMessageAircon) msg).getUid();
         }
         if (uid == null || uid.isEmpty()) {
-            System.out.println("UnitTypeInformation: UID not found, cannot update DataAirconInfo");
+            LOG.debug("UnitTypeInformation: UID not found, cannot update DataAirconInfo");
             return;
         }
         DataAircon dataAircon = getOrCreateDataAircon(uid);
@@ -214,7 +217,7 @@ public class HandlerAircon extends Handler {
         // Update expiry time
         dataAirconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         
-        System.out.println("Processed UnitTypeInformation for UID " + uid +
+        LOG.debug("Processed UnitTypeInformation for UID " + uid +
                 ": cbType=" + dataAirconInfo.cbType +
                 ", activationCodeStatus=" + dataAirconInfo.activationCodeStatus +
                 ", cbFWRevMajor=" + dataAirconInfo.cbFWRevMajor +
@@ -234,12 +237,12 @@ public class HandlerAircon extends Handler {
         // Validate zone number
         int zoneNumber = msg.getZoneNumber();
         if (zoneNumber < 1 || zoneNumber > 10) {
-            System.out.println("Rejected CB JZ11 - invalid zoneNumber: " + zoneNumber);
+            LOG.debug("Rejected CB JZ11 - invalid zoneNumber: " + zoneNumber);
             return;
         }
         
         if (info.noOfZones != null && zoneNumber > info.noOfZones) {
-            System.out.println("Rejected CB JZ11 - zoneNumber too high: " + zoneNumber);
+            LOG.debug("Rejected CB JZ11 - zoneNumber too high: " + zoneNumber);
             return;
         }
         
@@ -284,7 +287,7 @@ public class HandlerAircon extends Handler {
             zone.measuredTemp = measuredTemp;
         }
         
-        System.out.println("Valid CB JZ11 message. UID - " + uid + 
+        LOG.debug("Valid CB JZ11 message. UID - " + uid + 
                 " zoneNumber - " + zoneNumber + 
                 " state - " + zone.state +
                 " value - " + zone.value + "%" +
@@ -306,12 +309,12 @@ public class HandlerAircon extends Handler {
         // Validate zone number
         int zoneNumber = msg.getZoneNumber();
         if (zoneNumber < 1 || zoneNumber > 10) {
-            System.out.println("Rejected CB JZ13 - invalid zoneNumber: " + zoneNumber);
+            LOG.debug("Rejected CB JZ13 - invalid zoneNumber: " + zoneNumber);
             return;
         }
         
         if (info.noOfZones != null && zoneNumber > info.noOfZones) {
-            System.out.println("Rejected CB JZ13 - zoneNumber too high: " + zoneNumber);
+            LOG.debug("Rejected CB JZ13 - zoneNumber too high: " + zoneNumber);
             return;
         }
         
@@ -332,7 +335,7 @@ public class HandlerAircon extends Handler {
         zone.error = msg.getZoneError();
         zone.rssi = msg.getRssi();
         
-        System.out.println("Valid CB JZ13 message. UID - " + uid +
+        LOG.debug("Valid CB JZ13 message. UID - " + uid +
                 " zoneNumber - " + zoneNumber +
                 " minDamper - " + zone.minDamper +
                 " maxDamper - " + zone.maxDamper +
@@ -385,7 +388,7 @@ public class HandlerAircon extends Handler {
         // Update expiry time
         info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         
-        System.out.println("Valid CB JZ15 message. UID - " + uid +
+        LOG.debug("Valid CB JZ15 message. UID - " + uid +
                 " state - " + info.state +
                 " mode - " + info.mode +
                 " fan - " + info.fan +
@@ -411,7 +414,7 @@ public class HandlerAircon extends Handler {
         cbStatus.setUid(uid);
         eventBus.publish("communication-send-can", cbStatus);
 
-        System.out.println("Processed CBStatus for UID " + uid);
+        LOG.debug("Processed CBStatus for UID " + uid);
     }
 
     private void process(CANMessageAircon07CbStatusMessage msg) {
@@ -428,7 +431,7 @@ public class HandlerAircon extends Handler {
         // Update expiry time
         info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         
-        System.out.println("Valid CB JZ17 message. UID - " + uid +
+        LOG.debug("Valid CB JZ17 message. UID - " + uid +
                 " cbFWRevMajor - " + info.cbFWRevMajor +
                 " cbFWRevMinor - " + info.cbFWRevMinor +
                 " cbType - " + info.cbType +
@@ -446,7 +449,7 @@ public class HandlerAircon extends Handler {
         // Update expiry time
         info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         
-        System.out.println("Valid CB JZ22 message. UID - " + uid + " errorCode - " + info.airconErrorCode);
+        LOG.debug("Valid CB JZ22 message. UID - " + uid + " errorCode - " + info.airconErrorCode);
     }
 
     private void process(CANMessageAircon09ActivationCodeInformation msg) {
@@ -463,7 +466,7 @@ public class HandlerAircon extends Handler {
         // Map unlockCode and activationTimeDays if fields exist
         // info.unlockCode = msg.getUnlockCode(); // Uncomment if field exists
         // info.activationTimeDays = msg.getActivationTimeDays(); // Uncomment if field exists
-        System.out.println("Processed ActivationCodeInformation for UID " + uid +
+        LOG.debug("Processed ActivationCodeInformation for UID " + uid +
             ", action=" + msg.getAction() +
             ", unlockCode=" + msg.getUnlockCode() +
             ", activationTimeDays=" + msg.getActivationTimeDays());
@@ -475,7 +478,7 @@ public class HandlerAircon extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
         // info.mid = msg.getMid(); // Uncomment if field exists
-        System.out.println("Processed MidInformation for UID " + uid /*+ ", mid=" + msg.getMid()*/);
+        LOG.debug("Processed MidInformation for UID " + uid);
     }
 
     private void process(CANMessageAircon12ZoneSensorPairing msg) {
@@ -488,7 +491,7 @@ public class HandlerAircon extends Handler {
         // zone.sensorUID = msg.getSensorUID(); // Uncomment if field exists
         // zone.infoByte = msg.getInfoByte(); // Uncomment if field exists
         // zone.sensorMajorRev = msg.getSensorMajorRev(); // Uncomment if field exists
-        System.out.println("Processed ZoneSensorPairing for UID " + uid + ", sensorUID=" + msg.getSensorUID() + ", infoByte=" + msg.getInfoByte() + ", sensorMajorRev=" + msg.getSensorMajorRev());
+        LOG.debug("Processed ZoneSensorPairing for UID " + uid + ", sensorUID=" + msg.getSensorUID() + ", infoByte=" + msg.getInfoByte() + ", sensorMajorRev=" + msg.getSensorMajorRev());
     }
 
     private void process(CANMessageAircon13CBInfoByte msg) {
@@ -497,7 +500,7 @@ public class HandlerAircon extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
         // info.infoByte = msg.getInfoByte(); // Uncomment if field exists
-        System.out.println("Processed CBInfoByte for UID " + uid + ", infoByte=" + msg.getInfoByte());
+        LOG.debug("Processed CBInfoByte for UID " + uid + ", infoByte=" + msg.getInfoByte());
     }
 
     private void process(CANMessageAircon26RfDevicePairing msg) {
@@ -507,7 +510,7 @@ public class HandlerAircon extends Handler {
         // info.pairingControl = msg.getPairingControl(); // Uncomment if field exists
         // info.rfDeviceType = msg.getRfDeviceType(); // Uncomment if field exists
         // info.channelNo = msg.getChannelNo(); // Uncomment if field exists
-        System.out.println("Processed RfDevicePairing for UID " + uid + ", pairingControl=" + msg.getPairingControl() + ", rfDeviceType=" + msg.getRfDeviceType() + ", channelNo=" + msg.getChannelNo());
+        LOG.debug("Processed RfDevicePairing for UID " + uid + ", pairingControl=" + msg.getPairingControl() + ", rfDeviceType=" + msg.getRfDeviceType() + ", channelNo=" + msg.getChannelNo());
     }
 
     private void process(CANMessageAircon27RfDeviceCalibration msg) {
@@ -517,6 +520,6 @@ public class HandlerAircon extends Handler {
         // info.calibrationControl = msg.getCalibrationControl(); // Uncomment if field exists
         // info.channelNo = msg.getChannelNo(); // Uncomment if field exists
         // info.upDownPosition = msg.getUpDownPosition(); // Uncomment if field exists
-        System.out.println("Processed RfDeviceCalibration for UID " + uid + ", calibrationControl=" + msg.getCalibrationControl() + ", channelNo=" + msg.getChannelNo() + ", upDownPosition=" + msg.getUpDownPosition());
+        LOG.debug("Processed RfDeviceCalibration for UID " + uid + ", calibrationControl=" + msg.getCalibrationControl() + ", channelNo=" + msg.getChannelNo() + ", upDownPosition=" + msg.getUpDownPosition());
     }
 }

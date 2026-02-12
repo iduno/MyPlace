@@ -65,6 +65,9 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
   const [zonesList, setZonesList] = useState([]);
   const [editingZoneId, setEditingZoneId] = useState(null);
   const [editingZoneName, setEditingZoneName] = useState('');
+  const [editingDamperId, setEditingDamperId] = useState(null);
+  const [editingMinDamper, setEditingMinDamper] = useState(0);
+  const [editingMaxDamper, setEditingMaxDamper] = useState(100);
   const [updatingZones, setUpdatingZones] = useState(false);
   const [systemName, setSystemName] = useState('');
   const [editingSystem, setEditingSystem] = useState(false);
@@ -652,6 +655,70 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                         <Box display="flex" alignItems="center" sx={{ flex: 1 }}>
                           <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{zone.name}</Typography>
                           <IconButton size="small" onClick={(e) => { e.stopPropagation(); setEditingZoneId(zone.id); setEditingZoneName(zone.name); }}>
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+                      {editingDamperId === zone.id ? (
+                        <Box display="flex" alignItems="center" gap={1} sx={{ mr: 2 }}>
+                          <TextField
+                            size="small"
+                            label="Min"
+                            type="number"
+                            value={editingMinDamper}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              if (!isNaN(value) && value >= 0 && value <= 100) {
+                                setEditingMinDamper(value);
+                              }
+                            }}
+                            inputProps={{ min: 0, max: 100, style: { width: '50px' } }}
+                            sx={{ width: '80px' }}
+                          />
+                          <TextField
+                            size="small"
+                            label="Max"
+                            type="number"
+                            value={editingMaxDamper}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              if (!isNaN(value) && value >= 0 && value <= 100) {
+                                setEditingMaxDamper(value);
+                              }
+                            }}
+                            inputProps={{ min: 0, max: 100, style: { width: '50px' } }}
+                            sx={{ width: '80px' }}
+                          />
+                          <IconButton size="small" onClick={async () => {
+                            if (editingMinDamper > editingMaxDamper) {
+                              setSnackbar({ open: true, message: 'Min cannot be greater than max', severity: 'warning' });
+                              return;
+                            }
+                            try {
+                              await ApiService.updateZone({ id: zone.id, minDamper: editingMinDamper, maxDamper: editingMaxDamper });
+                              setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, minDamper: editingMinDamper, maxDamper: editingMaxDamper } : z));
+                              setSnackbar({ open: true, message: 'Damper values updated', severity: 'success' });
+                              setEditingDamperId(null);
+                            } catch (err) {
+                              setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
+                            }
+                          }}>
+                            <CheckIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" onClick={() => { setEditingDamperId(null); }}>
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ) : (
+                        <Box display="flex" alignItems="center" gap={1} sx={{ mr: 2 }}>
+                          <Typography variant="body2" sx={{ width: '80px', textAlign: 'center' }}>Min: {zone.minDamper ?? 0}</Typography>
+                          <Typography variant="body2" sx={{ width: '80px', textAlign: 'center' }}>Max: {zone.maxDamper ?? 100}</Typography>
+                          <IconButton size="small" onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setEditingDamperId(zone.id); 
+                            setEditingMinDamper(zone.minDamper ?? 0); 
+                            setEditingMaxDamper(zone.maxDamper ?? 100); 
+                          }}>
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Box>

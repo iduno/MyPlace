@@ -9,6 +9,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.jboss.logging.Logger;
+
 import com.air.advantage.config.MyPlaceConfig;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -25,6 +27,8 @@ import jakarta.inject.Inject;
 /* loaded from: classes.dex */
 @ApplicationScoped
 public class MyMasterData {
+    private static final Logger LOG = Logger.getLogger(MyMasterData.class);
+    
     public static final MasterData masterData = new MasterData();
 
     @Inject
@@ -38,17 +42,16 @@ public class MyMasterData {
             .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
 
     public void onStart(@Observes StartupEvent event) {
-        System.out.println("MyMasterData initialization started");
-        System.out.println("Using config path: " + config.config().path());
-        System.out.println("Using save delay: " + config.config().saveDelayMinutes() + " minutes");
+        LOG.info("MyMasterData initialization started");
+        LOG.info("Using config path: " + config.config().path());
+        LOG.info("Using save delay: " + config.config().saveDelayMinutes() + " minutes");
         
         try {
             initializeDefaultSystem();
             loadConfig();
-            System.out.println("MyMasterData initialization completed successfully");
+            LOG.info("MyMasterData initialization completed successfully");
         } catch (Exception e) {
-            System.err.println("Error during MyMasterData initialization: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("Error during MyMasterData initialization: " + e.getMessage(), e);
             throw new RuntimeException("Failed to initialize MyMasterData", e);
         }
     }
