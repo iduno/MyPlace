@@ -108,6 +108,11 @@ public class DataSystem {
     @JsonProperty("allTspErrorCodes")
     @JsonView({JsonExporterViews.Export.class})
     public HashMap<String, String> allTspErrorCodes;
+
+    @SerializedName("tspErrorCode")
+    @JsonProperty("tspErrorCode")
+    @JsonView({JsonExporterViews.Export.class})
+    public String tspErrorCode;
     
     @SerializedName("backupId")
     @JsonProperty("backupId")
@@ -492,6 +497,7 @@ public class DataSystem {
         // New fields
         if (other.aaServiceRev != null) this.aaServiceRev = other.aaServiceRev;
         if (other.allTspErrorCodes != null) this.allTspErrorCodes = new HashMap<>(other.allTspErrorCodes);
+        if (other.tspErrorCode != null) this.tspErrorCode = other.tspErrorCode;
         if (other.backupId != null) this.backupId = other.backupId;
         if (other.deletedDevices != null) this.deletedDevices = new HashMap<>(other.deletedDevices);
         if (other.deviceIdsV2 != null) this.deviceIdsV2 = new HashMap<>(other.deviceIdsV2);

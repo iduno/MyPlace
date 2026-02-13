@@ -12,6 +12,7 @@ import com.air.advantage.cbmessages.CANMessageAircon;
 import com.air.advantage.cbmessages.CANMessageAircon00Unknown;
 import com.air.advantage.cbmessages.CANMessageAircon01ZoneInformation;
 import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation;
+import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation.UnitType;
 import com.air.advantage.cbmessages.CANMessageAircon03ZoneState;
 import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
 import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
@@ -192,7 +193,9 @@ public class HandlerAircon extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         // Map fields from msg to dataAirconInfo
-        dataAirconInfo.cbType = msg.getUnitType() != null ? msg.getUnitType().getValue() : 0;
+        if (msg.getUnitType() != null && msg.getUnitType() != UnitType.UNKNOWN) {
+            dataAirconInfo.unitType = msg.getUnitType().getValue();
+        }
         // Map activationStatus enum if needed
         if (msg.getActivationStatus() != null) {
             switch (msg.getActivationStatus()) {
@@ -211,14 +214,15 @@ public class HandlerAircon extends Handler {
         } else {
             dataAirconInfo.activationCodeStatus = null;
         }
-        dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
-        dataAirconInfo.cbFWRevMinor = msg.getFwMinor();
-        
+        if (msg.getFwMajor() != 0 || msg.getFwMinor() != 0) {
+            dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
+            dataAirconInfo.cbFWRevMinor = msg.getFwMinor();        
+        }
         // Update expiry time
         dataAirconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         
         LOG.debug("Processed UnitTypeInformation for UID " + uid +
-                ": cbType=" + dataAirconInfo.cbType +
+                ": unitType=" + dataAirconInfo.unitType +
                 ", activationCodeStatus=" + dataAirconInfo.activationCodeStatus +
                 ", cbFWRevMajor=" + dataAirconInfo.cbFWRevMajor +
                 ", cbFWRevMinor=" + dataAirconInfo.cbFWRevMinor);
@@ -403,10 +407,12 @@ public class HandlerAircon extends Handler {
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
-        info.cbFWRevMajor = msg.getCbFwMajor();
-        info.cbFWRevMinor = msg.getCbFwMinor();
-        info.cbType = msg.getCbType();
-        // info.rfFWRevMajor = msg.getRfFwMajor(); // If you have this field
+        if (msg.getCbFwMajor() != 0 || msg.getCbFwMinor() != 0) {
+            info.cbFWRevMajor = msg.getCbFwMajor();
+            info.cbFWRevMinor = msg.getCbFwMinor();
+            info.cbType = msg.getCbType();
+            info.rfFWRevMajor = msg.getRfFwMajor();
+        }
 
         CANMessageAircon07CbStatusMessage cbStatus = new CANMessageAircon07CbStatusMessage();
         cbStatus.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
@@ -423,10 +429,12 @@ public class HandlerAircon extends Handler {
         DataAircon dataAircon = getOrCreateDataAircon(uid);
         DataAirconInfo info = dataAircon.airconInfo;
         
-        info.cbFWRevMajor = msg.getCbFwMajor();
-        info.cbFWRevMinor = msg.getCbFwMinor();
-        info.cbType = msg.getCbType();
-        info.rfFWRevMajor = msg.getRfFwMajor();
+        if (msg.getCbFwMajor() != 0 || msg.getCbFwMinor() != 0) {
+            info.cbFWRevMajor = msg.getCbFwMajor();
+            info.cbFWRevMinor = msg.getCbFwMinor();
+            info.cbType = msg.getCbType();
+            info.rfFWRevMajor = msg.getRfFwMajor();
+        }
         
         // Update expiry time
         info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);

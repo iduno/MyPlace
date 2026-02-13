@@ -108,6 +108,7 @@ public class MyMasterData {
         system.sysType = config.system().sysType();
         system.tspModel = config.system().tspModel();
         system.tspIp = config.system().tspIp();
+        system.tspErrorCode = "noError";
         system.drawLightsTab = false;
         system.drawThingsTab = false;
         system.hasAircons = false;

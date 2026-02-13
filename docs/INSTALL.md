@@ -137,15 +137,16 @@ cd MyPlace
 From the repository root run:
 
 ```bash
-mvn clean install package
+./mvnw clean install package
 ```
 
 Notes:
-- The build will produce artifacts in the `myplace/target` and `myplace/target/quarkus-app` directories depending on project packaging.
+- The build will produce artifacts in the `myplace/target/quarkus-app` directory.
+- The PI Zero does not have enough RAM to build.
 - Large builds may take significant time on a Pi. Consider building on a faster machine (x86) and copying the assembled `quarkus-app` folder or final jar to the Pi.
 
 Optional faster workflow:
-- Build on your PC and then `rsync` or `scp` the `quarkus-app`/jar to the Pi.
+- Build on your PC and then `rsync` or `scp` the `quarkus-app` folder to the Pi.
 
 
 ---
@@ -160,10 +161,10 @@ sudo chown aircon /opt/airconpi
 sudo chgrp aircon /opt/airconpi
 ```
 
-Copy the `myplace/target/quarkus-app` directory to `/opt/airconpi` and check the folder has the required files and folders:
+Copy the `myplace/target/quarkus-app` directory to `/opt/airconpi/quarkus-app` and check the folder has the required files and folders:
 
 ```bash
-ls /opt/airconpi/
+ls /opt/airconpi/quarkus-app/
 # app  lib  quarkus quarkus-run.jar
 ```
 
@@ -185,6 +186,20 @@ myplace.config.path=config/myplace.json
 
 quarkus.http.host=0.0.0.0
 quarkus.http.port=8080
+
+quarkus.log.level=OFF
+quarkus.log.console.level=OFF
+
+# If you would like to log the serial communication the following should be uncommented.
+
+#quarkus.log.handler.file."LOG_MESSAGE".enable=true
+#quarkus.log.handler.file."LOG_MESSAGE".format=%d{YYYY-MM-DD HH:mm:ss} %s%e%n
+#quarkus.log.handler.file."LOG_MESSAGE".path=/opt/airconpi/logs/myplace_comms.log
+#quarkus.log.handler.file."LOG_MESSAGE".rotation.max-file-size=20M
+#quarkus.log.handler.file."LOG_MESSAGE".rotation.max-backup-index=20
+#quarkus.log.category."com.air.advantage.service.communication.SerialCommunicationService".level=DEBUG
+#quarkus.log.category."com.air.advantage.service.communication.SerialCommunicationService".handlers=LOG_MESSAGE
+
 ```
 
 Below is a generic example for a systemd config. Adjust `ExecStart` to the actual runnable produced by your build (jar, quarkus-app runner, or a shell wrapper). Place the service file at `/etc/systemd/system/airconpi.service`.
@@ -201,7 +216,7 @@ After=network.target
 [Service]
 User=aircon
 WorkingDirectory=/opt/airconpi
-ExecStart=/usr/bin/java -jar /opt/airconpi/quarkus-run.jar
+ExecStart=/usr/bin/java -jar /opt/airconpi/quarkus-app/quarkus-run.jar
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=5
@@ -219,11 +234,12 @@ sudo systemctl start airconpi.service
 sudo journalctl -u airconpi -f
 ```
 
+After first run `/opt/airconpi/config/myplace.json` will be created. This stores the name of the aircon and zone information.
+
 Troubleshooting:
 - If the service fails to start, inspect `sudo journalctl -u airconpi -b` and `sudo systemctl status airconpi`.
 - Ensure the `ExecStart` path exists and Java runs correctly.
 
-Placeholder: ![](systemd-service-example.png)
 
 ---
 

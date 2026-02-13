@@ -13,6 +13,7 @@ import com.air.advantage.cbmessages.CANMessageAircon00Unknown;
 import com.air.advantage.cbmessages.CANMessageAircon01ZoneInformation;
 import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation;
 import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation.CodeStatus;
+import com.air.advantage.cbmessages.CANMessageAircon02UnitTypeInformation.UnitType;
 import com.air.advantage.cbmessages.CANMessageAircon03ZoneState;
 import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
 import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
@@ -233,7 +234,7 @@ public class HandlerAirconCB extends Handler {
         }
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
 
-        if (msg.getUnitType() != null) {
+        if (msg.getUnitType() != null && msg.getUnitType() != UnitType.UNKNOWN) {
             dataAirconInfo.unitType = msg.getUnitType().getValue();
         }
 
@@ -242,8 +243,10 @@ public class HandlerAirconCB extends Handler {
             case CODE_ENABLED -> dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.codeEnabled;
             case EXPIRED -> dataAirconInfo.activationCodeStatus = DataAircon.CodeStatus.expired;
         }
-        dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
-        dataAirconInfo.cbFWRevMinor = msg.getFwMinor();
+        if (msg.getFwMajor() != 0) {
+            dataAirconInfo.cbFWRevMajor = msg.getFwMajor();
+            dataAirconInfo.cbFWRevMinor = msg.getFwMinor();
+        }
     }
 
     private void process(CANMessageAircon03ZoneState msg) {
