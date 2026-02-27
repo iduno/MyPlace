@@ -41,7 +41,6 @@
       "windows": {
         "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
       },
-      "preLaunchTask": "Run MyPlace MYAIR",
       "args": [
         "quarkus:dev",
         "-Ddebug=false",

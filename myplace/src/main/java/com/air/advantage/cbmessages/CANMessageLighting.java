@@ -7,9 +7,11 @@ public class CANMessageLighting extends CANMessage{
         LM_SETUP_OLD("00"),
         LM_UPDATE_BRIGHTNESS_LEVEL("01"),
         LM_SETUP("02"),
+        DM_UPDATE_BRIGHTNESS_LEVEL("14"),
         RM2_THING_STATE("15"),
         RM2_DIP_THING("16"),
-        RM2_STATUS_ADD_DEVICE("17");
+        RM2_STATUS_ADD_DEVICE("17"),
+        RM2_UPDATE_BRIGHTNESS_LEVEL("1d");
         
 
         private final String value;
@@ -55,6 +57,9 @@ public class CANMessageLighting extends CANMessage{
             case LM_SETUP:
                 message = CANMessageLighting02LmStatusMessage.deserialize(data, offset);
                 break;
+            case DM_UPDATE_BRIGHTNESS_LEVEL:
+                message = CANMessageLighting14DmControlMessage.deserialize(data, offset);
+                break;
             case RM2_THING_STATE:
                 message = CANMessageLighting15Rm2ControlMessage.deserialize(data, offset);
                 break;
@@ -63,6 +68,9 @@ public class CANMessageLighting extends CANMessage{
                 break;
             case RM2_STATUS_ADD_DEVICE:
                 message = CANMessageLighting17Rm2AddDevice.deserialize(data, offset);
+                break;
+            case RM2_UPDATE_BRIGHTNESS_LEVEL:
+                message = CANMessageLighting1dRm2ControlMessage.deserialize(data, offset);
                 break;
             default:
                 message = CANMessageLighting00LmStatusMessageOld.deserialize(data, offset); // fallback to a default handler

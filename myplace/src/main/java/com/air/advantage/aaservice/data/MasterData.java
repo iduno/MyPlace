@@ -43,7 +43,7 @@ public class MasterData {
     @SerializedName("myLights")
     @JsonProperty("myLights")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    public DataLightsAll myLights = new DataLightsAll();
+    public DataMyLights myLights = new DataMyLights();
 
     public DataAircon getAirconByUID(String uid) {
         if (uid == null || uid.isEmpty()) return null;

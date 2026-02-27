@@ -14,21 +14,57 @@ import com.google.gson.annotations.SerializedName;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataScene {
 
+
+    // --- FIELDS COPIED FROM REFERENCE DataScene.java ---
+    public static final int MAXIMUM_START_AND_STOP_TIME_VALUE = 1440;
+
+    @SerializedName("activeDays")
+    public Integer activeDays;
+
+    @SerializedName("airconStopTime")
+    public Integer airconStopTime;
+
+    @SerializedName("airconStopTimeEnabled")
+    public Boolean airconStopTimeEnabled;
+
+    // @SerializedName("aircons")
+    // public HashMap<String, DataAirconSystem> aircons;
+
+    @SerializedName("canMessages")
+    public String canMessages;
+
     @SerializedName("id")
-    @JsonProperty("id")
-    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String id;
 
     @SerializedName("lights")
-    @JsonProperty("lights")
-    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public HashMap<String, DataLight> lights;
 
-    @SerializedName("canMessages")
-    @JsonProperty("canMessages")
-    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    @Expose(serialize = false)
-    public String canMessages;
+    // @SerializedName("monitors")
+    // public HashMap<String, DataMonitor> monitors;
+
+    @SerializedName("myTimeEnabled")
+    public Boolean myTimeEnabled;
+
+    @SerializedName("name")
+    public String name;
+
+    @SerializedName("runNow")
+    public Boolean runNow;
+
+    // @SerializedName("sonos")
+    // public HashMap<String, Sonos> sonos;
+
+    @SerializedName("startTime")
+    public Integer startTime;
+
+    @SerializedName("summary")
+    public String summary;
+
+    // @SerializedName("things")
+    // public HashMap<String, DataMyThing> things;
+
+    @SerializedName("timerEnabled")
+    public Boolean timerEnabled;
 
     public void copyFrom(DataScene other) {
         if (other == null) return;

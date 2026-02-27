@@ -17,6 +17,8 @@ import com.air.advantage.cbmessages.CANMessageAircon04ZoneConfiguration;
 import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
 import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
 import com.air.advantage.cbmessages.CANMessageAircon0aMidInformation;
+import com.air.advantage.cbmessages.CANMessageLighting00LmStatusMessageOld;
+import com.air.advantage.cbmessages.CANMessageLighting02LmStatusMessage;
 import com.air.advantage.config.MyPlaceConfig;
 
 import io.quarkus.runtime.StartupEvent;
@@ -50,18 +52,31 @@ public class AirconUpdateService {
 
     public void onStart(@Observes StartupEvent ev) {
         if (vertx != null) {
-            systemTimerId = vertx.setPeriodic(60000, id -> systemTimer());
+            systemTimerId = vertx.setPeriodic(20000, id -> systemTimer());
         }
     }
     
 
     private void systemTimer() {
-        myMasterData.masterData.aircons.forEach((key, aircon) -> {
-            String uid = aircon.airconInfo.uid;
-
+        if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.MYAIR) {
             CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
             populateHeader(airconStatus, "00000");
             eventBus.publish("communication-send-can", airconStatus);
+
+            CANMessageLighting00LmStatusMessageOld lightingStatusOld = new CANMessageLighting00LmStatusMessageOld();
+            populateHeader(lightingStatusOld, "00000");
+            lightingStatusOld.setSystemType(CANMessage.SystemType.LIGHTING);
+            lightingStatusOld.setRoomExists(36);
+            eventBus.publish("communication-send-can", lightingStatusOld);
+
+            CANMessageLighting02LmStatusMessage lightingStatus = new CANMessageLighting02LmStatusMessage();
+            populateHeader(lightingStatus, "00000");
+            lightingStatus.setSystemType(CANMessage.SystemType.LIGHTING);
+            lightingStatus.setMajorFWVersion(36);
+            eventBus.publish("communication-send-can", lightingStatus);
+        }
+        myMasterData.masterData.aircons.forEach((key, aircon) -> {
+            String uid = aircon.airconInfo.uid;
 
             DataAircon dataAircon = null;
             if (aircon.airconInfo.countDownToOff != null && aircon.airconInfo.countDownToOff > 0) {
@@ -346,5 +361,49 @@ public class AirconUpdateService {
 
     private static float valueOr(Float oldVal, Float newVal, float def) {
         if (newVal != null) return newVal; if (oldVal != null) return oldVal; return def;
+    }
+
+    /**
+     * Update group membership and order for all lights in the given DataGroup.
+     * If a light is not in the specified group, move it. If already present, update position.
+     * @param group The DataGroup to apply (id, name, lightsOrder)
+     */
+    public void applyLightGroupUpdate(com.air.advantage.aaservice.data.DataGroup group) {
+        if (group == null || group.id == null || MyMasterData.masterData == null || MyMasterData.masterData.myLights == null) return;
+        var groups = MyMasterData.masterData.myLights.groups;
+        var groupsOrder = MyMasterData.masterData.myLights.groupsOrder;
+        if (groups == null) return;
+        var targetGroup = groups.get(group.id);
+        if (targetGroup == null) {
+            targetGroup = new com.air.advantage.aaservice.data.DataGroup();
+            targetGroup.id = group.id;
+            targetGroup.name = group.name;
+            groups.put(group.id, targetGroup);
+            if (groupsOrder != null && !groupsOrder.contains(group.id)) {
+                groupsOrder.add(group.id);
+            }
+        } else {
+            targetGroup.name = group.name;
+        }
+    }
+
+    public void applyLightUpdate(com.air.advantage.aaservice.data.DataLight dataLight) {
+        if (dataLight == null || dataLight.id == null || MyMasterData.masterData == null || MyMasterData.masterData.myLights == null) return;
+        var lights = MyMasterData.masterData.myLights.lights;
+        if (lights == null) return;
+        var existing = lights.get(dataLight.id);
+        boolean isNew = existing == null;
+        if (isNew) {
+            existing = new com.air.advantage.aaservice.data.DataLight();
+            existing.id = dataLight.id;
+            lights.put(dataLight.id, existing);
+        }
+        existing.name = valueOr(existing.name, dataLight.name);
+        existing.value = valueOr(existing.value, dataLight.value);
+        existing.moduleType = valueOr(existing.moduleType, dataLight.moduleType);
+        existing.deviceType = valueOr(existing.deviceType, dataLight.deviceType);
+        existing.reachable = valueOr(existing.reachable, dataLight.reachable);
+        existing.relay = valueOr(existing.relay, dataLight.relay);
+        existing.state = valueOr(existing.state, dataLight.state);
     }
 }

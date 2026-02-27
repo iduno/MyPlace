@@ -1,5 +1,7 @@
 package com.air.advantage.service;
 
+import com.air.advantage.aaservice.data.DataGroup;
+import com.air.advantage.aaservice.data.DataLight;
 import com.air.advantage.aaservice.data.JsonExporterViews;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.Message;
@@ -98,7 +100,8 @@ public class WebServiceResource {
     @POST
     @Path("/setLight")
     @WebService(value = "setLight", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLight(String body) {
+    public Response setLight(DataLight dataLight) {
+        airconUpdateService.applyLightUpdate(dataLight);
         return Response.ok("{\"ack\":true,\"request\":\"setLight\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -173,7 +176,8 @@ public class WebServiceResource {
     @POST
     @Path("/setLightGroup")
     @WebService(value = "setLightGroup", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLightGroup(String body) {
+    public Response setLightGroup(DataGroup group) {
+        airconUpdateService.applyLightGroupUpdate(group);
         return Response.ok("{\"ack\":true,\"request\":\"setLightGroup\"}", MediaType.APPLICATION_JSON).build();
     }
 

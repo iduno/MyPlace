@@ -43,10 +43,31 @@ public class DataLight {
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String deviceType;
 
+
+    @SerializedName("reachable")
+    @JsonProperty("reachable")
+    @JsonView({JsonExporterViews.Export.class})
+    public Boolean reachable;
+
+    @SerializedName("relay")
+    @JsonProperty("relay")
+    @JsonView({JsonExporterViews.Export.class})
+    public Boolean relay;
+
     @SerializedName("state")
     @JsonProperty("state")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String state;
+
+    @SerializedName("thisIsRFDevice")
+    @JsonProperty("thisIsRFDevice")
+    @JsonView({JsonExporterViews.Export.class})
+    public Boolean thisIsRFDevice;
+
+    @SerializedName("dimOffset")
+    @JsonProperty("dimOffset")
+    @JsonView({JsonExporterViews.Export.class})
+    public Integer dimOffset;
 
     public void copyFrom(DataLight other) {
         if (other == null) return;

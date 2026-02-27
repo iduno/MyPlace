@@ -3,9 +3,9 @@ package com.air.advantage.cbmessages;
 public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
     public int majorFWVersion;
     public int minorFWVersion;
-    public boolean[] roomExists = new boolean[8];
-    public boolean[] validRooms = new boolean[8];
-    public boolean[] relayRooms = new boolean[8];
+    public int roomExists;
+    public int validRooms;
+    public int relayRooms;
     public int infoByte;
 
     public CANMessageLighting02LmStatusMessage() {
@@ -13,11 +13,9 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
         this.messageType = MessageType.LM_SETUP;
         this.majorFWVersion = 0;
         this.minorFWVersion = 0;
-        for (int i = 0; i < 8; i++) {
-            this.roomExists[i] = false;
-            this.validRooms[i] = false;
-            this.relayRooms[i] = false;
-        }
+        this.roomExists = 0;
+        this.validRooms = 0;
+        this.relayRooms = 0;
         this.infoByte = 0;
     }
 
@@ -27,15 +25,10 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
         if (data.length >= offset + 2) {
             msg.majorFWVersion = ByteArray.parseHexValue(offset, data);
             msg.minorFWVersion = ByteArray.parseHexValue(offset + 2, data);
-            int roomExistsBinary = ByteArray.parseHexValue(offset + 4, data);
-            int validRoomsBinary = ByteArray.parseHexValue(offset + 6, data);
-            int relayRoomsBinary = ByteArray.parseHexValue(offset + 8, data);
+            msg.roomExists = ByteArray.parseHexValue(offset + 4, data);
+            msg.validRooms = ByteArray.parseHexValue(offset + 6, data);
+            msg.relayRooms = ByteArray.parseHexValue(offset + 8, data);
             msg.infoByte = ByteArray.parseHexValue(offset + 10, data);
-            for (int i = 0; i < 8; i++) {
-                msg.roomExists[i] = ((roomExistsBinary >> i) & 0x01) == 1;
-                msg.validRooms[i] = ((validRoomsBinary >> i) & 0x01) == 1;
-                msg.relayRooms[i] = ((relayRoomsBinary >> i) & 0x01) == 1;
-            }
         }
         return msg;
     }
@@ -45,17 +38,9 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
         
         ByteArray.toHexDigits(majorFWVersion, data, offset);
         ByteArray.toHexDigits(minorFWVersion, data, offset + 2);
-        int roomExistsBinary = 0;
-        int validRoomsBinary = 0;
-        int relayRoomsBinary = 0;
-        for (int i = 0; i < 8; i++) {
-            if (roomExists[i]) roomExistsBinary |= (1 << i);
-            if (validRooms[i]) validRoomsBinary |= (1 << i);
-            if (relayRooms[i]) relayRoomsBinary |= (1 << i);
-        }
-        ByteArray.toHexDigits(roomExistsBinary, data, offset + 4);
-        ByteArray.toHexDigits(validRoomsBinary, data, offset + 6);
-        ByteArray.toHexDigits(relayRoomsBinary, data, offset + 8);
+        ByteArray.toHexDigits(roomExists, data, offset + 4);
+        ByteArray.toHexDigits(validRooms, data, offset + 6);
+        ByteArray.toHexDigits(relayRooms, data, offset + 8);
         ByteArray.toHexDigits(infoByte, data, offset + 10);
         return offset + 14;
     }
@@ -76,72 +61,78 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
         this.minorFWVersion = minorFWVersion;
     }
     
-    public boolean[] getRoomExists() {
+    public int getRoomExists() {
         return roomExists;
     }
     
-    public void setRoomExists(boolean[] roomExists) {
-        if (roomExists != null && roomExists.length == 8) {
-            System.arraycopy(roomExists, 0, this.roomExists, 0, 8);
-        }
+    public void setRoomExists(int roomExists) {
+        this.roomExists = roomExists;
     }
     
     public boolean getRoomExists(int index) {
-        if (index >= 0 && index < 8) {
-            return roomExists[index];
+        if (index >= 0 && index < 6) {
+            return ((roomExists >> index) & 0x01) == 1;
         }
         return false;
     }
     
     public void setRoomExists(int index, boolean exists) {
-        if (index >= 0 && index < 8) {
-            roomExists[index] = exists;
+        if (index >= 0 && index < 6) {
+            if (exists) {
+                roomExists |= (1 << index);
+            } else {
+                roomExists &= ~(1 << index);
+            }
         }
     }
     
-    public boolean[] getValidRooms() {
+    public int getValidRooms() {
         return validRooms;
     }
     
-    public void setValidRooms(boolean[] validRooms) {
-        if (validRooms != null && validRooms.length == 8) {
-            System.arraycopy(validRooms, 0, this.validRooms, 0, 8);
-        }
+    public void setValidRooms(int validRooms) {
+        this.validRooms = validRooms;
     }
     
     public boolean getValidRoom(int index) {
-        if (index >= 0 && index < 8) {
-            return validRooms[index];
+        if (index >= 0 && index < 6) {
+            return ((validRooms >> index) & 0x01) == 1;
         }
         return false;
     }
     
     public void setValidRoom(int index, boolean valid) {
-        if (index >= 0 && index < 8) {
-            validRooms[index] = valid;
+        if (index >= 0 && index < 6) {
+            if (valid) {
+                validRooms |= (1 << index);
+            } else {
+                validRooms &= ~(1 << index);
+            }
         }
     }
     
-    public boolean[] getRelayRooms() {
+    public int getRelayRooms() {
         return relayRooms;
     }
     
-    public void setRelayRooms(boolean[] relayRooms) {
-        if (relayRooms != null && relayRooms.length == 8) {
-            System.arraycopy(relayRooms, 0, this.relayRooms, 0, 8);
-        }
+    public void setRelayRooms(int relayRooms) {
+        this.relayRooms = relayRooms;
     }
     
     public boolean getRelayRoom(int index) {
-        if (index >= 0 && index < 8) {
-            return relayRooms[index];
+        if (index >= 0 && index < 6) {
+            return ((relayRooms >> index) & 0x01) == 1;
         }
         return false;
     }
     
     public void setRelayRoom(int index, boolean relay) {
-        if (index >= 0 && index < 8) {
-            relayRooms[index] = relay;
+        if (index >= 0 && index < 6) {
+            if (relay) {
+                relayRooms |= (1 << index);
+            } else {
+                relayRooms &= ~(1 << index);
+            }
         }
     }
     
@@ -162,13 +153,13 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
         if (majorFWVersion != that.majorFWVersion) return false;
         if (minorFWVersion != that.minorFWVersion) return false;
         if (infoByte != that.infoByte) return false;
-        if (!java.util.Arrays.equals(roomExists, that.roomExists)) return false;
-        return java.util.Arrays.equals(validRooms, that.validRooms) && java.util.Arrays.equals(relayRooms, that.relayRooms);
+        if (roomExists != that.roomExists) return false;
+        return validRooms == that.validRooms && relayRooms == that.relayRooms;
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(super.hashCode(), majorFWVersion, minorFWVersion, java.util.Arrays.hashCode(roomExists), java.util.Arrays.hashCode(validRooms), java.util.Arrays.hashCode(relayRooms), infoByte);
+        return java.util.Objects.hash(super.hashCode(), majorFWVersion, minorFWVersion, roomExists, validRooms, relayRooms, infoByte);
     }
 
 }
