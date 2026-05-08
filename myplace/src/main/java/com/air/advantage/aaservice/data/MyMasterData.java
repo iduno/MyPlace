@@ -105,7 +105,7 @@ public class MyMasterData {
         system.aaServiceRev = config.system().aaServiceRev();
         system.name = config.system().name();
         system.myAppRev = config.system().myAppRev();
-        system.sysType = config.system().sysType();
+        system.sysType = config.system().sysType().getValue();
         system.tspModel = config.system().tspModel();
         system.tspIp = config.system().tspIp();
         system.tspErrorCode = "noError";

@@ -358,7 +358,7 @@ const ZoneFragment = () => {
                     <Typography variant="caption" color="text.secondary" display="block">{zone.damperValue}%</Typography>
                   </Box>
                   {zone.type === 0 ? (
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                    <Box mb={0.5} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <IconButton size="small" onClick={() => handleDamperValueChange(zone.id, 'down')} disabled={zone.damperValue <= (zone.minDamper || 0)}>
                         <ArrowDownwardIcon fontSize="inherit" />
                       </IconButton>
@@ -368,7 +368,7 @@ const ZoneFragment = () => {
                       </IconButton>
                     </Box>
                   ) : (
-                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+                    <Box mb={0.5} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <IconButton size="small" onClick={() => handleTemperatureChange(zone.id, 'down')} disabled={zone.temperature <= 16}>
                         <ArrowDownwardIcon fontSize="inherit" />
                       </IconButton>

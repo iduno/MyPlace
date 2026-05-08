@@ -17,7 +17,7 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 
 public class HandlerLightingCB extends Handler {
     private static final Logger LOG = Logger.getLogger(HandlerLightingCB.class);
-    private static final CANMessage.DeviceType DEVICE_TYPE = CANMessage.DeviceType.AIRCON_1;
+    private static final CANMessage.DeviceType DEVICE_TYPE = CANMessage.DeviceType.RF_CONTROLLER;
     private static final CANMessage.SystemType SYSTEM_TYPE = CANMessage.SystemType.LIGHTING;
     
     public HandlerLightingCB(MyMasterData myMasterData, EventBus eventBus) {

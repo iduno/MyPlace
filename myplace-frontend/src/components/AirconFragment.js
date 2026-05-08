@@ -628,7 +628,7 @@ const AirconFragment = () => {
               TEMPERATURE
             </Typography>
             
-            <Box display="flex" alignItems="center" justifyContent="center">
+            <Box display="flex" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <IconButton 
                 onClick={() => handleTemperatureChange('down')}
                 disabled={temperature <= 16}

@@ -366,14 +366,14 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
 
   return (
     <StyledPaper elevation={1}>
-      <Box display="flex" flexDirection="column">
+      <Box style={{ display: 'flex', flexDirection: 'column', alignItems: 'left', justifyContent: 'space-between' }}>
         <Grid item xs={12} md={12}>
           <Paper variant="outlined" sx={{ p: 2, mb: 1 }}>
-            <Box display="flex" alignItems="center" gap={1}>
+            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <DeviceHubIcon fontSize="small" />
               <Typography variant="caption" color="text.secondary">System Name</Typography>
             </Box>
-            <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+            <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               {editingSystem ? (
                 <TextField
                   size="small"
@@ -481,11 +481,11 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           <Grid container spacing={2} alignItems="flex-start">
           <Grid item xs={12} md={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <SecurityIcon fontSize="small" />
                 <Typography variant="caption" color="text.secondary">AirCon Name</Typography>
               </Box>
-              <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 {editingAircon ? (
                   <TextField
                     size="small"
@@ -522,17 +522,17 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
             
           <Grid item xs={12} md={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <SensorsIcon fontSize="small" />
                 <Typography variant="caption" color="text.secondary">Number of Zones</Typography>
               </Box>
-              <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 {editingZones ? (
                   <>
                     <TextField
                       size="small"
                       type="number"
-                      inputProps={{ min: 1, max: 10 }}
+                      inputProps={{ min: 1, max: 10 }}  
                       value={editingZonesCount === null ? '' : editingZonesCount}
                       onChange={(e) => setEditingZonesCount(e.target.value === '' ? null : Number(e.target.value))}
                       onKeyDown={(e) => {
@@ -563,12 +563,12 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           {/* Zones configuration section */}
           <Grid item xs={12} md={12}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <DeviceHubIcon fontSize="small" />
                   <Typography variant="subtitle2">Zones Configuration</Typography>
                 </Box>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Typography variant="caption" color="text.secondary">Max 3 constant zones</Typography>
                   <IconButton size="small" onClick={async () => {
                     setUpdatingZones(true);
@@ -597,13 +597,13 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                 </Box>
               </Box>
 
-              <Box mt={2}>
+              <Box mt={20}>
                 {zonesList && zonesList.length ? (
                   zonesList.map(zone => (
-                    <Box key={zone.id} display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
+                    <Box key={zone.id} display="flex" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Typography variant="body2" sx={{ width: 48 }}>{zone.zoneNumber}</Typography>
                       {editingZoneId === zone.id ? (
-                        <Box display="flex" alignItems="center" sx={{ flex: 1 }}>
+                        <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <TextField
                             size="small"
                             value={editingZoneName}
@@ -652,7 +652,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                           </IconButton>
                         </Box>
                       ) : (
-                        <Box display="flex" alignItems="center" sx={{ flex: 1 }}>
+                        <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{zone.name}</Typography>
                           <IconButton size="small" onClick={(e) => { e.stopPropagation(); setEditingZoneId(zone.id); setEditingZoneName(zone.name); }}>
                             <EditIcon fontSize="small" />
@@ -660,7 +660,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                         </Box>
                       )}
                       {editingDamperId === zone.id ? (
-                        <Box display="flex" alignItems="center" gap={1} sx={{ mr: 2 }}>
+                        <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <TextField
                             size="small"
                             label="Min"
@@ -710,9 +710,8 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                           </IconButton>
                         </Box>
                       ) : (
-                        <Box display="flex" alignItems="center" gap={1} sx={{ mr: 2 }}>
-                          <Typography variant="body2" sx={{ width: '80px', textAlign: 'center' }}>Min: {zone.minDamper ?? 0}</Typography>
-                          <Typography variant="body2" sx={{ width: '80px', textAlign: 'center' }}>Max: {zone.maxDamper ?? 100}</Typography>
+                        <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Typography variant="body2" sx={{ width: '80px', textAlign: 'center' }}>{zone.minDamper ?? 0} - {zone.maxDamper ?? 100}</Typography>
                           <IconButton size="small" onClick={(e) => { 
                             e.stopPropagation(); 
                             setEditingDamperId(zone.id); 
@@ -792,10 +791,10 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="caption" color="text.secondary">Postcode</Typography>
               </Box>
-              <Box display="flex" alignItems="center" gap={1} sx={{ mt: 1 }}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }} sx={{ mt: 1 }}>
                 {editingPostcode ? (
                   <TextField
                     size="small"
@@ -845,7 +844,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <SecurityIcon fontSize="small" />
                 <Typography variant="caption" color="text.secondary">Activation</Typography>
               </Box>
@@ -855,7 +854,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           </Grid>
           <Grid item xs={12} md={4}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <FingerprintIcon fontSize="small" />
                 <Typography variant="caption" color="text.secondary">Garage Door PIN</Typography>
               </Box>
@@ -865,7 +864,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           </Grid>
           <Grid item xs={12} md={4}>
             <Paper variant="outlined" sx={{ p: 2 }}>
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <LockIcon fontSize="small" />
                 <Typography variant="caption" color="text.secondary">Lock Reminder</Typography>
               </Box>

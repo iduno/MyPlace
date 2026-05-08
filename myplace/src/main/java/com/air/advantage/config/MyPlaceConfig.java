@@ -30,6 +30,49 @@ public interface MyPlaceConfig {
     
     @ConfigMapping(prefix = "system")
     interface SystemSettings {
+        enum SystemType {
+            ANYWAIR("anywAiR"),
+            EZONE("e-zone"),
+            EZONE_INTERNET("e-zonei"),
+            MYAIR1("MyAir1"),
+            MYAIR2("MyAir2"),
+            MYAIR3("MyAir3"),
+            MYAIR4("MyAir4"),
+            MYAIR4_INTERNET("MyAir4i"),
+            MYAIR5("MyAir5"),
+            VAMS("vams"),
+            ZONE10("zone10"),
+            ZONE10E("zone10e");
+
+            private final String value;
+
+            SystemType(String value) {
+                this.value = value;
+            }
+
+            public String getValue() {
+                return value;
+            }
+
+            @Override
+            public String toString() {
+                return value;
+            }
+
+            public static SystemType fromString(String value) {
+                if (value == null) {
+                    return null;
+                }
+                String v = value.trim();
+                for (SystemType s : SystemType.values()) {
+                    if (s.name().equalsIgnoreCase(v) || s.value.equalsIgnoreCase(v)) {
+                        return s;
+                    }
+                }
+                throw new IllegalArgumentException("Unknown SystemType: " + value);
+            }
+        }
+
         @WithDefault("14.116")
         String aaServiceRev();
 
@@ -39,10 +82,10 @@ public interface MyPlaceConfig {
         @WithDefault("MyPlace")
         String name();
 
-        @WithDefault("MyAir5")
-        String sysType();
+        @WithDefault("myair5")
+        SystemType sysType();
 
-        @WithDefault("PIC8KS6-TSP7")
+        @WithDefault("MyAir5")
         String tspModel();
 
         @WithDefault("127.0.0.1")

@@ -75,7 +75,6 @@
       "windows": {
         "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
       },
-      "preLaunchTask": "Run TCP MyPlace MYAIR",
       "args": [
         "quarkus:dev",
         "-Ddebug=false",
@@ -93,7 +92,6 @@
       "windows": {
         "runtimeExecutable": "${workspaceFolder}\\myplace\\mvnw.cmd"
       },
-      "preLaunchTask": "Run TCP MyPlace CB",
       "args": [
         "quarkus:dev",
         "-Ddebug=false",
