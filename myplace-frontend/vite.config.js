@@ -31,16 +31,11 @@ export default defineConfig({
       }
     })
   ],
-  esbuild: {
-    loader: 'jsx',
+  oxc: {
     include: /src\/.*\.[jt]sx?$/,
-    exclude: []
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx'
-      }
+    exclude: [],
+    jsx: {
+      runtime: 'automatic'
     }
   },
   server: {
