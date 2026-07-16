@@ -3,13 +3,17 @@ package com.air.advantage.service;
 import com.air.advantage.aaservice.data.DataGroup;
 import com.air.advantage.aaservice.data.DataLight;
 import com.air.advantage.aaservice.data.JsonExporterViews;
+import com.air.advantage.aaservice.data.MasterData;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.Message;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.FormParam;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -32,9 +36,11 @@ public class WebServiceResource {
     @Inject
     EventBus eventBus;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     @GET
     @Path("/getSystemData")
-    @WebService(value = "getSystemData", methods = WebService.HttpMethod.GET)
     @JsonView(JsonExporterViews.Export.class) // Use JsonView to control serialization
     public Response getSystemData(@QueryParam("uid") String uid,@QueryParam("fcmToken") String fcmToken, @QueryParam("notificationVersion") String notificationVersion, @QueryParam("deviceName") String deviceName) {
         // Return masterData object as JSON
@@ -48,7 +54,6 @@ public class WebServiceResource {
 
     @GET
     @Path("/getLights")
-    @WebService(value = "getLights", methods = WebService.HttpMethod.GET)
     public Response getLights() {
         // Not supported, as in WebServer.java1
         String xml = "<iZS10.3><request>No longer supported</request></iZS10.3>";
@@ -57,73 +62,134 @@ public class WebServiceResource {
 
     @POST
     @Path("/changeName")
-    @WebService(value = "changeName", methods = WebService.HttpMethod.POST | WebService.HttpMethod.GET)
-    public Response changeName(String body) {
+    public Response changeNamePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"changeName\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/changeName")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response changeNameGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"changeName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setSystemData")
-    @WebService(value = "setSystemData", methods = WebService.HttpMethod.POST | WebService.HttpMethod.GET)
-    public Response setSystemData(String body) {
+    public Response setSystemDataPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setSystemData\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setSystemData")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setSystemDataGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setSystemData\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setClock")
-    @WebService(value = "setClock", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setClock(String body) {
+    public Response setClockPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setClock\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setClock")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setClockGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setClock\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setZoneData")
-    @WebService(value = "setZoneData", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setZoneData(String body) {
+    public Response setZoneDataPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setZoneData\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setZoneData")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setZoneDataGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setZoneData\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setZoneTimer")
-    @WebService(value = "setZoneTimer", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setZoneTimer(String body) {
+    public Response setZoneTimerPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setZoneTimer\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setZoneTimer")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setZoneTimerGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setZoneTimer\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setScheduleData")
-    @WebService(value = "setScheduleData", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setScheduleData(String body) {
+    public Response setScheduleDataPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setScheduleData\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setScheduleData")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setScheduleDataGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setScheduleData\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLight")
-    @WebService(value = "setLight", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLight(DataLight dataLight) {
+    public Response setLightPost(DataLight dataLight) {
         airconUpdateService.applyLightUpdate(dataLight);
         return Response.ok("{\"ack\":true,\"request\":\"setLight\"}", MediaType.APPLICATION_JSON).build();
     }
 
+    @GET
+    @Path("/setLight")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightGet(@QueryParam("json") String lightJson) {
+        try {
+            DataLight dataLight = objectMapper.readValue(lightJson, DataLight.class);
+            return setLightPost(dataLight);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setLight\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+    }
+
     @POST
     @Path("/setLightName")
-    @WebService(value = "setLightName", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLightName(String body) {
+    public Response setLightNamePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setLightName\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setLightName")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightNameGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setLightName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightToGroup")
-    @WebService(value = "setLightToGroup", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLightToGroup(String body) {
+    public Response setLightToGroupPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setLightToGroup\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setLightToGroup")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightToGroupGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setLightToGroup\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightScene")
-    @WebService(value = "setLightScene", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response setLightScene(com.air.advantage.aaservice.data.DataScene scene) {
+    public Response setLightScenePost(com.air.advantage.aaservice.data.DataScene scene) {
         try {
             if (scene != null && scene.id != null) {
                 MyMasterData.masterData.myLights.scenes.put(scene.id, scene);
@@ -142,11 +208,26 @@ public class WebServiceResource {
         }
     }
 
+    @GET
+    @Path("/setLightScene")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightSceneGet(@QueryParam("json") String sceneJson) {
+        try {
+            com.air.advantage.aaservice.data.DataScene scene =
+                objectMapper.readValue(sceneJson, com.air.advantage.aaservice.data.DataScene.class);
+            return setLightScenePost(scene);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setLightScene\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+    }
+
     @POST
     @Path("/runLightScene")
-    @WebService(value = "runLightScene", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response runLightScene(com.air.advantage.aaservice.data.DataScene scene) {
+    public Response runLightScenePost(com.air.advantage.aaservice.data.DataScene scene) {
         try {
             // Update the scene in masterData.myLights.scenes
             if (scene != null && scene.id != null) {
@@ -166,26 +247,61 @@ public class WebServiceResource {
         }
     }
 
+    @GET
+    @Path("/runLightScene")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response runLightSceneGet(@QueryParam("json") String sceneJson) {
+        try {
+            com.air.advantage.aaservice.data.DataScene scene =
+                objectMapper.readValue(sceneJson, com.air.advantage.aaservice.data.DataScene.class);
+            return runLightScenePost(scene);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"runLightScene\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+    }
+
     @POST
     @Path("/setLightGroupName")
-    @WebService(value = "setLightGroupName", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLightGroupName(String body) {
+    public Response setLightGroupNamePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setLightGroupName\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setLightGroupName")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightGroupNameGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setLightGroupName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setLightGroup")
-    @WebService(value = "setLightGroup", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setLightGroup(DataGroup group) {
+    public Response setLightGroupPost(DataGroup group) {
         airconUpdateService.applyLightGroupUpdate(group);
         return Response.ok("{\"ack\":true,\"request\":\"setLightGroup\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setLightGroup")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setLightGroupGet(@QueryParam("json") String groupJson) {
+        try {
+            DataGroup group = objectMapper.readValue(groupJson, DataGroup.class);
+            return setLightGroupPost(group);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setLightGroup\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
     }
 
     @POST
     @Path("/setAircon")
     @Consumes(MediaType.APPLICATION_JSON)
-    @WebService(value = "setAircon", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setAircon(java.util.Map<String, com.air.advantage.aaservice.data.DataAircon> airconMap) {
+    public Response setAirconPost(java.util.Map<String, com.air.advantage.aaservice.data.DataAircon> airconMap) {
         try {
             // Use diffing + CAN emission service
             airconUpdateService.applyUpdates(airconMap);
@@ -198,18 +314,39 @@ public class WebServiceResource {
         }
     }
 
+    @GET
+    @Path("/setAircon")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setAirconGet(@QueryParam("json") String airconJson) {
+        try {
+            java.util.Map<String, com.air.advantage.aaservice.data.DataAircon> airconMap =
+                objectMapper.readValue(airconJson, new TypeReference<java.util.Map<String, com.air.advantage.aaservice.data.DataAircon>>() {});
+            return setAirconPost(airconMap);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setAircon\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+    }
+
     @POST
     @Path("/setSnapShot")
-    @WebService(value = "setSnapShot", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setSnapShot(String body) {
+    public Response setSnapShotPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setSnapShot\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setSnapShot")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setSnapShotGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setSnapShot\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setMySystem")
-    @WebService(value = "setMySystem", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response setMySystem(com.air.advantage.aaservice.data.DataSystem incomingSystem) {
+    public Response setMySystemPost(com.air.advantage.aaservice.data.DataSystem incomingSystem) {
         try {
             airconUpdateService.applySystemUpdates(incomingSystem);
             return Response.ok("{\"ack\":true,\"request\":\"setMySystem\"}", MediaType.APPLICATION_JSON).build();
@@ -221,88 +358,191 @@ public class WebServiceResource {
         }
     }
 
+    @GET
+    @Path("/setMySystem")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setMySystemGet(@QueryParam("json") String systemJson) {
+        try {
+            com.air.advantage.aaservice.data.DataSystem incomingSystem =
+                objectMapper.readValue(systemJson, com.air.advantage.aaservice.data.DataSystem.class);
+            return setMySystemPost(incomingSystem);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setMySystem\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+    }
+
     @POST
     @Path("/setThing")
-    @WebService(value = "setThing", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setThing(String body) {
+    public Response setThingPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setThing\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setThing")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setThingGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setGroupThing")
-    @WebService(value = "setGroupThing", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setGroupThing(String body) {
+    public Response setGroupThingPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setGroupThing\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setGroupThing")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setGroupThingGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setGroupThingName")
-    @WebService(value = "setGroupThingName", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setGroupThingName(String body) {
+    public Response setGroupThingNamePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setGroupThingName\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setGroupThingName")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setGroupThingNameGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setGroupThingName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setNewGroupThingName")
-    @WebService(value = "setNewGroupThingName", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setNewGroupThingName(String body) {
+    public Response setNewGroupThingNamePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setNewGroupThingName\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setNewGroupThingName")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setNewGroupThingNameGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setNewGroupThingName\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setThingToGroupThing")
-    @WebService(value = "setThingToGroupThing", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setThingToGroupThing(String body) {
+    public Response setThingToGroupThingPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setThingToGroupThing\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setThingToGroupThing")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setThingToGroupThingGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setThingToGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setThingToNewGroupThing")
-    @WebService(value = "setThingToNewGroupThing", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setThingToNewGroupThing(String body) {
+    public Response setThingToNewGroupThingPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setThingToNewGroupThing\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setThingToNewGroupThing")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setThingToNewGroupThingGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setThingToNewGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/runScene")
-    @WebService(value = "runScene", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response runScene(String body) {
+    public Response runScenePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"runScene\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/runScene")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response runSceneGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"runScene\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setScene")
-    @WebService(value = "setScene", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setScene(String body) {
+    public Response setScenePost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setScene\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setScene")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setSceneGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setScene\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setSensor")
-    @WebService(value = "setSensor", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setSensor(String body) {
+    public Response setSensorPost(String body) {
+        return Response.ok("{\"ack\":true,\"request\":\"setSensor\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setSensor")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setSensorGet(@QueryParam("json") String bodyJson) {
         return Response.ok("{\"ack\":true,\"request\":\"setSensor\"}", MediaType.APPLICATION_JSON).build();
     }
 
     @POST
     @Path("/setBackupDataToRestore")
-    @WebService(value = "setBackupDataToRestore", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
-    public Response setBackupDataToRestore(java.util.Map<String, com.air.advantage.aaservice.data.DataAircon> airconMap) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setBackupDataToRestorePost(MasterData masterData) {
         return Response.ok("{\"ack\":true,\"request\":\"setBackupDataToRestore\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    /*
+        MyPlace uses a post as form data with a parameter of the name parameter that contains json=<MasterData>
+     */
+    @POST
+    @Path("/setBackupDataToRestore")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response setBackupDataToRestorePostForm(@FormParam("parameter") String parameter) {
+        try {
+            String jsonValue = null;
+            if (parameter.startsWith("json=")) {
+                jsonValue = java.net.URLDecoder.decode(parameter.substring(5), java.nio.charset.StandardCharsets.UTF_8);
+            }
+            if (jsonValue != null) {
+                MasterData masterData =
+                    objectMapper.readValue(jsonValue, new TypeReference<MasterData>() {});
+                return setBackupDataToRestorePost(masterData);
+            }
+            return Response.ok("{\"ack\":true,\"request\":\"setBackupDataToRestore\"}", MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setBackupDataToRestore\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
     }
 
     @POST
     @Path("/loginRequest")
-    @WebService(value = "loginRequest", methods = WebService.HttpMethod.GET | WebService.HttpMethod.POST)
     @Produces(MediaType.APPLICATION_XML)
-    public Response loginRequest(String body) {
+    public Response loginRequestPost(String body) {
+        String xmlResponse = "<iZS10.3><request>login</request><mac></mac><ack>1</ack><authenticated>1</authenticated></iZS10.3>";
+        return Response.ok(xmlResponse, MediaType.APPLICATION_XML).build();
+    }
+
+    @GET
+    @Path("/loginRequest")
+    @Produces(MediaType.APPLICATION_XML)
+    public Response loginRequestGet(@QueryParam("json") String bodyJson) {
         String xmlResponse = "<iZS10.3><request>login</request><mac></mac><ack>1</ack><authenticated>1</authenticated></iZS10.3>";
         return Response.ok(xmlResponse, MediaType.APPLICATION_XML).build();
     }
 
     @POST
     @Path("/sendRawMessage")
-    public Response sendRawMessage(String message) {
+    public Response sendRawMessagePost(String message) {
         byte[] messageChars = message.getBytes();
         Message msg = Message.deserialize(messageChars);
 

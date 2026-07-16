@@ -177,6 +177,9 @@ public interface MyPlaceConfig {
             @WithName("server.port")
             // No default value makes it optional
             Optional<Integer> serverPort();
+
+            @WithName("server.host")
+            Optional<String> serverHost();
             
             @WithName("max.line.length")
             @WithDefault("16384")

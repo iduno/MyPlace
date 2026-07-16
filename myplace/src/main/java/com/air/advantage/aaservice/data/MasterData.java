@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 
-
 import jakarta.annotation.Nullable;
 
 /* compiled from: MasterData.java */
@@ -25,7 +24,7 @@ public class MasterData {
 
     @JsonProperty("aircons")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    public final TreeMap<String, DataAircon> aircons = new TreeMap<>();
+    public TreeMap<String, DataAircon> aircons = new TreeMap<>();
 
     /* renamed from: b */
 
