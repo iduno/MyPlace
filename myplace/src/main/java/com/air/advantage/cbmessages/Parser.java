@@ -1,64 +1,68 @@
 package com.air.advantage.cbmessages;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import io.vertx.mutiny.core.buffer.Buffer;
+
 public class Parser {
-    private InputStream inputStream;
-    private final byte[] buffer = new byte[3072]; 
+    private final byte[] internalBuffer = new byte[8192];
     private int bufferSize = 0;
     private int bufferReadPos;
-    private ArrayBlockingQueue<Message> messages = new ArrayBlockingQueue<>(100);
+    private final ArrayBlockingQueue<Message> messages = new ArrayBlockingQueue<>(100);
     private int calculatedCRC = 0;
     private int messageCRC = 0;
 
 
-    Parser(InputStream inputStream) {
-        this.inputStream = inputStream;
-        Arrays.fill(buffer, 0, buffer.length, (byte) 0);
-
+    public Parser() {
+        Arrays.fill(internalBuffer, 0, internalBuffer.length, (byte) 0);
     }
 
-    public void parse() {
+    public void parse(Buffer buffer) {
         bufferReadPos = 0;
         try {
             // If the buffer size goes beyond the buffer length, reset it
-            if (this.bufferSize + 256 > buffer.length) {
+            if (this.bufferSize + 4096 > internalBuffer.length) {
                 this.bufferSize = 0;
             }
-            int readSize = inputStream.read(buffer,this.bufferSize, 256);
-            if (readSize == -1) {
+            
+            int available = buffer.length();
+            if (available <= 0) {
                 return;
             }
+            
+            int readSize = Math.min(4096, available);
+            byte[] tempBuffer = buffer.getBytes(0, readSize);
+            System.arraycopy(tempBuffer, 0, internalBuffer, this.bufferSize, readSize);
             this.bufferSize += readSize;
             int endMessageIndex = -1;
 
             while (bufferReadPos < this.bufferSize) {
                 endMessageIndex = -1;
-                bufferReadPos = ByteArray.findParseBlockTagStart(buffer, bufferReadPos, bufferSize);
-                if (bufferReadPos >= 0) {
-                    int pingIndex = ByteArray.findParseBlockTagPing(buffer, bufferReadPos, bufferSize);
-                    // Found a ping message
-                    if (pingIndex > 13) {
-                        Message message = new MessagePing();
-                        if (!messages.offer(message)) {
-                            messages.poll(); // Remove oldest
-                            messages.offer(message); // Try again
-                        }
-                        // Remove all of the Ping messages in the buffer and discard any data until the last Ping message
-                        while (pingIndex - bufferReadPos > 13) {
-                            bufferReadPos = pingIndex;
-                            pingIndex = ByteArray.findParseBlockTagPing(buffer, bufferReadPos, bufferSize);
-                        }
-                    }
-                    endMessageIndex = ByteArray.findParseBlockTagEnd(buffer, bufferReadPos, bufferSize);
+                int nextTagPos = ByteArray.findParseBlockTagStart(internalBuffer, bufferReadPos, bufferSize);
+                if (nextTagPos >= 0) {
+                    bufferReadPos = nextTagPos;
+                    int pingIndex = ByteArray.findParseBlockTagPing(internalBuffer, bufferReadPos, bufferSize);
+                    // // Found a ping message
+                    // if (pingIndex > 13) {
+                    //     Message message = new MessagePing();
+                    //     if (!messages.offer(message)) {
+                    //         messages.poll(); // Remove oldest
+                    //         messages.offer(message); // Try again
+                    //     }
+                    //     // Remove all of the Ping messages in the buffer and discard any data until the last Ping message
+                    //     while (pingIndex - bufferReadPos > 13) {
+                    //         bufferReadPos = pingIndex;
+                    //         pingIndex = ByteArray.findParseBlockTagPing(internalBuffer, bufferReadPos, bufferSize);
+                    //     }
+                    // }
+                    endMessageIndex = ByteArray.findParseBlockTagEnd(internalBuffer, bufferReadPos, bufferSize);
                     if (endMessageIndex >= 0) {
                         try
                         {
-                            this.messageCRC = ByteArray.parseCrcValue(endMessageIndex, buffer);
+                            this.messageCRC = ByteArray.parseCrcValue(endMessageIndex, internalBuffer);
                             // get the data of the message contained within the U tags 3 characters for <U> 7 for </U=XX>
-                            byte[] messageData = ByteArray.copySubArray(this.buffer, bufferReadPos + 3, endMessageIndex - 7);
+                            byte[] messageData = ByteArray.copySubArray(this.internalBuffer, bufferReadPos + 3, endMessageIndex - 7);
                             bufferReadPos = endMessageIndex;
                             this.calculatedCRC = CalculateCRC8.calculateCRC8FromBytes(0, messageData.length, messageData);
                         
@@ -72,7 +76,6 @@ public class Parser {
                             }
                         }
                         catch (Exception e) {
-                            // Handle the exception if needed
                             e.printStackTrace();
                         }
                     }
@@ -83,15 +86,19 @@ public class Parser {
                 }
             }
             if ((bufferReadPos > 0) && (bufferReadPos <= this.bufferSize)) {
-                ByteArray.shiftArrayLeft(bufferReadPos, this.buffer);
+                ByteArray.shiftArrayLeft(bufferReadPos, this.internalBuffer);
                 this.bufferSize -= bufferReadPos;
             }
+            
+            // Consume the read bytes from the buffer
+            // if (readSize > 0) {
+            //     buffer = buffer.slice(readSize, buffer.length());
+            // }
         } catch (Exception e) {
             // Reset the buffer if a unexpected exception occurs
-            this.bufferSize=0;
-            bufferReadPos=0;
+            this.bufferSize = 0;
+            bufferReadPos = 0;
             e.printStackTrace();
-
         }
     }
 

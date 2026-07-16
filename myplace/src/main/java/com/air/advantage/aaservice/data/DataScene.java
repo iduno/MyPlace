@@ -3,10 +3,7 @@ package com.air.advantage.aaservice.data;
 import java.util.HashMap;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+
 
 /* compiled from: DataScene.java */
 /* renamed from: com.air.advantage.aaservice.o.j */
@@ -18,52 +15,52 @@ public class DataScene {
     // --- FIELDS COPIED FROM REFERENCE DataScene.java ---
     public static final int MAXIMUM_START_AND_STOP_TIME_VALUE = 1440;
 
-    @SerializedName("activeDays")
+
     public Integer activeDays;
 
-    @SerializedName("airconStopTime")
+
     public Integer airconStopTime;
 
-    @SerializedName("airconStopTimeEnabled")
+
     public Boolean airconStopTimeEnabled;
 
-    // @SerializedName("aircons")
+
     // public HashMap<String, DataAirconSystem> aircons;
 
-    @SerializedName("canMessages")
+
     public String canMessages;
 
-    @SerializedName("id")
+
     public String id;
 
-    @SerializedName("lights")
+
     public HashMap<String, DataLight> lights;
 
-    // @SerializedName("monitors")
+
     // public HashMap<String, DataMonitor> monitors;
 
-    @SerializedName("myTimeEnabled")
+
     public Boolean myTimeEnabled;
 
-    @SerializedName("name")
+
     public String name;
 
-    @SerializedName("runNow")
+
     public Boolean runNow;
 
-    // @SerializedName("sonos")
+
     // public HashMap<String, Sonos> sonos;
 
-    @SerializedName("startTime")
+
     public Integer startTime;
 
-    @SerializedName("summary")
+
     public String summary;
 
-    // @SerializedName("things")
+
     // public HashMap<String, DataMyThing> things;
 
-    @SerializedName("timerEnabled")
+
     public Boolean timerEnabled;
 
     public void copyFrom(DataScene other) {

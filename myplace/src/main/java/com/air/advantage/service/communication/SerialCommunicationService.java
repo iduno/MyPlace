@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 import com.air.advantage.cbmessages.Message;
 import com.air.advantage.cbmessages.MessageCAN;
 import com.air.advantage.cbmessages.MessagePing;
+import com.air.advantage.cbmessages.Parser;
 import com.air.advantage.config.MyPlaceConfig.CommunicationConfig;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortEvent;

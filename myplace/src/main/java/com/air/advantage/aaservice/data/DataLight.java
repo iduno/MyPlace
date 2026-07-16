@@ -3,7 +3,7 @@ package com.air.advantage.aaservice.data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
+
 
 /* compiled from: DataLight.java */
 /* renamed from: com.air.advantage.aaservice.o.f */
@@ -16,55 +16,55 @@ public class DataLight {
     public static final String MODULE_TYPE_STRING_HUE = "HUE";
 
     /* renamed from: a */
-    @SerializedName("id")
+
     @JsonProperty("id")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String id;
 
-    @SerializedName("name")
+
     @JsonProperty("name")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String name;
 
     public transient Long nextPollTime;
 
-    @SerializedName("value")
+
     @JsonProperty("value")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer value;
 
-    @SerializedName("moduleType")
+
     @JsonProperty("moduleType")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String moduleType;
 
-    @SerializedName("deviceType")
+
     @JsonProperty("deviceType")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String deviceType;
 
 
-    @SerializedName("reachable")
+
     @JsonProperty("reachable")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean reachable;
 
-    @SerializedName("relay")
+
     @JsonProperty("relay")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean relay;
 
-    @SerializedName("state")
+
     @JsonProperty("state")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String state;
 
-    @SerializedName("thisIsRFDevice")
+
     @JsonProperty("thisIsRFDevice")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean thisIsRFDevice;
 
-    @SerializedName("dimOffset")
+
     @JsonProperty("dimOffset")
     @JsonView({JsonExporterViews.Export.class})
     public Integer dimOffset;

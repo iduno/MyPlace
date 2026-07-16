@@ -11,9 +11,19 @@
     <properties>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.31.1</quarkus.platform.version> <!-- reference https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom for latest version -->
-        <compiler-plugin.version>3.14.1</compiler-plugin.version>
-        <surefire-plugin.version>3.1.2</surefire-plugin.version>
+        <quarkus.platform.version>3.37.2</quarkus.platform.version> <!-- reference https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom for latest version -->
+        <compiler.plugin.version>3.15.0</compiler.plugin.version> <!-- reference https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin for latest version -->
+        
+        <surefire.plugin.version>3.5.6</surefire.plugin.version> <!-- reference https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-surefire-plugin for latest version -->
+        <jSerialComm.version>[2.11.4,3.0.0)</jSerialComm.version> <!-- reference https://mvnrepository.com/artifact/com.fazecast/jSerialComm for latest version -->
+
+        <node.version>v26.4.0</node.version> <!-- reference https://nodejs.org/en/download/releases/ for latest version -->
+        <npm.version>11.18.0</npm.version> <!-- reference https://www.npmjs.com/package/npm for latest version -->
+        
+        <maven.resources.plugin.version>3.5.0</maven.resources.plugin.version> <!-- reference https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-resources-plugin for latest version -->
+        <maven.clean.plugin.version>3.5.0</maven.clean.plugin.version> <!-- reference https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-clean-plugin for latest version -->
+        <frontend.maven.plugin.version>2.0.1</frontend.maven.plugin.version> <!-- reference https://mvnrepository.com/artifact/com.github.eirslett/frontend-maven-plugin for latest version -->
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

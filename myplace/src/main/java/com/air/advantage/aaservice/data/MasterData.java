@@ -5,7 +5,7 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
+
 
 import jakarta.annotation.Nullable;
 
@@ -16,31 +16,31 @@ import jakarta.annotation.Nullable;
 public class MasterData {
 
     @Nullable
-    @SerializedName("online")
+
     @JsonProperty("online")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     private Boolean online;
 
     /* renamed from: a */
-    @SerializedName("aircons")
+
     @JsonProperty("aircons")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public final TreeMap<String, DataAircon> aircons = new TreeMap<>();
 
     /* renamed from: b */
-    @SerializedName("snapshots")
+
     @JsonProperty("snapshots")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, SnapShot> snapshots = new TreeMap<>(new SnapshotComparator());
 
     /* renamed from: c */
-    @SerializedName("system")
+
     @JsonProperty("system")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public DataSystem system = new DataSystem();
 
     /* renamed from: d */
-    @SerializedName("myLights")
+
     @JsonProperty("myLights")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public DataMyLights myLights = new DataMyLights();

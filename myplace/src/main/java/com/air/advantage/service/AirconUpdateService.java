@@ -21,6 +21,7 @@ import com.air.advantage.cbmessages.CANMessageLighting00LmStatusMessageOld;
 import com.air.advantage.cbmessages.CANMessageLighting02LmStatusMessage;
 import com.air.advantage.config.MyPlaceConfig;
 
+import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -53,6 +54,13 @@ public class AirconUpdateService {
     public void onStart(@Observes StartupEvent ev) {
         if (vertx != null) {
             systemTimerId = vertx.setPeriodic(20000, id -> systemTimer());
+        }
+    }
+
+    public void onShutdown(@Observes ShutdownEvent ev) {
+        if (vertx != null && systemTimerId != 0) {
+            vertx.cancelTimer(systemTimerId);
+            systemTimerId = 0;
         }
     }
     

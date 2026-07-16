@@ -1,88 +1,84 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-		<groupId>com.idunou.myplace</groupId>
-        <artifactId>myplace-parent</artifactId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
+  <parent>
     <groupId>com.idunou.myplace</groupId>
-    <artifactId>myplace</artifactId>
+    <artifactId>myplace-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
+  </parent>
+  <groupId>com.idunou.myplace</groupId>
+  <artifactId>myplace</artifactId>
+  <version>1.0-SNAPSHOT</version>
 
 
-        <dependencies>
-            <!-- Frontend module dependency to ensure it's built first -->
-            <dependency>
-                <groupId>com.idunou.myplace</groupId>
-                <artifactId>myplace-frontend</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-            </dependency>
-            
-            <!-- Remove quarkus-rest in favor of quarkus-resteasy -->
-            <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-reactive-routes</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-rest</artifactId>
-            </dependency>
-            <dependency>
-              <groupId>io.quarkus</groupId>
-              <artifactId>quarkus-rest-jackson</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-            </dependency>
+  <dependencies>
+    <!-- Frontend module dependency to ensure it's built first -->
+    <dependency>
+        <groupId>com.idunou.myplace</groupId>
+        <artifactId>myplace-frontend</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
+    </dependency>
+    
+
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-reactive-routes</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-rest</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-jackson</artifactId>
+    </dependency>
 
 
-            <dependency>
-              <groupId>com.fazecast</groupId>
-              <artifactId>jSerialComm</artifactId>
-              <version>[2.11.4,3.0.0)</version>
-            </dependency>
-            
-            <dependency>
-              <groupId>io.quarkus</groupId>
-              <artifactId>quarkus-vertx</artifactId>
-            </dependency>
-            
-            <dependency>
-              <groupId>io.smallrye.reactive</groupId>
-              <artifactId>smallrye-mutiny-vertx-core</artifactId>
-            </dependency>
-            
-            <!-- <dependency>
-              <groupId>io.quarkus</groupId>
-              <artifactId>quarkus-resteasy-jackson</artifactId>
-            </dependency>
-            
-            <dependency>
-              <groupId>io.quarkus</groupId>
-              <artifactId>quarkus-resteasy</artifactId>
-            </dependency> -->
+    <dependency>
+      <groupId>com.fazecast</groupId>
+      <artifactId>jSerialComm</artifactId>
+      <version>${jSerialComm.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-vertx</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>io.smallrye.reactive</groupId>
+      <artifactId>smallrye-mutiny-vertx-core</artifactId>
+    </dependency>
+    
+    <!-- <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jackson</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
+    </dependency> -->
 
-            <!-- Add CORS support -->
-            <dependency>
-              <groupId>io.quarkus</groupId>
-              <artifactId>quarkus-vertx-http</artifactId>
-            </dependency>
-            
-            <dependency>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-junit</artifactId>
-                <scope>test</scope>
-            </dependency>
- 
-        </dependencies>
+    <!-- Add CORS support -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-vertx-http</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>io.quarkus</groupId>
+        <artifactId>quarkus-junit</artifactId>
+        <scope>test</scope>
+    </dependency>
 
-    <build>
-        <plugins>
-            <plugin>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus.platform.version}</version>
@@ -99,7 +95,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>${compiler-plugin.version}</version>
+        <version>${compiler.plugin.version}</version>
         <configuration>
           <compilerArgs>
             <arg>-parameters</arg>
@@ -110,7 +106,7 @@
       <!-- Copy React frontend resources -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>${maven.resources.plugin.version}</version>
         <executions>
           <execution>
             <id>copy-frontend-resources</id>
@@ -130,7 +126,21 @@
           </execution>
         </executions>
       </plugin>
-            </plugins>
+    </plugins>
+  </build>
 
-    </build>
+  <profiles>
+    <profile>
+        <id>native</id>
+        <activation>
+            <property>
+                <name>native</name>
+            </property>
+        </activation>
+        <properties>
+            <skipITs>false</skipITs>
+            <quarkus.native.enabled>true</quarkus.native.enabled>
+        </properties>
+    </profile>
+</profiles>
 </project>

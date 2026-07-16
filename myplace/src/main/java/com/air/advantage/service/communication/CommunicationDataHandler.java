@@ -25,6 +25,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
+import io.vertx.mutiny.core.eventbus.MessageConsumer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -62,12 +63,13 @@ public class CommunicationDataHandler {
     private String currentEndpoint;
     private Long pingTimerId;
     private boolean sendAck = false;
+    private MessageConsumer<String> communicationStatusConsumer;
     
     void onStart(@Observes StartupEvent ev) {
         LOG.info("Initializing Communication Data Handler");
         
         // Set up a connection status handler
-        eventBus.consumer("communication-status", message -> {
+        communicationStatusConsumer = eventBus.consumer("communication-status", message -> {
             String status = (String) message.body();
             if ("disconnected".equals(status)) {
                 handleDisconnection();
@@ -89,7 +91,15 @@ public class CommunicationDataHandler {
     
     void onShutdown(@Observes ShutdownEvent ev) {
         LOG.info("Shutting down Communication Data Handler");
+        if (pingTimerId != null) {
+            vertx.cancelTimer(pingTimerId);
+            pingTimerId = null;
+        }
         stopReconnectionTimer();
+        if (communicationStatusConsumer != null) {
+            communicationStatusConsumer.unregister();
+            communicationStatusConsumer = null;
+        }
     }
 
     private void pingTimer() {

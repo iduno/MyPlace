@@ -6,7 +6,7 @@ import java.util.HashMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
+
 
 /* compiled from: DataSystem.java */
 /* renamed from: com.air.advantage.aaservice.o.k */
@@ -14,242 +14,242 @@ import com.google.gson.annotations.SerializedName;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataSystem {
 
-    @SerializedName("dealerPhoneNumber")
+
     @JsonProperty("dealerPhoneNumber")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String dealerPhoneNumber;
 
-    @SerializedName("hasAircons")
+
     @JsonProperty("hasAircons")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasAircons;
 
-    @SerializedName("hasLights")
+
     @JsonProperty("hasLights")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasLights;
 
-    @SerializedName("needsUpdate")
+
     @JsonProperty("needsUpdate")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean needsUpdate;
 
-    @SerializedName("logoPIN")
+
     @JsonProperty("logoPIN")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String logoPIN;
 
-    @SerializedName("mid")
+
     @JsonProperty("mid")
     @JsonView({JsonExporterViews.Export.class})
     public String mid;
 
-    @SerializedName("myAppRev")
+
     @JsonProperty("myAppRev")
     @JsonView({JsonExporterViews.Export.class})
     public String myAppRev;
 
-    @SerializedName("name")
+
     @JsonProperty("name")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String name;
 
-    @SerializedName("noOfAircons")
+
     @JsonProperty("noOfAircons")
     @JsonView({JsonExporterViews.Export.class})
     public Integer noOfAircons;
 
-    @SerializedName("noOfSnapshots")
+
     @JsonProperty("noOfSnapshots")
     @JsonView({JsonExporterViews.Export.class})
     public Integer noOfSnapshots;
 
-    @SerializedName("rid")
+
     @JsonProperty("rid")
     @JsonView({JsonExporterViews.Export.class})
     public String rid;
 
-    @SerializedName("sysType")
+
     @JsonProperty("sysType")
     @JsonView({JsonExporterViews.Export.class})
     public String sysType;
 
-    @SerializedName("deviceIds")
+
     @JsonProperty("deviceIds")
     @JsonView({JsonExporterViews.Export.class})
     public ArrayList<String> deviceIds;
 
-    @SerializedName("postCode")
+
     @JsonProperty("postCode")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String postCode;
 
-    @SerializedName("country")
+
     @JsonProperty("country")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String country;
 
-    @SerializedName("latitude")
+
     @JsonProperty("latitude")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Double latitude;
 
-    @SerializedName("longitude")
+
     @JsonProperty("longitude")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Double longitude;
 
-    @SerializedName("aaServiceRev")
+
     @JsonProperty("aaServiceRev")
     @JsonView({JsonExporterViews.Export.class})
     public String aaServiceRev;
     
-    @SerializedName("allTspErrorCodes")
+
     @JsonProperty("allTspErrorCodes")
     @JsonView({JsonExporterViews.Export.class})
     public HashMap<String, String> allTspErrorCodes;
 
-    @SerializedName("tspErrorCode")
+
     @JsonProperty("tspErrorCode")
     @JsonView({JsonExporterViews.Export.class})
     public String tspErrorCode;
     
-    @SerializedName("backupId")
+
     @JsonProperty("backupId")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String backupId;
     
-    @SerializedName("deletedDevices")
+
     @JsonProperty("deletedDevices")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public HashMap<String, Long> deletedDevices;
     
-    @SerializedName("deviceIdsV2")
+
     @JsonProperty("deviceIdsV2")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public HashMap<String, String> deviceIdsV2;
     
-    @SerializedName("deviceNames")
+
     @JsonProperty("deviceNames")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public HashMap<String, String> deviceNames;
     
-    @SerializedName("deviceNotificationVersion")
+
     @JsonProperty("deviceNotificationVersion")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public HashMap<String, String> deviceNotificationVersion;
     
-    @SerializedName("drawLightsTab")
+
     @JsonProperty("drawLightsTab")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean drawLightsTab;
     
-    @SerializedName("drawThingsTab")
+
     @JsonProperty("drawThingsTab")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean drawThingsTab;
     
-    @SerializedName("garageDoorReminderWaitTime")
+
     @JsonProperty("garageDoorReminderWaitTime")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer garageDoorReminderWaitTime;
     
-    @SerializedName("garageDoorSecurityPin")
+
     @JsonProperty("garageDoorSecurityPin")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String garageDoorSecurityPin;
     
-    @SerializedName("garageDoorSecurityPinEnabled")
+
     @JsonProperty("garageDoorSecurityPinEnabled")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean garageDoorSecurityPinEnabled;
     
-    @SerializedName("hasLocks")
+
     @JsonProperty("hasLocks")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasLocks;
     
-    @SerializedName("hasSensors")
+
     @JsonProperty("hasSensors")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasSensors;
     
-    @SerializedName("hasThings")
+
     @JsonProperty("hasThings")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasThings;
     
-    @SerializedName("hasThingsBOG")
+
     @JsonProperty("hasThingsBOG")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasThingsBOG;
     
-    @SerializedName("hasThingsLight")
+
     @JsonProperty("hasThingsLight")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean hasThingsLight;
     
-    @SerializedName("isValidSuburbTemp")
+
     @JsonProperty("isValidSuburbTemp")
     @JsonView({JsonExporterViews.Export.class})
     public Boolean isValidSuburbTemp;
     
-    @SerializedName("lockDoorReminderWaitTime")
+
     @JsonProperty("lockDoorReminderWaitTime")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer lockDoorReminderWaitTime;
     
-    @SerializedName("membershipStatus")
+
     @JsonProperty("membershipStatus")
     @JsonView({JsonExporterViews.Export.class})
     public String membershipStatus;
     
-    @SerializedName("myLightsDealerPhoneNumber")
+
     @JsonProperty("myLightsDealerPhoneNumber")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String myLightsDealerPhoneNumber;
     
-    @SerializedName("myLightsLogoPIN")
+
     @JsonProperty("myLightsLogoPIN")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String myLightsLogoPIN;
     
-    @SerializedName("myPlaceDealerPhoneNumber")
+
     @JsonProperty("myPlaceDealerPhoneNumber")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String myPlaceDealerPhoneNumber;
     
-    @SerializedName("myPlaceLogoPIN")
+
     @JsonProperty("myPlaceLogoPIN")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String myPlaceLogoPIN;
     
-    @SerializedName("remoteAccessPairingEnabled")
+
     @JsonProperty("remoteAccessPairingEnabled")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean remoteAccessPairingEnabled;
     
-    @SerializedName("showMeasuredTemp")
+
     @JsonProperty("showMeasuredTemp")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean showMeasuredTemp;
     
-    @SerializedName("splitTypeSystem")
+
     @JsonProperty("splitTypeSystem")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean splitTypeSystem;
     
-    @SerializedName("suburbTemp")
+
     @JsonProperty("suburbTemp")
     @JsonView({JsonExporterViews.Export.class})
     public Double suburbTemp;
     
-    @SerializedName("tspIp")
+
     @JsonProperty("tspIp")
     @JsonView({JsonExporterViews.Export.class})
     public String tspIp;
     
-    @SerializedName("tspModel")
+
     @JsonProperty("tspModel")
     @JsonView({JsonExporterViews.Export.class})
     public String tspModel;

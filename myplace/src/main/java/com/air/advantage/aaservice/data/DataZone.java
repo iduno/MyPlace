@@ -7,7 +7,7 @@ import com.air.advantage.aaservice.data.DataAircon.ZoneState;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
+
 
 import jakarta.annotation.Nullable;
 
@@ -54,107 +54,107 @@ public class DataZone {
 
     @Nullable
     @JsonExporter(saveThis = false)
-    @SerializedName("error")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer error;
 
     @Nullable
-    @SerializedName("followers")
+
     @JsonProperty("followers")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> followers;
 
     @Nullable
-    @SerializedName("following")
+
     @JsonProperty("following")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer following;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("maxDamper")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer maxDamper;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("measuredTemp")
+
     @JsonView(JsonExporterViews.Export.class)
     public Float measuredTemp;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("minDamper")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer minDamper;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("motion")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer motion;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("motionConfig")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer motionConfig;
 
-    @SerializedName("name")
+
     @JsonProperty("name")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String name;
 
     @Nullable
-    @SerializedName("number")
+
     @JsonProperty("number")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer number;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("rssi")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer rssi;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("SensorMajorRev")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer sensorMajorRev;
 
     @Nullable
-    @SerializedName("sensorUid")
+
     @JsonProperty("sensorUid")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String sensorUid;
 
     /* renamed from: b */
-    @SerializedName("setTemp")
+
     @JsonProperty("setTemp")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Float setTemp;
 
     /* renamed from: c */
-    @SerializedName("state")
+
     @JsonProperty("state")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ZoneState state;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("tempSensorClash")
+
     @JsonView(JsonExporterViews.Export.class)
     public Boolean tempSensorClash = Boolean.FALSE;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("type")
+
     @JsonView(JsonExporterViews.Export.class)
     public Integer type;
 
     /* renamed from: d */
-    @SerializedName("value")
+
     @JsonProperty("value")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer value;

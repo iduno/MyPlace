@@ -6,7 +6,7 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
+
 
 /* compiled from: DataLightsAll.java */
 /* renamed from: com.air.advantage.aaservice.o.h */
@@ -14,37 +14,37 @@ import com.google.gson.annotations.SerializedName;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataMyLights {
 
-    @SerializedName("lights")
+
     @JsonProperty("lights")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataLight> lights = new TreeMap<>();
 
-    @SerializedName("groups")
+
     @JsonProperty("groups")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataGroup> groups;
 
-    @SerializedName("groupsOrder")
+
     @JsonProperty("groupsOrder")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> groupsOrder;
 
-    @SerializedName("scenes")
+
     @JsonProperty("scenes")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public TreeMap<String, DataScene> scenes;
 
-    @SerializedName("scenesOrder")
+
     @JsonProperty("scenesOrder")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> scenesOrder;
 
-    @SerializedName("alarmsOrder")
+
     @JsonProperty("alarmsOrder")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<String> alarmsOrder;
 
-    @SerializedName("backupLights")
+
     @JsonProperty("backupLights")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<DataMyLights.BackupLight> backupLights;
@@ -55,17 +55,17 @@ public class DataMyLights {
     /* renamed from: com.air.advantage.data.t$b */
     public static final class BackupLight {
 
-        @SerializedName("groupId")
+
         @JsonProperty("groupId")
         @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
         public String groupId;
 
-        @SerializedName("id")
+
         @JsonProperty("id")
         @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
         public String id;
 
-        @SerializedName("name")
+
         @JsonProperty("name")
         @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
         public String name;

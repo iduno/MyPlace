@@ -8,6 +8,7 @@ import org.jboss.logging.Logger;
 import com.air.advantage.cbmessages.Message;
 import com.air.advantage.config.MyPlaceConfig;
 
+import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
 import io.vertx.mutiny.core.Vertx;
@@ -58,6 +59,17 @@ public class CommunicationManager {
         
         // Start the heartbeat timer for connection monitoring
         startHeartbeatTimer();
+    }
+
+    void onShutdown(@Observes ShutdownEvent ev) {
+        if (heartbeatTimerId != null) {
+            vertx.cancelTimer(heartbeatTimerId);
+            heartbeatTimerId = null;
+        }
+        if (isConnected.get()) {
+            communicationService.close();
+            isConnected.set(false);
+        }
     }
     
     private void startHeartbeatTimer() {

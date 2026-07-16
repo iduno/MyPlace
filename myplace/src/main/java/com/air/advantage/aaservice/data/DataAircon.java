@@ -5,23 +5,22 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
 
 import jakarta.annotation.Nonnull;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DataAircon {
 
-    @SerializedName("info")
+
     @JsonProperty("info")
     @Nonnull
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    public final DataAirconInfo airconInfo = new DataAirconInfo();
+    public DataAirconInfo airconInfo = new DataAirconInfo();
 
-    @SerializedName("zones")
+
     @JsonProperty("zones")
     @Nonnull
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    public final TreeMap<String, DataZone> zones = new TreeMap<>();
+    public TreeMap<String, DataZone> zones = new TreeMap<>();
 
     public enum FreshAirStatus {
         none(0),
@@ -122,22 +121,19 @@ public class DataAircon {
     }
 
     public enum ZoneState {
-    close(0),
-    open(1);
+        close(0),
+        open(1);
 
-    private final int value;
+        private final int value;
 
-    /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
-    ZoneState(int i) {
-        this.value = i;
+        ZoneState(int i) {
+            this.value = i;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
     }
-
-    /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
-    public int getValue() {
-        return this.value;
-    }
-}
-
 
 
     DataAircon() {

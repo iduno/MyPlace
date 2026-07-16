@@ -5,7 +5,7 @@ import com.air.advantage.aaservice.data.DataAircon.SystemState;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.gson.annotations.SerializedName;
+
 
 import jakarta.annotation.Nullable;
 
@@ -16,54 +16,54 @@ import jakarta.annotation.Nullable;
 public class DataAirconInfo {
 
     @Nullable
-    @SerializedName("aaAutoFanModeEnabled")
+
     @JsonProperty("aaAutoFanModeEnabled")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean aaAutoFanModeEnabled;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("activationCodeStatus")
+
     @JsonProperty("activationCodeStatus")
     @JsonView(JsonExporterViews.Export.class)
     public DataAircon.CodeStatus activationCodeStatus;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("airconErrorCode")
+
     @JsonProperty("airconErrorCode")
     @JsonView(JsonExporterViews.Export.class)
     public String airconErrorCode;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("cbFWRevMajor")
+
     @JsonProperty("cbFWRevMajor")
     @JsonView(JsonExporterViews.Export.class)
     public Integer cbFWRevMajor;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("cbFWRevMinor")
+
     @JsonProperty("cbFWRevMinor")
     @JsonView(JsonExporterViews.Export.class)
     public Integer cbFWRevMinor;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("cbType")
+
     @JsonProperty("cbType")
     @JsonView(JsonExporterViews.Export.class)
     public Integer cbType;
 
     @Nullable
-    @SerializedName("climateControlModeEnabled")
+
     @JsonProperty("climateControlModeEnabled")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean climateControlModeEnabled;
 
     @Nullable
-    @SerializedName("climateControlModeIsRunning")
+
     @JsonProperty("climateControlModeIsRunning")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean climateControlModeIsRunning;
@@ -71,7 +71,7 @@ public class DataAirconInfo {
     /* renamed from: constant1 */
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("constant1")
+
     @JsonProperty("constant1")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer constantZone1;
@@ -79,7 +79,7 @@ public class DataAirconInfo {
     /* renamed from: constant2 */
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("constant2")
+
     @JsonProperty("constant2")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer constantZone2;
@@ -87,40 +87,40 @@ public class DataAirconInfo {
     /* renamed from: constant3 */
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("constant3")
+
     @JsonProperty("constant3")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer constantZone3;
 
     @Nullable
-    @SerializedName("countDownToOff")
+
     @JsonProperty("countDownToOff")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer countDownToOff;
 
     @Nullable
-    @SerializedName("countDownToOn")
+
     @JsonProperty("countDownToOn")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer countDownToOn;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("dbFWRevMajor")
+
     @JsonProperty("dbFWRevMajor")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer dbFWRevMajor;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("dbFWRevMinor")
+
     @JsonProperty("dbFWRevMinor")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer dbFWRevMinor;
 
     @JsonExporter(export = false)
     @Nullable
-    @SerializedName("enabled")
+
     @JsonProperty("enabled")
     @JsonView(JsonExporterViews.Export.class)
     public Boolean enabled;
@@ -131,72 +131,72 @@ public class DataAirconInfo {
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("fan")
+
     @JsonProperty("fan")
     @JsonView(JsonExporterViews.Export.class)
     public DataAircon.FanStatus fan;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("filterCleanStatus")
+
     @JsonProperty("filterCleanStatus")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer filterCleanStatus;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("freshAirStatus")
+
     @JsonProperty("freshAirStatus")
     @JsonView(JsonExporterViews.Export.class)
     public DataAircon.FreshAirStatus freshAirStatus;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("mode")
+
     @JsonProperty("mode")
     @JsonView(JsonExporterViews.Export.class)
     public AirconMode mode;
 
     @Nullable
-    @SerializedName("myAutoCoolTargetTemp")
+
     @JsonProperty("myAutoCoolTargetTemp")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer myAutoCoolTargetTemp;
 
     @Nullable
-    @SerializedName("myAutoHeatTargetTemp")
+
     @JsonProperty("myAutoHeatTargetTemp")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer myAutoHeatTargetTemp;
 
     @Nullable
-    @SerializedName("myAutoModeCurrentSetMode")
+
     @JsonProperty("myAutoModeCurrentSetMode")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public AirconMode myAutoModeCurrentSetMode;
 
     @Nullable
-    @SerializedName("myAutoModeEnabled")
+
     @JsonProperty("myAutoModeEnabled")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean myAutoModeEnabled;
 
     @Nullable
-    @SerializedName("myAutoModeIsRunning")
+
     @JsonProperty("myAutoModeIsRunning")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean myAutoModeIsRunning;
 
     @JsonExporter(export = false)
     @Nullable
-    @SerializedName("myFanSpeedIsRunning")
+
     @JsonProperty("myFanSpeedIsRunning")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean myFanSpeedIsRunning;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("myZone")
+
     @JsonProperty("myZone")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer myZone;
@@ -206,95 +206,95 @@ public class DataAirconInfo {
     private transient String myZoneName;
 
     @Nullable
-    @SerializedName("name")
+
     @JsonProperty("name")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String name;
 
     /* renamed from: noOfConstants */
     @Nullable
-    @SerializedName("noOfConstants")
+
     @JsonProperty("noOfConstants")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer noOfConstantZones;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("noOfZones")
+
     @JsonProperty("noOfZones")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer noOfZones;
 
     @Nullable
-    @SerializedName("quietNightModeEnabled")
+
     @JsonProperty("quietNightModeEnabled")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean quietNightModeEnabled;
 
     @Nullable
-    @SerializedName("quietNightModeIsRunning")
+
     @JsonProperty("quietNightModeIsRunning")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Boolean quietNightModeIsRunning;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("rfFWRevMajor")
+
     @JsonProperty("rfFWRevMajor")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer rfFWRevMajor;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("rfSysID")
+
     @JsonProperty("rfSysID")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer rfSysID;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("setActivationCode")
+
     @JsonProperty("setActivationCode")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public DataAircon.ActivationCode setActivationCode;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("setActivationTime")
+
     @JsonProperty("setActivationTime")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer setActivationTime;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("setTemp")
+
     @JsonProperty("setTemp")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Float setTemp;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("state")
+
     @JsonProperty("state")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public SystemState state;
 
     @Nullable
-    @SerializedName("uid")
+
     @JsonProperty("uid")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String uid;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("unitType")
+
     @JsonProperty("unitType")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public Integer unitType;
 
     @JsonExporter(saveThis = false)
     @Nullable
-    @SerializedName("unlockCode")
+
     @JsonProperty("unlockCode")
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public String unlockCode;
