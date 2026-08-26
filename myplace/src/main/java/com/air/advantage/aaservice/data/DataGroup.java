@@ -4,7 +4,9 @@ import java.util.ArrayList;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.Nulls;
 
 
 /* compiled from: DataGroup.java */
@@ -16,8 +18,9 @@ public class DataGroup {
     /* renamed from: a */
 
     @JsonProperty("lightsOrder")
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    public final ArrayList<String> lightsOrder = new ArrayList<>();
+    public ArrayList<String> lightsOrder = new ArrayList<>();
 
     /* renamed from: b */
 

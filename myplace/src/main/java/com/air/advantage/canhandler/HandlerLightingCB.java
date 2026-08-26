@@ -130,7 +130,7 @@ public class HandlerLightingCB extends Handler {
                         " validRooms: 0x" + Integer.toHexString(validRooms) +
                         " relayRooms: 0x" + Integer.toHexString(relayRooms) +
                         " infoByte: 0x" + Integer.toHexString(infoByte));
-                eventBus.publish("communication-send-can", statusMsg);
+                eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(statusMsg));
 
                 // Send JZ1 (Control Message) for this light if LM
                 if ("LM".equals(moduleType)) {
@@ -148,7 +148,7 @@ public class HandlerLightingCB extends Handler {
                     controlMsg.setBrightnessLevel(Math.min(100, Math.max(0, brightness)));
                     LOG.debug("CB: Sending JZ1 control for group " + groupId + " light " + lightId +
                             " state: " + light.state + " brightness: " + brightness);
-                    eventBus.publish("communication-send-can", controlMsg);
+                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(controlMsg));
                 }
 
                 // If RM2, send RM2-specific messages
@@ -177,7 +177,7 @@ public class HandlerLightingCB extends Handler {
                     dipMsg.setDip6State(dipStates[5]);
                     dipMsg.setInfoByte(rm2InfoByte);
                     LOG.debug("CB: Sending JZ16 RM2 DIP config for group " + groupId + " light " + lightId);
-                    eventBus.publish("communication-send-can", dipMsg);
+                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(dipMsg));
 
                     // JZ17 (RM2 Add Device / Version Info)
                     CANMessageLighting17Rm2AddDevice addDeviceMsg = new CANMessageLighting17Rm2AddDevice();
@@ -194,7 +194,7 @@ public class HandlerLightingCB extends Handler {
                     }
                     addDeviceMsg.setInfoByte(rm2AddDeviceInfo);
                     LOG.debug("CB: Sending JZ17 RM2 add device for group " + groupId + " light " + lightId);
-                    eventBus.publish("communication-send-can", addDeviceMsg);
+                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(addDeviceMsg));
 
                     // JZ15 (RM2 Control Message)
                     CANMessageLighting15Rm2ControlMessage rm2ControlMsg = new CANMessageLighting15Rm2ControlMessage();
@@ -214,7 +214,7 @@ public class HandlerLightingCB extends Handler {
                     rm2ControlMsg.setDimOffset(0);
                     rm2ControlMsg.setStatusState(0);
                     LOG.debug("CB: Sending JZ15 RM2 control for group " + groupId + " light " + lightId);
-                    eventBus.publish("communication-send-can", rm2ControlMsg);
+                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(rm2ControlMsg));
                 }
             }
         }

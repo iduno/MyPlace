@@ -69,19 +69,19 @@ public class AirconUpdateService {
         if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.MYAIR) {
             CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
             populateHeader(airconStatus, "00000");
-            eventBus.publish("communication-send-can", airconStatus);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(airconStatus));
 
             CANMessageLighting00LmStatusMessageOld lightingStatusOld = new CANMessageLighting00LmStatusMessageOld();
             populateHeader(lightingStatusOld, "00000");
             lightingStatusOld.setSystemType(CANMessage.SystemType.LIGHTING);
             lightingStatusOld.setRoomExists(36);
-            eventBus.publish("communication-send-can", lightingStatusOld);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(lightingStatusOld));
 
             CANMessageLighting02LmStatusMessage lightingStatus = new CANMessageLighting02LmStatusMessage();
             populateHeader(lightingStatus, "00000");
             lightingStatus.setSystemType(CANMessage.SystemType.LIGHTING);
             lightingStatus.setMajorFWVersion(36);
-            eventBus.publish("communication-send-can", lightingStatus);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(lightingStatus));
         }
         myMasterData.masterData.aircons.forEach((key, aircon) -> {
             String uid = aircon.airconInfo.uid;
@@ -184,7 +184,7 @@ public class AirconUpdateService {
             msg.setConstantZone2(valueOrZero(newInfo.constantZone2, oldInfo.constantZone2));
             msg.setConstantZone3(valueOrZero(newInfo.constantZone3, oldInfo.constantZone3));
             msg.setFilterCleanStatus(valueOrZero(newInfo.filterCleanStatus, oldInfo.filterCleanStatus));
-            eventBus.publish("communication-send-can", msg);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(msg));
             anyMessageSent.set(true);
         }
 
@@ -234,7 +234,7 @@ public class AirconUpdateService {
                 default -> msg.setFreshAirStatus(CANMessageAircon05AirconState.FreshAirStatus.NONE);
             }
 
-            eventBus.publish("communication-send-can", msg);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(msg));
             anyMessageSent.set(true);
         }
 
@@ -288,7 +288,7 @@ public class AirconUpdateService {
                     msg.setSetTemp(valueOr(0.0f, newZone.setTemp, 25.0f));
                     msg.setSensorType(valueOr(0, newZone.type, 0));
                     msg.setMeasuredTemp(valueOr(0.0f, newZone.measuredTemp, 0.0f));
-                    eventBus.publish("communication-send-can", msg);
+                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(msg));
                     anyMessageSent.set(true);
                 }
 
@@ -310,7 +310,7 @@ public class AirconUpdateService {
                     cfg.setMotionConfig(valueOr(oldMotionConfig, newZone.motionConfig, DataZone.DEFAULT_SETMOTIONCFG));
                     cfg.setZoneError(valueOr(oldError, newZone.error, 0));
                     cfg.setRssi(valueOr(oldRssi, newZone.rssi, 0));
-                    eventBus.publish("communication-send-can", cfg);
+                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(cfg));
                     anyMessageSent.set(true);
                 }
 
@@ -323,7 +323,7 @@ public class AirconUpdateService {
         if (anyMessageSent.get()) {
             CANMessageAircon0aMidInformation mid = new CANMessageAircon0aMidInformation();
             populateHeader(mid, uid);
-            eventBus.publish("communication-send-can", mid);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(mid));
         }
 
         // 5. Apply full copy so future diffs work off updated state

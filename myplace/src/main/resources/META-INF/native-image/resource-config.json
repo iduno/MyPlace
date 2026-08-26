@@ -1,0 +1,9 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": ".*\\.so$"},
+      {"pattern": ".*\\.dll$"},
+      {"pattern": ".*\\.dylib$"}
+    ]
+  }
+}

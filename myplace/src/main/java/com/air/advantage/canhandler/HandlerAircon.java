@@ -418,7 +418,7 @@ public class HandlerAircon extends Handler {
         cbStatus.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
         cbStatus.setSystemType(CANMessage.SystemType.CAN_AIRCON);
         cbStatus.setUid(uid);
-        eventBus.publish("communication-send-can", cbStatus);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(cbStatus));
 
         LOG.debug("Processed CBStatus for UID " + uid);
     }

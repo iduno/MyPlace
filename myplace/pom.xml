@@ -41,7 +41,7 @@
       <artifactId>jSerialComm</artifactId>
       <version>${jSerialComm.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-vertx</artifactId>

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "com.fazecast.jSerialComm.SerialPort",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true,
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.fazecast.jSerialComm.SerialPort$ConfigurationException",
+    "allDeclaredConstructors": true
+  }
+]

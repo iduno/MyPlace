@@ -3,6 +3,41 @@ package com.air.advantage.cbmessages;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, 
+    include = JsonTypeInfo.As.PROPERTY, 
+    property = "type"
+)
+
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = CANMessageAircon.class, name = "CANMessageAircon"),
+    @JsonSubTypes.Type(value = CANMessageAircon00Unknown.class, name = "CANMessageAircon00Unknown"),
+    @JsonSubTypes.Type(value = CANMessageAircon01ZoneInformation.class, name = "CANMessageAircon01ZoneInformation"),
+    @JsonSubTypes.Type(value = CANMessageAircon02UnitTypeInformation.class, name = "CANMessageAircon02UnitTypeInformation"),
+    @JsonSubTypes.Type(value = CANMessageAircon03ZoneState.class, name = "CANMessageAircon03ZoneState"),
+    @JsonSubTypes.Type(value = CANMessageAircon04ZoneConfiguration.class, name = "CANMessageAircon04ZoneConfiguration"),
+    @JsonSubTypes.Type(value = CANMessageAircon05AirconState.class, name = "CANMessageAircon05AirconState"),
+    @JsonSubTypes.Type(value = CANMessageAircon06CBStatus.class, name = "CANMessageAircon06CBStatus"),
+    @JsonSubTypes.Type(value = CANMessageAircon07CbStatusMessage.class, name = "CANMessageAircon07CbStatusMessage"),
+    @JsonSubTypes.Type(value = CANMessageAircon08CBErrorStatus.class, name = "CANMessageAircon08CBErrorStatus"),
+    @JsonSubTypes.Type(value = CANMessageAircon09ActivationCodeInformation.class, name = "CANMessageAircon09ActivationCodeInformation"),
+    @JsonSubTypes.Type(value = CANMessageAircon0aMidInformation.class, name = "CANMessageAircon0aMidInformation"),
+    @JsonSubTypes.Type(value = CANMessageAircon12ZoneSensorPairing.class, name = "CANMessageAircon12ZoneSensorPairing"),
+    @JsonSubTypes.Type(value = CANMessageAircon13CBInfoByte.class, name = "CANMessageAircon13CBInfoByte"),
+    @JsonSubTypes.Type(value = CANMessageAircon26RfDevicePairing.class, name = "CANMessageAircon26RfDevicePairing"),
+    @JsonSubTypes.Type(value = CANMessageAircon27RfDeviceCalibration.class, name = "CANMessageAircon27RfDeviceCalibration"),
+    @JsonSubTypes.Type(value = CANMessageLighting.class, name = "CANMessageLighting"),
+    @JsonSubTypes.Type(value = CANMessageLighting00LmStatusMessageOld.class, name = "CANMessageLighting00LmStatusMessageOld"),
+    @JsonSubTypes.Type(value = CANMessageLighting01LmControlMessage.class, name = "CANMessageLighting01LmControlMessage"),
+    @JsonSubTypes.Type(value = CANMessageLighting02LmStatusMessage.class, name = "CANMessageLighting02LmStatusMessage"),
+    @JsonSubTypes.Type(value = CANMessageLighting14DmControlMessage.class, name = "CANMessageLighting14DmControlMessage"),
+    @JsonSubTypes.Type(value = CANMessageLighting15Rm2ControlMessage.class, name = "CANMessageLighting15Rm2ControlMessage"),
+    @JsonSubTypes.Type(value = CANMessageLighting16Rm2StatusMessage.class, name = "CANMessageLighting16Rm2StatusMessage"),
+    @JsonSubTypes.Type(value = CANMessageLighting17Rm2AddDevice.class, name = "CANMessageLighting17Rm2AddDevice"),
+    @JsonSubTypes.Type(value = CANMessageLighting1dRm2ControlMessage.class, name = "CANMessageLighting1dRm2ControlMessage")
+})
 public class CANMessage {
 
     public enum SystemType {

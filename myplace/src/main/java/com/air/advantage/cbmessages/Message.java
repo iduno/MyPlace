@@ -2,6 +2,27 @@ package com.air.advantage.cbmessages;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type"
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = MessageAck.class, name = "MessageAck"),
+    @JsonSubTypes.Type(value = MessageCAN.class, name = "MessageCAN"),
+    @JsonSubTypes.Type(value = MessageGetAllZoneSensorData.class, name = "MessageGetAllZoneSensorData"),
+    @JsonSubTypes.Type(value = MessageGetClock.class, name = "MessageGetClock"),
+    @JsonSubTypes.Type(value = MessageGetScheduleData.class, name = "MessageGetScheduleData"),
+    @JsonSubTypes.Type(value = MessageGetSystemData.class, name = "MessageGetSystemData"),
+    @JsonSubTypes.Type(value = MessageGetZoneDataZone.class, name = "MessageGetZoneDataZone"),
+    @JsonSubTypes.Type(value = MessageGetZoneTimer.class, name = "MessageGetZoneTimer"),
+    @JsonSubTypes.Type(value = MessageNak.class, name = "MessageNak"),
+    @JsonSubTypes.Type(value = MessagePing.class, name = "MessagePing")
+})
+
 public class Message {
 
     MessageType messageType;

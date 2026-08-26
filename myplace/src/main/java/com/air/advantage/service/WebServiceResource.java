@@ -546,7 +546,7 @@ public class WebServiceResource {
         byte[] messageChars = message.getBytes();
         Message msg = Message.deserialize(messageChars);
 
-        eventBus.publish("communication-send", msg);
+        eventBus.publish("communication-send", io.vertx.core.json.JsonObject.mapFrom(msg));
 
 
         return Response.ok("{\"ack\":true,\"request\":\"sendRawMessage\"}", MediaType.APPLICATION_JSON).build();

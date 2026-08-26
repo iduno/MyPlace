@@ -23,12 +23,13 @@ import com.air.advantage.config.MyPlaceConfig;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.vertx.ConsumeEvent;
+import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import io.vertx.mutiny.core.eventbus.MessageConsumer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+
 
 @ApplicationScoped
 public class CommunicationDataHandler {
@@ -63,21 +64,10 @@ public class CommunicationDataHandler {
     private String currentEndpoint;
     private Long pingTimerId;
     private boolean sendAck = false;
-    private MessageConsumer<String> communicationStatusConsumer;
     
     void onStart(@Observes StartupEvent ev) {
         LOG.info("Initializing Communication Data Handler");
         
-        // Set up a connection status handler
-        communicationStatusConsumer = eventBus.consumer("communication-status", message -> {
-            String status = (String) message.body();
-            if ("disconnected".equals(status)) {
-                handleDisconnection();
-            } else if ("connected".equals(status)) {
-                isConnected.set(true);
-                reconnectAttempts = 0;
-            }
-        });
         sendAck = false;
         
         // If auto-connect is enabled, initiate the connection
@@ -96,10 +86,6 @@ public class CommunicationDataHandler {
             pingTimerId = null;
         }
         stopReconnectionTimer();
-        if (communicationStatusConsumer != null) {
-            communicationStatusConsumer.unregister();
-            communicationStatusConsumer = null;
-        }
     }
 
     private void pingTimer() {
@@ -117,16 +103,28 @@ public class CommunicationDataHandler {
             communicationManager.send(pingMessage);
         }
     }
+
+    @ConsumeEvent("communication-status")
+    public void handleCommunicationStatus(String status) {
+        if ("disconnected".equals(status)) {
+            handleDisconnection();
+        } else if ("connected".equals(status)) {
+            isConnected.set(true);
+            reconnectAttempts = 0;
+        }
+    }
     
     @ConsumeEvent("communication-send")
-    public boolean sendMessage(Message message) {
+    public boolean sendMessage(JsonObject jsonMessage) {
+        Message message = jsonMessage.mapTo(Message.class);
         messageQueue.push(message);
         return true;
     }
 
     @ConsumeEvent("communication-send-can")
-    public boolean sendCANMessage(CANMessage message) {
-        messageCANQueue.push(message);
+    public boolean sendCANMessage(JsonObject jsonMessage) {
+        CANMessage canMessage = jsonMessage.mapTo(CANMessage.class);
+        messageCANQueue.push(canMessage);
         return true;
     }
 
@@ -146,7 +144,7 @@ public class CommunicationDataHandler {
                 CANMessageAircon06CBStatus airconStatus = new CANMessageAircon06CBStatus();
                 airconStatus.setDeviceType(DeviceType.CONTROL_BOARD);
                 canMessage.getMessageCANBaseList().add(airconStatus);
-                sendMessage(canMessage);
+                messageQueue.push(canMessage);
             }
         } else {
             LOG.warn("Failed to connect to: ");
@@ -270,7 +268,7 @@ public class CommunicationDataHandler {
                 MessageGetSystemData systemData = (MessageGetSystemData) data;
                 LOG.trace("Received system data: " + systemData);
                 Message messageGetSystemData = new MessageGetSystemData(MessageType.CAN2_IN_USE);
-                sendMessage(messageGetSystemData);
+                messageQueue.push(messageGetSystemData);
                 // Handle system data as needed
             }
             else {
@@ -286,13 +284,13 @@ public class CommunicationDataHandler {
                 cbMidInfoMessage.setDeviceType(DeviceType.AIRCON_1);
                 cbMidInfoMessage.setSystemType(CANMessage.SystemType.CAN_AIRCON);
                 cbMidInfoMessage.setUid(uid);
-                sendCANMessage(cbMidInfoMessage);
+                messageCANQueue.push(cbMidInfoMessage);
 
                 CANMessageAircon08CBErrorStatus cbErrorStatusMessage = new CANMessageAircon08CBErrorStatus();
                 cbErrorStatusMessage.setDeviceType(DeviceType.AIRCON_1);
                 cbErrorStatusMessage.setSystemType(CANMessage.SystemType.CAN_AIRCON);
                 cbErrorStatusMessage.setUid(uid);
-                sendCANMessage(cbErrorStatusMessage);
+                messageCANQueue.push(cbErrorStatusMessage);
 
             }
  

@@ -157,7 +157,7 @@ public class HandlerAirconCB extends Handler {
         midInfo.setUid(uid);
         midInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
         midInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
-        eventBus.publish("communication-send-can", midInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(midInfo));
 
         CANMessageAircon01ZoneInformation cbStatus = new CANMessageAircon01ZoneInformation();
         cbStatus.setUid(uid);
@@ -170,7 +170,7 @@ public class HandlerAirconCB extends Handler {
         cbStatus.setConstantZone3(dataAirconInfo.constantZone3);
         cbStatus.setFilterCleanStatus(dataAirconInfo.filterCleanStatus);
 
-        eventBus.publish("communication-send-can", cbStatus);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(cbStatus));
     }
 
     // Helper to get or create DataAircon (implement as needed)
@@ -356,7 +356,7 @@ public class HandlerAirconCB extends Handler {
         midInfo.setUid(uid);
         midInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
         midInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
-        eventBus.publish("communication-send-can", midInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(midInfo));
 
         CANMessageAircon06CBStatus cbStatus = new CANMessageAircon06CBStatus();
         cbStatus.setUid(uid);
@@ -365,7 +365,7 @@ public class HandlerAirconCB extends Handler {
         cbStatus.setCbFwMajor(dataAircon.airconInfo.cbFWRevMajor);
         cbStatus.setCbFwMinor(dataAircon.airconInfo.cbFWRevMinor);
         cbStatus.setCbType(dataAircon.airconInfo.cbType);
-        eventBus.publish("communication-send-can", cbStatus);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(cbStatus));
 
     }
 
@@ -382,7 +382,7 @@ public class HandlerAirconCB extends Handler {
         midInfo.setUid(uid);
         midInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
         midInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
-        eventBus.publish("communication-send-can", midInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(midInfo));
 
         CANMessageAircon02UnitTypeInformation unitTypeInfo = new CANMessageAircon02UnitTypeInformation();
         unitTypeInfo.setUid(uid);
@@ -390,7 +390,7 @@ public class HandlerAirconCB extends Handler {
         unitTypeInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
         unitTypeInfo.setUnitType(CANMessageAircon02UnitTypeInformation.UnitType.FUJITSU);
         unitTypeInfo.setActivationStatus(CodeStatus.NO_CODE);
-        eventBus.publish("communication-send-can", unitTypeInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(unitTypeInfo));
 
         CANMessageAircon01ZoneInformation zoneInfo = new CANMessageAircon01ZoneInformation();
         zoneInfo.setUid(uid);
@@ -403,7 +403,7 @@ public class HandlerAirconCB extends Handler {
         zoneInfo.setConstantZone2(dataAircon.airconInfo.constantZone2);
         zoneInfo.setConstantZone3(dataAircon.airconInfo.constantZone3);
         zoneInfo.setFilterCleanStatus(dataAircon.airconInfo.filterCleanStatus);
-        eventBus.publish("communication-send-can", zoneInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneInfo));
 
         // Send 05 message (AirconState)
         CANMessageAircon05AirconState airconState = new CANMessageAircon05AirconState();
@@ -492,7 +492,7 @@ public class HandlerAirconCB extends Handler {
         // Set myZone (if available)
         airconState.setMyZoneId(dataAircon.airconInfo.myZone != null ? dataAircon.airconInfo.myZone : 0);
         
-        eventBus.publish("communication-send-can", airconState);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(airconState));
 
         for (DataZone zone : dataAircon.getZones().values()) {
             if (zone == null) continue;
@@ -503,7 +503,7 @@ public class HandlerAirconCB extends Handler {
             zoneSensorPairing.setSensorUID(zone.sensorUid);
             zoneSensorPairing.setInfoByte(zone.number);
             zoneSensorPairing.setSensorMajorRev(0);
-            eventBus.publish("communication-send-can", zoneSensorPairing);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneSensorPairing));
 
             CANMessageAircon03ZoneState zoneState = new CANMessageAircon03ZoneState();
             zoneState.setUid(uid);
@@ -516,7 +516,7 @@ public class HandlerAirconCB extends Handler {
             zoneState.setMeasuredTemp(zone.measuredTemp);
             zoneState.setSetTemp(zone.setTemp);
             
-            eventBus.publish("communication-send-can", zoneState);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneState));
 
             CANMessageAircon04ZoneConfiguration zoneConfig = new CANMessageAircon04ZoneConfiguration();
             zoneConfig.setUid(uid);
@@ -548,7 +548,7 @@ public class HandlerAirconCB extends Handler {
             zoneConfig.setMotionConfig(motionConfig);
             zoneConfig.setZoneError(zoneError);
             zoneConfig.setRssi(rssi);
-            eventBus.publish("communication-send-can", zoneConfig);
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneConfig));
         }
 
     }
@@ -599,7 +599,7 @@ public class HandlerAirconCB extends Handler {
         midInfo.setUid(uid);
         midInfo.setDeviceType(CANMessage.DeviceType.AIRCON_1);
         midInfo.setSystemType(CANMessage.SystemType.CAN_AIRCON);
-        eventBus.publish("communication-send-can", midInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(midInfo));
         
         // Send 01 message (ZoneInformation)
         CANMessageAircon01ZoneInformation zoneInfo = new CANMessageAircon01ZoneInformation();
@@ -622,7 +622,7 @@ public class HandlerAirconCB extends Handler {
         zoneInfo.setConstantZone2(constantZone2);
         zoneInfo.setConstantZone3(constantZone3);
         zoneInfo.setFilterCleanStatus(filterCleanStatus);
-        eventBus.publish("communication-send-can", zoneInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneInfo));
         
         // Send 02 message (UnitTypeInformation)
         CANMessageAircon02UnitTypeInformation unitTypeInfo = new CANMessageAircon02UnitTypeInformation();
@@ -637,7 +637,7 @@ public class HandlerAirconCB extends Handler {
         int fwMinor = dataAircon.airconInfo.cbFWRevMinor != null ? dataAircon.airconInfo.cbFWRevMinor : 0;
         unitTypeInfo.setFwMajor(fwMajor);
         unitTypeInfo.setFwMinor(fwMinor);
-        eventBus.publish("communication-send-can", unitTypeInfo);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(unitTypeInfo));
         
         // Send 05 message (AirconState)
         CANMessageAircon05AirconState airconState = new CANMessageAircon05AirconState();
@@ -726,7 +726,7 @@ public class HandlerAirconCB extends Handler {
         // Set myZone (if available)
         airconState.setMyZoneId(dataAircon.airconInfo.myZone != null ? dataAircon.airconInfo.myZone : 0);
         
-        eventBus.publish("communication-send-can", airconState);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(airconState));
         
         // Send 03 message (ZoneState)
         CANMessageAircon03ZoneState zoneState = new CANMessageAircon03ZoneState();
@@ -751,7 +751,7 @@ public class HandlerAirconCB extends Handler {
         zoneState.setSetTemp(zone.setTemp != null ? zone.setTemp : 25.0f);
         zoneState.setMeasuredTemp(zone.measuredTemp != null ? zone.measuredTemp : 0.0f);
         
-        eventBus.publish("communication-send-can", zoneState);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneState));
         
         // Send 04 message (ZoneConfiguration)
         CANMessageAircon04ZoneConfiguration zoneConfig = new CANMessageAircon04ZoneConfiguration();
@@ -768,7 +768,7 @@ public class HandlerAirconCB extends Handler {
         zoneConfig.setZoneError(zone.error != null ? zone.error : 0);
         zoneConfig.setRssi(zone.rssi != null ? zone.rssi : 0);
         
-        eventBus.publish("communication-send-can", zoneConfig);
+        eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneConfig));
     }
 
     private void process(CANMessageAircon13CBInfoByte msg) {
