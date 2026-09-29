@@ -3,6 +3,7 @@ package com.air.advantage.canhandler;
 import org.jboss.logging.Logger;
 
 import com.air.advantage.aaservice.data.DataLight;
+import com.air.advantage.aaservice.data.DataLight.LightState;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageLighting;
@@ -139,7 +140,7 @@ public class HandlerLightingCB extends Handler {
                     controlMsg.setDeviceType(DEVICE_TYPE);
                     controlMsg.setSystemType(SYSTEM_TYPE);
                     controlMsg.setRoomNumber(roomNumber);
-                    if ("on".equals(light.state)) {
+                    if (light.state == LightState.on) {
                         controlMsg.setLightState(CANMessageLighting01LmControlMessage.LightState.ON);
                     } else {
                         controlMsg.setLightState(CANMessageLighting01LmControlMessage.LightState.OFF);

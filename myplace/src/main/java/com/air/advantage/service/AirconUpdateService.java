@@ -386,12 +386,17 @@ public class AirconUpdateService {
             targetGroup = new com.air.advantage.aaservice.data.DataGroup();
             targetGroup.id = group.id;
             targetGroup.name = group.name;
+            targetGroup.state = group.state;
+            targetGroup.value = group.value;
             groups.put(group.id, targetGroup);
             if (groupsOrder != null && !groupsOrder.contains(group.id)) {
                 groupsOrder.add(group.id);
             }
+            myMasterData.scheduleSave();
         } else {
             targetGroup.name = group.name;
+            targetGroup.state = valueOr(targetGroup.state, group.state);
+            targetGroup.value = valueOr(targetGroup.value, group.value);
         }
     }
 

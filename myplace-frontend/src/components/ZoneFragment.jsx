@@ -72,7 +72,7 @@ const ControlButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ZoneFragment = () => {
+const ZoneFragment = ({ airconId = null }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,7 +93,7 @@ const ZoneFragment = () => {
     ApiService.startZonePolling();
     const unsubscribe = ApiService.subscribeZones((data, { error }) => {
       if (error) {
-        if (!ApiService.getCachedZones()) {
+        if (!ApiService.getCachedZones(airconId)) {
           // Only show error initially if nothing loaded yet
             setError('Failed to fetch zones data');
             setLoading(false);
@@ -111,9 +111,9 @@ const ZoneFragment = () => {
       }
       setLoading(false);
       setError(null);
-    });
+    }, airconId);
     return () => unsubscribe();
-  }, [selectedZoneId]);
+  }, [selectedZoneId, airconId]);
   
   // Fetch just the zone status information without clearing existing data
   const fetchZoneStatus = async () => {
@@ -158,7 +158,7 @@ const ZoneFragment = () => {
 
         try {
           // Send master zone update via setAircon (myZone = zoneNumber)
-          await ApiService.updateAircon({ myZone: zoneToUpdate.zoneNumber });
+          await ApiService.updateAircon({ myZone: zoneToUpdate.zoneNumber }, airconId);
           showSnackbar(`${zoneToUpdate.name} set as master zone`);
         } catch (err) {
           console.error('Failed to set master zone:', err);
@@ -177,7 +177,7 @@ const ZoneFragment = () => {
         ...updates
       };
       
-      const response = await ApiService.updateZone(updatedZone);
+      const response = await ApiService.updateZone(updatedZone, airconId);
       
       // Update local state regardless of server response to provide immediate feedback
       const updatedZones = zones.map(zone => 

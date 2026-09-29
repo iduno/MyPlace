@@ -56,8 +56,8 @@ public class DataLight {
 
 
     @JsonProperty("state")
-    @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
-    public String state;
+    @JsonView({JsonExporterViews.Export.class})
+    public LightState state;
 
 
     @JsonProperty("thisIsRFDevice")
@@ -68,6 +68,21 @@ public class DataLight {
     @JsonProperty("dimOffset")
     @JsonView({JsonExporterViews.Export.class})
     public Integer dimOffset;
+
+    public enum LightState {
+        off(0),
+        on(1);
+
+        private final int value;
+
+        LightState(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
+    }
 
     public void copyFrom(DataLight other) {
         if (other == null) return;

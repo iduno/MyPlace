@@ -3,6 +3,7 @@ package com.air.advantage.canhandler;
 import org.jboss.logging.Logger;
 
 import com.air.advantage.aaservice.data.DataLight;
+import com.air.advantage.aaservice.data.DataLight.LightState;
 import com.air.advantage.aaservice.data.DataGroup;
 import com.air.advantage.aaservice.data.MasterData;
 import com.air.advantage.aaservice.data.MyMasterData;
@@ -110,7 +111,7 @@ public class HandlerLighting extends Handler {
                 light.moduleType = "LM";
                 light.nextPollTime = expiryTime;
                 if (light.state == null) {
-                    light.state = "off";
+                    light.state = LightState.off;
                 }
                 if (light.value == null) {
                     light.value = 80;
@@ -140,7 +141,7 @@ public class HandlerLighting extends Handler {
         String lightId = uid + String.format("%02d", roomNumber);
         
         DataLight light = getOrCreateLight(lightId);
-        light.state = (lightState == CANMessageLighting01LmControlMessage.LightState.ON) ? "on" : "off";
+        light.state = (lightState == CANMessageLighting01LmControlMessage.LightState.ON) ? LightState.on : LightState.off;
         light.value = percentValue;
         light.moduleType = "LM";
         
@@ -176,7 +177,7 @@ public class HandlerLighting extends Handler {
                 light.deviceType = isRelay ? "relay" : "dimmer";
                 light.nextPollTime = expiryTime;
                 if (light.state == null) {
-                    light.state = "off";
+                    light.state = LightState.off;
                 }
                 if (light.value == null && !isRelay) {
                     light.value = 80;
@@ -248,10 +249,10 @@ public class HandlerLighting extends Handler {
                 light.moduleType = "RM2";
                 light.deviceType = "dimmer";
                 if (state == 1) {
-                    light.state = "on";
+                    light.state = LightState.on;
                     light.value = dimLevel * 10;
                 } else {
-                    light.state = "off";
+                    light.state = LightState.off;
                     light.value = 0;
                 }
                 light.dimOffset = dimOffset;
@@ -262,7 +263,7 @@ public class HandlerLighting extends Handler {
                 fan.moduleType = "RM2";
                 fan.deviceType = "fan";
                 // Fan value logic: 0=off, 1=low, 2=med, 3=high, etc.
-                fan.state = (state == 1) ? "on" : "off";
+                fan.state = (state == 1) ? LightState.on : LightState.off;
                 fan.value = (state == 1) ? dimLevel : 0;
                 fan.dimOffset = dimOffset;
                 LOG.debug("RM2 fan logic: UID=" + uid + ", channel=" + roomNumber + ", state=" + state + ", dimLevel=" + dimLevel + ", dimOffset=" + dimOffset);
@@ -276,10 +277,10 @@ public class HandlerLighting extends Handler {
                 DataLight defLight = getOrCreateLight(lightId);
                 defLight.moduleType = "RM2";
                 if (state == 0) {
-                    defLight.state = "off";
+                    defLight.state = LightState.off;
                     defLight.value = 0;
                 } else if (state == 1) {
-                    defLight.state = "on";
+                    defLight.state = LightState.on;
                     defLight.value = (dimLevel > 0 && dimLevel <= 100) ? dimLevel : 100;
                 } else if (state == 2) {
                     // Stop command - maintain current state
@@ -348,7 +349,7 @@ public class HandlerLighting extends Handler {
                 light.moduleType = "RM2";
                 light.nextPollTime = expiryTime;
                 if (light.state == null) {
-                    light.state = "off";
+                    light.state = LightState.off;
                 }
                 LOG.debug("Enabled RM2 channel " + roomNumber + " dipState: " + dipState + " deviceType: " + deviceType);
             } else {
@@ -522,7 +523,7 @@ public class HandlerLighting extends Handler {
                     if (b != null && lightId.equals(b.id)) {
                         dataLight.name = b.name;
                         // Default state for new/backup
-                        dataLight.state = "off";
+                        dataLight.state = LightState.off;
                         if (isRelayModule) {
                             dataLight.value = null;
                             dataLight.relay = Boolean.TRUE;
@@ -539,7 +540,7 @@ public class HandlerLighting extends Handler {
             }
             if (!restored) {
                 dataLight.name = "Light " + (masterData.myLights.lights.size() + 1 + (masterData.myLights.backupLights != null ? masterData.myLights.backupLights.size() : 0));
-                dataLight.state = "off";
+                dataLight.state = LightState.off;
                 if (isRelayModule) {
                     dataLight.value = null;
                     dataLight.relay = Boolean.TRUE;

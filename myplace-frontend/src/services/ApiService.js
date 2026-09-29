@@ -31,13 +31,115 @@ class ApiService {
     this._systemPollingIntervalMs = 2000;  // 2s
     this._systemPollingActive = false;     // Concurrency guard
 
-    // Derived caches
-    this._airconCache = null;
-    this._zoneCache = null;
+    // Listener -> airconId (null means first aircon)
+    this._airconListeners = new Map();
+    this._zoneListeners = new Map();
+    this._systemListeners = new Set();
+  }
 
-    // Listener sets (public subscriptions remain stable)
-    this._airconListeners = new Set();
-    this._zoneListeners = new Set();
+  /**
+   * Resolve the aircon id to use; falls back to the first aircon.
+   */
+  _resolveAirconId(systemData, airconId = null) {
+    const ids = this._sortedAirconIds(systemData);
+    if (airconId && ids.includes(airconId)) return airconId;
+    return ids[0] || 'ac1';
+  }
+
+  _sortedAirconIds(systemData) {
+    return Object.keys(systemData?.aircons || {})
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }
+
+  /**
+   * Summary list of aircon units: [{ id, name, power, mode }]
+   */
+  getAirconList(systemData = this._systemCache) {
+    return this._sortedAirconIds(systemData).map(id => {
+      const info = systemData.aircons[id]?.info || {};
+      return { id, name: info.name || id, power: info.state === 'on', mode: info.mode };
+    });
+  }
+
+  /**
+   * Lights grouped by myLights.groups (in groupsOrder); ungrouped lights are appended.
+   * Returns [] when there are no lights.
+   */
+  getLightGroups(systemData = this._systemCache) {
+    const myLights = systemData?.myLights;
+    const lights = myLights?.lights || {};
+    const lightIds = Object.keys(lights);
+    if (!lightIds.length) return [];
+
+    const used = new Set();
+    const groupIds = myLights.groupsOrder?.length ? myLights.groupsOrder : Object.keys(myLights.groups || {});
+    const groups = groupIds
+      .map(gid => {
+        const group = myLights.groups?.[gid];
+        if (!group) return null;
+        const groupLights = (group.lightsOrder || [])
+          .filter(id => lights[id] && !used.has(id))
+          .map(id => { used.add(id); return lights[id]; });
+        return { id: gid, name: group.name || gid, lights: groupLights };
+      })
+      .filter(g => g && g.lights.length);
+
+    const ungrouped = lightIds.filter(id => !used.has(id)).map(id => lights[id]);
+    if (ungrouped.length) {
+      groups.push({ id: '_ungrouped', name: groups.length ? 'Other' : 'Lights', lights: ungrouped });
+    }
+    return groups;
+  }
+
+  getCachedSystem() {
+    return this._systemCache;
+  }
+
+  /**
+   * Subscribe to raw system data updates. Listener receives (rawData, {error, fromCache}).
+   */
+  subscribeSystem(listener) {
+    this._systemListeners.add(listener);
+    if (this._systemCache) {
+      try { listener(this._systemCache, { error: null, fromCache: true }); } catch (_) { /* ignore */ }
+    }
+    return () => {
+      this._systemListeners.delete(listener);
+      this._stopPollingIfIdle();
+    };
+  }
+
+  _stopPollingIfIdle() {
+    if (this._airconListeners.size === 0 && this._zoneListeners.size === 0 && this._systemListeners.size === 0) {
+      this.stopSystemPolling();
+    }
+  }
+
+  /**
+   * Update a light (id required; state 'on'/'off' and/or value 0-100)
+   */
+  async setLight(lightData) {
+    try {
+      const payload = {
+        id: lightData.id,
+        ...(lightData.state && { state: lightData.state }),
+        ...(lightData.value !== undefined && { value: lightData.value }),
+      };
+      const response = await fetch(`${this.baseUrl}/setLight`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const result = await response.json();
+      this.refreshSystem();
+      return result;
+    } catch (error) {
+      console.error('Error updating light:', error);
+      throw error;
+    }
   }
 
   /**
@@ -80,26 +182,23 @@ class ApiService {
   /**
    * Return the last cached aircon data (may be null if not yet fetched)
    */
-  getCachedAircon() {
-    return this._airconCache;
+  getCachedAircon(airconId = null) {
+    return this._extractAircon(this._systemCache, airconId);
   }
 
   /**
-   * Subscribe to aircon cache updates. Listener receives (data, {error, fromCache})
-   * Returns an unsubscribe function.
+   * Subscribe to aircon cache updates for one aircon (default: first).
+   * Listener receives (data, {error, fromCache}). Returns an unsubscribe function.
    */
-  subscribeAircon(listener) {
-    this._airconListeners.add(listener);
-    // Immediately emit current cache if available
-    if (this._airconCache) {
-      try { listener(this._airconCache, { error: null, fromCache: true }); } catch (_) { /* ignore */ }
+  subscribeAircon(listener, airconId = null) {
+    this._airconListeners.set(listener, airconId);
+    const cached = this.getCachedAircon(airconId);
+    if (cached) {
+      try { listener(cached, { error: null, fromCache: true }); } catch (_) { /* ignore */ }
     }
     return () => {
       this._airconListeners.delete(listener);
-      // If no listeners remain, stop polling to save resources
-      if (this._airconListeners.size === 0) {
-        this.stopAirconPolling();
-      }
+      this._stopPollingIfIdle();
     };
   }
 
@@ -131,16 +230,11 @@ class ApiService {
       const raw = await this._fetchSystemRaw();
       this._systemCache = raw;
       this._systemLastError = null;
-      // Derive specialized views
-      this._airconCache = this._extractAircon(raw);
-      this._zoneCache = this._extractZones(raw);
-      this._notifyAirconListeners(this._airconCache, null);
-      this._notifyZoneListeners(this._zoneCache, null);
+      this._notifyListeners(raw, null);
     } catch (err) {
       this._systemLastError = err;
       if (!this._systemCache) { // Only push an error event if nothing loaded yet
-        this._notifyAirconListeners(null, err);
-        this._notifyZoneListeners(null, err);
+        this._notifyListeners(null, err);
       }
     } finally {
       this._systemPollingActive = false;
@@ -148,8 +242,12 @@ class ApiService {
   }
   _pollSystemImmediate() { this._pollSystem(); }
 
-  _notifyAirconListeners(data, error) { this._airconListeners.forEach(l => { try { l(data, { error, fromCache: !error }); } catch(_){} }); }
-  _notifyZoneListeners(data, error) { this._zoneListeners.forEach(l => { try { l(data, { error, fromCache: !error }); } catch(_){} }); }
+  _notifyListeners(raw, error) {
+    const meta = { error, fromCache: !error };
+    this._airconListeners.forEach((airconId, l) => { try { l(error ? null : this._extractAircon(raw, airconId), meta); } catch(_){} });
+    this._zoneListeners.forEach((airconId, l) => { try { l(error ? null : this._extractZones(raw, airconId), meta); } catch(_){} });
+    this._systemListeners.forEach(l => { try { l(error ? null : raw, meta); } catch(_){} });
+  }
 
   async _fetchSystemRaw() {
     const response = await fetch(`${this.baseUrl}/getSystemData`);
@@ -159,11 +257,12 @@ class ApiService {
     return data;
   }
 
-  _extractAircon(systemData) {
+  _extractAircon(systemData, requestedId = null) {
     if (!systemData || !systemData.aircons) return null;
-    const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+    const airconId = this._resolveAirconId(systemData, requestedId);
     const aircon = systemData.aircons[airconId]?.info || {};
     return {
+      airconId,
       power: aircon.state === 'on',
       temperature: aircon.setTemp || 24,
       fanSpeed: aircon.fan || 'low',
@@ -178,12 +277,12 @@ class ApiService {
       _fetchedAt: systemData._fetchedAt
     };
   }
-  _extractZones(systemData) {
+  _extractZones(systemData, requestedId = null) {
     if (!systemData || !systemData.aircons) return null;
-    const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+    const airconId = this._resolveAirconId(systemData, requestedId);
     const aircon = systemData.aircons[airconId];
     if (!aircon || !aircon.zones) {
-      return { zones: [], systemId: systemData.systemInfo?.id || 'System 1', _fetchedAt: systemData._fetchedAt };
+      return { airconId, zones: [], systemId: systemData.systemInfo?.id || 'System 1', _fetchedAt: systemData._fetchedAt };
     }
     const masterZoneNumber = aircon.info?.myZone || 1;
     const noOfConstants = aircon.info?.noOfConstants || 0;
@@ -209,6 +308,7 @@ class ApiService {
       };
     });
     return {
+      airconId,
       zones: zonesArray,
       systemId: systemData.system?.name || 'System 1',
       masterZoneNumber,
@@ -221,13 +321,13 @@ class ApiService {
   /**
    * Update aircon settings
    * @param {Object} airconData - The aircon data to update
+   * @param {String} [targetAirconId] - Aircon id (e.g. 'ac2'); defaults to the first aircon
    * @returns {Promise<Object>} The response from the server
    */
-  async updateAircon(airconData) {
+  async updateAircon(airconData, targetAirconId = null) {
     try {
-      // Adapt to your backend API structure
-      const systemData = await this.getSystem();
-      const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+      const systemData = this._systemCache || await this.getSystem();
+      const airconId = this._resolveAirconId(systemData, targetAirconId);
 
       // Based on the DataAircon Java model, we need to structure the data correctly
       // with info and zones properties
@@ -332,65 +432,13 @@ class ApiService {
 
   /**
    * Get zones information
+   * @param {String} [airconId] - Aircon id (e.g. 'ac2'); defaults to the first aircon
    * @returns {Promise<Object>} The zones data
    */
-  async getZones() {
+  async getZones(airconId = null) {
     try {
-      const response = await fetch(`${this.baseUrl}/getSystemData`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      
-      // Extract zones data from the system response
-      // Assuming the first aircon in the list is the one we want
-      const airconId = Object.keys(data.aircons)[0] || 'ac1';
-      const aircon = data.aircons[airconId];
-      
-      if (!aircon || !aircon.zones) {
-        return { zones: [], systemId: data.systemInfo?.id || 'System 1' };
-      }
-      
-      // Get the master zone from aircon info
-      const masterZoneNumber = aircon.info?.myZone || 1;
-      // Get the number of constant zones
-      const noOfConstants = aircon.info?.noOfConstants || 0;
-      
-      // Convert zones object to array with proper structure
-      const zonesArray = Object.entries(aircon.zones).map(([id, zoneData]) => {
-        // Check if this is a master zone
-        const zoneNumber = zoneData.number || parseInt(id.replace('z', ''));
-        const isMaster = zoneNumber === masterZoneNumber;
-        
-        // Check if this is a constant zone (type will be different)
-        const isConstant = aircon.info?.constant1 == zoneNumber || aircon.info?.constant2 == zoneNumber || aircon.info?.constant3 == zoneNumber;
-        
-        return {
-          id,
-          name: zoneData.name || `Zone ${id}`,
-          temperature: zoneData.setTemp || 24,
-          measuredTemp: zoneData.measuredTemp, // Current actual temperature
-          damperValue: zoneData.value || 0, // Assuming value is the damper percentage (0-100)
-          isOpen: zoneData.state === 'open',
-          isMaster: isMaster,
-          isConstant: isConstant,
-          type: zoneData.type,
-          minDamper: zoneData.minDamper,
-          maxDamper: zoneData.maxDamper,
-          following: zoneData.following || 0,
-          followers: zoneData.followers || [],
-          zoneNumber: zoneNumber
-        };
-      });
-      
-      return {
-        zones: zonesArray,
-        systemId: data.system?.name || 'System 1',
-        masterZoneNumber: masterZoneNumber,
-        noOfConstants: noOfConstants,
-        _raw: data,
-        _fetchedAt: Date.now()
-      };
+      const data = await this._fetchSystemRaw();
+      return this._extractZones(data, airconId) || { zones: [], systemId: 'System 1' };
     } catch (error) {
       console.error('Error fetching zones data:', error);
       throw error;
@@ -398,18 +446,17 @@ class ApiService {
   }
   
   // Zones cache helpers
-  getCachedZones() { return this._zoneCache; }
+  getCachedZones(airconId = null) { return this._extractZones(this._systemCache, airconId); }
 
-  subscribeZones(listener) {
-    this._zoneListeners.add(listener);
-    if (this._zoneCache) {
-      try { listener(this._zoneCache, { error: null, fromCache: true }); } catch (_) {}
+  subscribeZones(listener, airconId = null) {
+    this._zoneListeners.set(listener, airconId);
+    const cached = this.getCachedZones(airconId);
+    if (cached) {
+      try { listener(cached, { error: null, fromCache: true }); } catch (_) {}
     }
     return () => {
       this._zoneListeners.delete(listener);
-      if (this._zoneListeners.size === 0) {
-        this.stopZonePolling();
-      }
+      this._stopPollingIfIdle();
     };
   }
 
@@ -418,15 +465,13 @@ class ApiService {
   /**
    * Update zone settings
    * @param {Object} zoneData - The zone data to update
+   * @param {String} [targetAirconId] - Aircon id (e.g. 'ac2'); defaults to the first aircon
    * @returns {Promise<Object>} The response from the server
    */
-  async updateZone(zoneData) {
+  async updateZone(zoneData, targetAirconId = null) {
     try {
-      // First get the current system data to identify the aircon ID
-      const systemData = await this.getSystem();
-      
-      // Get the first aircon ID or use default
-      const airconId = Object.keys(systemData.aircons)[0] || 'ac1';
+      const systemData = this._systemCache || await this.getSystem();
+      const airconId = this._resolveAirconId(systemData, targetAirconId);
       
       // Create zone update structure matching the DataZone Java class
       const zoneUpdate = {

@@ -30,7 +30,7 @@ const ActionButton = styled(Button)(() => ({
   marginBottom: 8,
 }));
 
-const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
+const SetupFragment = ({ airconId = null, onBack = () => {}, onNavigate = () => {} }) => {
   const [aircon, setAircon] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
   const [renameAirconOpen, setRenameAirconOpen] = useState(false);
@@ -95,9 +95,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
 
         // Derive comfort mode and fresh air status from backend info flags when available
         try {
-          const raw = data._raw;
-          const airconId = raw && raw.aircons ? Object.keys(raw.aircons || {})[0] : null;
-          const info = airconId ? (raw.aircons?.[airconId]?.info || {}) : {};
+          const info = data._raw?.aircons?.[data.airconId]?.info || {};
           if (info.myAutoModeEnabled) {
             setComfortMode('myAuto');
           } else if (info.climateControlModeEnabled) {
@@ -128,8 +126,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           }
           // Initialize zonesCount from aircon info.noOfZones if present
           try {
-            const airconId = data._raw && data._raw.aircons ? Object.keys(data._raw.aircons || {})[0] : null;
-            const info = airconId ? (data._raw.aircons?.[airconId]?.info || {}) : {};
+            const info = data._raw?.aircons?.[data.airconId]?.info || {};
             const infoCount = info?.noOfZones;
             if (typeof infoCount !== 'undefined' && infoCount !== null) {
               // Only update zonesCount from backend when the user is not actively editing it
@@ -144,40 +141,22 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
           // ignore
         }
       }
-    });
-    const unsubZones = ApiService.subscribeZones(async (data, { error }) => {
+    }, airconId);
+    const unsubZones = ApiService.subscribeZones((data, { error }) => {
       if (error) return;
       if (data && data.zones) {
-        // Try to read constants from cached aircon info first
-        let constants = [];
-        try {
-          const cachedAir = ApiService.getCachedAircon ? ApiService.getCachedAircon() : null;
-          if (cachedAir && cachedAir._raw) {
-            const system = cachedAir._raw;
-            const airconId = Object.keys(system.aircons || {})[0];
-            const info = system.aircons?.[airconId]?.info || {};
-            constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
-          } else {
-            const system = await ApiService.getSystem();
-            const airconId = Object.keys(system.aircons || {})[0];
-            const info = system.aircons?.[airconId]?.info || {};
-            constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
-          }
-        } catch (err) {
-          // ignore and fall back to zone.type mapping
-          constants = [];
-        }
-
+        const info = data._raw?.aircons?.[data.airconId]?.info || {};
+        const constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
         const newZones = data.zones.map(z => ({ ...z, isConstant: constants.includes(z.zoneNumber) }));
         setZonesList(newZones);
       }
-    });
+    }, airconId);
 
     return () => {
       try { unsub(); } catch(_) {}
       try { unsubZones(); } catch(_) {}
     };
-  }, []);
+  }, [airconId]);
 
   // keep editing ref updated when editingZones changes
   useEffect(() => {
@@ -256,7 +235,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     // Optimistically set local state then call API
     setComfortMode(mode);
     try {
-      await ApiService.updateAircon(payload);
+      await ApiService.updateAircon(payload, airconId);
       setSnackbar({ open: true, message: `Comfort mode set: ${mode}`, severity: 'success' });
     } catch (err) {
       setSnackbar({ open: true, message: ApiService.getErrorMessage(err), severity: 'error' });
@@ -267,7 +246,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     if (!newAirconName) return setSnackbar({ open: true, message: 'Name cannot be empty', severity: 'warning' });
     setSaving(true);
     try {
-      await ApiService.updateAircon({ name: newAirconName });
+      await ApiService.updateAircon({ name: newAirconName }, airconId);
       setSnackbar({ open: true, message: 'Aircon renamed', severity: 'success' });
       setRenameAirconOpen(false);
       setEditingAircon(false);
@@ -284,7 +263,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     if (!newDeviceName) return setSnackbar({ open: true, message: 'Device name cannot be empty', severity: 'warning' });
     setSaving(true);
     try {
-      await ApiService.updateAircon({ deviceName: newDeviceName });
+      await ApiService.updateAircon({ deviceName: newDeviceName }, airconId);
       setSnackbar({ open: true, message: 'Device renamed', severity: 'success' });
       setRenameDeviceOpen(false);
     } catch (err) {
@@ -352,7 +331,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
     if (valueToSave < 1 || valueToSave > 10) { setSnackbar({ open: true, message: 'Zones must be between 1 and 10', severity: 'warning' }); return; }
     setZoneSaving(true);
     try {
-      await ApiService.updateAircon({ noOfZones: valueToSave });
+      await ApiService.updateAircon({ noOfZones: valueToSave }, airconId);
       setSnackbar({ open: true, message: `Number of zones set to ${valueToSave}`, severity: 'success' });
       setEditingZones(false);
       setEditingZonesCount(null);
@@ -435,7 +414,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
               // Optimistic update
               setQuietNightMode(enabled);
               try {
-                await ApiService.updateAircon({ quietNightModeEnabled: enabled });
+                await ApiService.updateAircon({ quietNightModeEnabled: enabled }, airconId);
                 setSnackbar({ open: true, message: `Quiet Night Mode ${enabled ? 'enabled' : 'disabled'}`, severity: 'success' });
                 ApiService.refreshAircon();
               } catch (err) {
@@ -453,7 +432,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
               const enabled = e.target.checked;
               setFreshAirEnabled(enabled);
               try {
-                await ApiService.updateAircon({ freshAirStatus: enabled ? 'off' : 'none' });
+                await ApiService.updateAircon({ freshAirStatus: enabled ? 'off' : 'none' }, airconId);
                 setSnackbar({ open: true, message: `Fresh Air system ${enabled ? 'enabled' : 'disabled'}`, severity: 'success' });
               } catch (err) {
                 setFreshAirEnabled(!enabled);
@@ -578,11 +557,9 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                       ApiService.refreshZones();
                       // Wait briefly for cache to update
                       await new Promise(r => setTimeout(r, 500));
-                      const system = await ApiService.getSystem();
-                      const airconId = Object.keys(system.aircons || {})[0];
-                      const info = system.aircons?.[airconId]?.info || {};
+                      const zonesData = await ApiService.getZones(airconId);
+                      const info = zonesData._raw?.aircons?.[zonesData.airconId]?.info || {};
                       const constants = [info.constant1, info.constant2, info.constant3].filter(v => v !== undefined && v !== null);
-                      const zonesData = await ApiService.getZones();
                       const newZones = (zonesData.zones || []).map(z => ({ ...z, isConstant: constants.includes(z.zoneNumber) }));
                       setZonesList(newZones);
                       setSnackbar({ open: true, message: 'Zones refreshed', severity: 'success' });
@@ -615,7 +592,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                                 if (!newName) { setSnackbar({ open: true, message: 'Zone name cannot be empty', severity: 'warning' }); return; }
                                 (async () => {
                                   try {
-                                    await ApiService.updateZone({ id: zone.id, name: newName });
+                                    await ApiService.updateZone({ id: zone.id, name: newName }, airconId);
                                     setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, name: newName } : z));
                                     setSnackbar({ open: true, message: 'Zone name updated', severity: 'success' });
                                     setEditingZoneId(null);
@@ -636,7 +613,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                             const newName = editingZoneName?.trim();
                             if (!newName) { setSnackbar({ open: true, message: 'Zone name cannot be empty', severity: 'warning' }); return; }
                             try {
-                              await ApiService.updateZone({ id: zone.id, name: newName });
+                              await ApiService.updateZone({ id: zone.id, name: newName }, airconId);
                               setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, name: newName } : z));
                               setSnackbar({ open: true, message: 'Zone name updated', severity: 'success' });
                               setEditingZoneId(null);
@@ -695,7 +672,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                               return;
                             }
                             try {
-                              await ApiService.updateZone({ id: zone.id, minDamper: editingMinDamper, maxDamper: editingMaxDamper });
+                              await ApiService.updateZone({ id: zone.id, minDamper: editingMinDamper, maxDamper: editingMaxDamper }, airconId);
                               setZonesList(prev => prev.map(z => z.id === zone.id ? { ...z, minDamper: editingMinDamper, maxDamper: editingMaxDamper } : z));
                               setSnackbar({ open: true, message: 'Damper values updated', severity: 'success' });
                               setEditingDamperId(null);
@@ -760,7 +737,7 @@ const SetupFragment = ({ onBack = () => {}, onNavigate = () => {} }) => {
                                 };
 
                                 // Send to ApiService.updateAircon so the info object contains constants (slots 1..3)
-                                await ApiService.updateAircon(airconPayload);
+                                await ApiService.updateAircon(airconPayload, airconId);
 
                                 setSnackbar({ open: true, message: 'Zone constant flag updated', severity: 'success' });
                               } catch (err) {

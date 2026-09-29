@@ -154,7 +154,7 @@ const StatusIndicator = styled('div')(({ status, theme }) => ({
   marginRight: theme.spacing(1),
 }));
 
-const AirconFragment = () => {
+const AirconFragment = ({ airconId = null }) => {
   const theme = useTheme();
   const [power, setPower] = useState(false);
   const [temperature, setTemperature] = useState(24);
@@ -183,7 +183,7 @@ const AirconFragment = () => {
     const unsubscribe = ApiService.subscribeAircon((data, { error }) => {
       if (error) {
         // Only show error if we have never loaded data
-        if (!ApiService.getCachedAircon()) {
+        if (!ApiService.getCachedAircon(airconId)) {
           setError('Failed to fetch aircon data');
           setLoading(false);
         }
@@ -201,8 +201,7 @@ const AirconFragment = () => {
       // derive myAutoModeEnabled and freshAirStatus from raw system info if present
       try {
         const raw = data._raw;
-        const airconId = raw && raw.aircons ? Object.keys(raw.aircons || {})[0] : null;
-        const info = airconId ? (raw.aircons?.[airconId]?.info || {}) : {};
+        const info = raw?.aircons?.[data.airconId]?.info || {};
         setMyAutoEnabled(!!info.myAutoModeEnabled);
         setFreshAirStatus((info.freshAirStatus || 'none').toLowerCase());
       } catch (err) {
@@ -210,9 +209,9 @@ const AirconFragment = () => {
       }
       setLoading(false);
       setError(null);
-    });
+    }, airconId);
     return () => unsubscribe();
-  }, []);
+  }, [airconId]);
 
   // Map fan speed from string to number
   const mapFanSpeedFromString = (speedString) => {
@@ -268,7 +267,7 @@ const AirconFragment = () => {
 
       console.log('Updating aircon data:', airconData);
       
-  const response = await ApiService.updateAircon(airconData); // This triggers immediate refresh
+  const response = await ApiService.updateAircon(airconData, airconId); // This triggers immediate refresh
       
       if (response.ack) {
         showSnackbar('Aircon settings updated successfully');

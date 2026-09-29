@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, CssBaseline, Typography, AppBar, Toolbar,
-  Tabs, Tab, Paper
+  Tabs, Tab, Paper, useMediaQuery
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AirconFragment from './components/AirconFragment';
 import ZoneFragment from './components/ZoneFragment';
+import LightsFragment from './components/LightsFragment';
+import AirconUnitSelector from './components/AirconUnitSelector';
 import SetupFragment from './components/SetupFragment';
 import OfflineDetection from './components/OfflineDetection';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
+import ApiService from './services/ApiService';
 import './App.css';
 
 // Create a custom theme to match the Android app
@@ -61,13 +65,13 @@ function a11yProps(index) {
 }
 
 function App() {
-  // State for aircon data and loading state
-  const [airconData, setAirconData] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Tab state
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState('aircon');
+  const [aircons, setAircons] = useState([]);
+  const [selectedAirconId, setSelectedAirconId] = useState(null);
+  const [hasLights, setHasLights] = useState(false);
+  const isPhone = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Handle tab change
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -76,10 +80,10 @@ function App() {
     // Basic navigation mapping from SetupFragment
     switch (page) {
       case 'ZoneSetup':
-        setActiveTab(1);
+        setActiveTab('zones');
         break;
       case 'AdvancedInfo':
-        setActiveTab(0);
+        setActiveTab('aircon');
         break;
       case 'CloseApp':
         // no-op in web, could show a message
@@ -91,34 +95,25 @@ function App() {
     }
   };
 
-  // Fetch data on component mount
+  // Track the aircon units and whether lights exist from the shared system poll
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Replace this with your actual API call
-        // Example: const response = await fetch('/api/aircon');
-        // const data = await response.json();
-        
-        // Simulated data
-        const data = {
-          name: "Living Room",
-          power: false,
-          temperature: 24,
-          fanSpeed: "medium",
-          timerEnabled: false,
-          timerValue: 0
-        };
-        
-        setAirconData(data);
+    ApiService.startSystemPolling();
+    return ApiService.subscribeSystem((raw, { error }) => {
+      if (error || !raw) {
         setLoading(false);
-      } catch (error) {
-        console.error('Error fetching aircon data:', error);
-        setLoading(false);
+        return;
       }
-    };
-
-    fetchData();
+      setAircons(ApiService.getAirconList(raw));
+      setHasLights(ApiService.getLightGroups(raw).length > 0);
+      setLoading(false);
+    });
   }, []);
+
+  const activeAirconId = aircons.find(a => a.id === selectedAirconId)?.id ?? aircons[0]?.id ?? null;
+  const currentTab = activeTab === 'lights' && !hasLights ? 'aircon' : activeTab;
+  const showUnitSelector = aircons.length > 1 && ['aircon', 'zones', 'setup'].includes(currentTab);
+  const iconPosition = isPhone ? 'top' : 'start';
+  const tabSx = isPhone ? { minHeight: 64, minWidth: 0, px: 0.5, fontSize: '0.75rem' } : undefined;
 
   return (
     <ThemeProvider theme={theme}>
@@ -138,7 +133,7 @@ function App() {
           {/* Navigation Tabs */}
           <Paper sx={{ borderRadius: '8px 8px 0 0' }}>
             <Tabs 
-              value={activeTab} 
+              value={currentTab} 
               onChange={handleTabChange} 
               variant="fullWidth"
               sx={{
@@ -148,25 +143,49 @@ function App() {
               }}
             >
               <Tab 
-                label="Air Conditioner" 
+                value="aircon"
+                label={isPhone ? 'Aircon' : 'Air Conditioner'} 
                 icon={<AcUnitIcon />} 
-                iconPosition="start"
-                {...a11yProps(0)} 
+                iconPosition={iconPosition}
+                sx={tabSx}
+                {...a11yProps('aircon')} 
               />
               <Tab 
+                value="zones"
                 label="Zones" 
                 icon={<DashboardIcon />} 
-                iconPosition="start"
-                {...a11yProps(1)} 
+                iconPosition={iconPosition}
+                sx={tabSx}
+                {...a11yProps('zones')} 
               />
+              {hasLights && (
+                <Tab
+                  value="lights"
+                  label="Lights"
+                  icon={<LightbulbIcon />}
+                  iconPosition={iconPosition}
+                  sx={tabSx}
+                  {...a11yProps('lights')}
+                />
+              )}
               <Tab
+                value="setup"
                 label="Setup"
                 icon={<SettingsIcon />}
-                iconPosition="start"
-                {...a11yProps(2)}
+                iconPosition={iconPosition}
+                sx={tabSx}
+                {...a11yProps('setup')}
               />
             </Tabs>
           </Paper>
+
+          {showUnitSelector && (
+            <AirconUnitSelector
+              aircons={aircons}
+              selectedId={activeAirconId}
+              onSelect={setSelectedAirconId}
+            />
+          )}
           
           {/* Loading State */}
           {loading ? (
@@ -175,17 +194,23 @@ function App() {
             </Box>
           ) : (
             <>
-              {/* Tab Panels */}
-              <TabPanel value={activeTab} index={0}>
-                <AirconFragment />
+              {/* Tab Panels (keyed by aircon so state resets when switching units) */}
+              <TabPanel value={currentTab} index="aircon">
+                <AirconFragment key={activeAirconId} airconId={activeAirconId} />
               </TabPanel>
               
-              <TabPanel value={activeTab} index={1}>
-                <ZoneFragment />
+              <TabPanel value={currentTab} index="zones">
+                <ZoneFragment key={activeAirconId} airconId={activeAirconId} />
               </TabPanel>
 
-              <TabPanel value={activeTab} index={2}>
-                <SetupFragment onNavigate={handleNavigate} />
+              {hasLights && (
+                <TabPanel value={currentTab} index="lights">
+                  <LightsFragment />
+                </TabPanel>
+              )}
+
+              <TabPanel value={currentTab} index="setup">
+                <SetupFragment key={activeAirconId} airconId={activeAirconId} onNavigate={handleNavigate} />
               </TabPanel>
             </>
           )}
