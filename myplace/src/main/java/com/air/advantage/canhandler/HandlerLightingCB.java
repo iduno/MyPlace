@@ -4,6 +4,7 @@ import org.jboss.logging.Logger;
 
 import com.air.advantage.aaservice.data.DataLight;
 import com.air.advantage.aaservice.data.DataLight.LightState;
+import com.air.advantage.aaservice.data.DataLight.ModuleType;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageLighting;
@@ -113,9 +114,9 @@ public class HandlerLightingCB extends Handler {
                 // Compose status message for this light
                 int roomExists = channelMask;
                 int validRooms = channelMask;
-                int relayRooms = ("relay".equals(light.deviceType)) ? channelMask : 0;
-                boolean isRM2 = "RM2".equals(light.moduleType) || "RM".equals(light.moduleType);
-                String moduleType = (light.moduleType != null) ? light.moduleType : "LM";
+                int relayRooms = Boolean.TRUE.equals(light.relay) ? channelMask : 0;
+                boolean isRM2 = ModuleType.RM2.equals(light.moduleType) || ModuleType.RM.equals(light.moduleType);
+                ModuleType moduleType = (light.moduleType != null) ? light.moduleType : ModuleType.LM;
 
                 CANMessageLighting02LmStatusMessage statusMsg = new CANMessageLighting02LmStatusMessage();
                 statusMsg.setUid(uid);
@@ -137,7 +138,7 @@ public class HandlerLightingCB extends Handler {
                 eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(statusMsg));
 
                 // Send JZ1 (Control Message) for this light if LM
-                if ("LM".equals(moduleType)) {
+                if (moduleType == ModuleType.LM) {
                     CANMessageLighting01LmControlMessage controlMsg = new CANMessageLighting01LmControlMessage();
                     controlMsg.setUid(uid);
                     controlMsg.setDeviceType(DEVICE_TYPE);
@@ -191,9 +192,9 @@ public class HandlerLightingCB extends Handler {
                     addDeviceMsg.setMajorFWVersion(2);
                     addDeviceMsg.setMinorFWVersion(1);
                     int rm2AddDeviceInfo = 0;
-                    if ("DM".equals(moduleType)) {
+                    if (moduleType == ModuleType.DM) {
                         rm2AddDeviceInfo = 0x80;
-                    } else if ("GDM".equals(moduleType)) {
+                    } else if (moduleType == ModuleType.GDM) {
                         rm2AddDeviceInfo = 0x10;
                     }
                     addDeviceMsg.setInfoByte(rm2AddDeviceInfo);

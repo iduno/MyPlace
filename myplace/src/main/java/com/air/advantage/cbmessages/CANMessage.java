@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = CANMessageLighting00LmStatusMessageOld.class, name = "CANMessageLighting00LmStatusMessageOld"),
     @JsonSubTypes.Type(value = CANMessageLighting01LmControlMessage.class, name = "CANMessageLighting01LmControlMessage"),
     @JsonSubTypes.Type(value = CANMessageLighting02LmStatusMessage.class, name = "CANMessageLighting02LmStatusMessage"),
+    @JsonSubTypes.Type(value = CANMessageLighting03LmAck.class, name = "CANMessageLighting03LmAck"),
     @JsonSubTypes.Type(value = CANMessageLighting14DmControlMessage.class, name = "CANMessageLighting14DmControlMessage"),
     @JsonSubTypes.Type(value = CANMessageLighting15Rm2ControlMessage.class, name = "CANMessageLighting15Rm2ControlMessage"),
     @JsonSubTypes.Type(value = CANMessageLighting16Rm2StatusMessage.class, name = "CANMessageLighting16Rm2StatusMessage"),

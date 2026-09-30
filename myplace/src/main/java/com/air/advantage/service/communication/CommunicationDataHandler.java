@@ -61,6 +61,7 @@ public class CommunicationDataHandler {
 
     
     private int reconnectAttempts = 0;
+    private long reconnectInterval = 30000;
     private String currentEndpoint;
     private Long pingTimerId;
     private boolean sendAck = false;
@@ -69,6 +70,8 @@ public class CommunicationDataHandler {
         LOG.info("Initializing Communication Data Handler");
         
         sendAck = false;
+
+        reconnectInterval = config.communication().reconnectInterval();
         
         // If auto-connect is enabled, initiate the connection
         if (config.communication().autoconnect()) {
@@ -163,10 +166,10 @@ public class CommunicationDataHandler {
     }
     
     private void startReconnectionTimer() {
-        LOG.info("Starting reconnection timer with interval: " + config.communication().reconnectInterval() + "ms");
+        LOG.info("Starting reconnection timer with interval: " + reconnectInterval + "ms");
         stopReconnectionTimer(); // Stop any existing timer
         
-        reconnectTimerId = vertx.setTimer(config.communication().reconnectInterval(), id -> attemptReconnection());
+        reconnectTimerId = vertx.setTimer(reconnectInterval, id -> attemptReconnection());
     }
     
     private void attemptReconnection() {
@@ -196,11 +199,11 @@ public class CommunicationDataHandler {
                 isReconnecting.set(false);
             } else {
                 LOG.warn("Reconnection failed, scheduling next attempt");
-                reconnectTimerId = vertx.setTimer(config.communication().reconnectInterval(), id -> attemptReconnection());
+                reconnectTimerId = vertx.setTimer(reconnectInterval, id -> attemptReconnection());
             }
         } catch (Exception e) {
             LOG.error("Error during reconnection attempt: " + e.getMessage(), e);
-            reconnectTimerId = vertx.setTimer(config.communication().reconnectInterval(), id -> attemptReconnection());
+            reconnectTimerId = vertx.setTimer(reconnectInterval, id -> attemptReconnection());
         }
     }
     
