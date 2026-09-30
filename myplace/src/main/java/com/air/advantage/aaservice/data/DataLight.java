@@ -69,6 +69,18 @@ public class DataLight {
     @JsonView({JsonExporterViews.Export.class})
     public Integer dimOffset;
 
+    @JsonProperty("lowBattery")
+    @JsonView(JsonExporterViews.Export.class)
+    public Boolean lowBattery;
+
+    @JsonProperty("calibrated")
+    @JsonView(JsonExporterViews.Export.class)
+    public Boolean calibrated;
+
+    @JsonProperty("poll")
+    @JsonView(JsonExporterViews.Export.class)
+    public Boolean poll;
+
     public enum LightState {
         off(0),
         on(1);
@@ -93,5 +105,8 @@ public class DataLight {
         if (other.moduleType != null) this.moduleType = other.moduleType;
         if (other.deviceType != null) this.deviceType = other.deviceType;
         if (other.state != null) this.state = other.state;
+        if (other.lowBattery != null) this.lowBattery = other.lowBattery;
+        if (other.calibrated != null) this.calibrated = other.calibrated;
+        if (other.poll != null) this.poll = other.poll;
     }
 }

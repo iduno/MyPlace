@@ -2,9 +2,9 @@ package com.air.advantage.canhandler;
 
 import org.jboss.logging.Logger;
 
+import com.air.advantage.aaservice.data.DataGroup;
 import com.air.advantage.aaservice.data.DataLight;
 import com.air.advantage.aaservice.data.DataLight.LightState;
-import com.air.advantage.aaservice.data.DataGroup;
 import com.air.advantage.aaservice.data.MasterData;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
@@ -12,9 +12,11 @@ import com.air.advantage.cbmessages.CANMessageLighting;
 import com.air.advantage.cbmessages.CANMessageLighting00LmStatusMessageOld;
 import com.air.advantage.cbmessages.CANMessageLighting01LmControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting02LmStatusMessage;
+import com.air.advantage.cbmessages.CANMessageLighting14DmControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting15Rm2ControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting16Rm2StatusMessage;
 import com.air.advantage.cbmessages.CANMessageLighting17Rm2AddDevice;
+import com.air.advantage.cbmessages.CANMessageLighting1dRm2ControlMessage;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
 
@@ -55,12 +57,16 @@ public class HandlerLighting extends Handler {
             process((CANMessageLighting01LmControlMessage) message);
         } else if (message instanceof CANMessageLighting02LmStatusMessage) {
             process((CANMessageLighting02LmStatusMessage) message);
+        } else if (message instanceof CANMessageLighting14DmControlMessage) {
+            process((CANMessageLighting14DmControlMessage) message);
         } else if (message instanceof CANMessageLighting15Rm2ControlMessage) {
             process((CANMessageLighting15Rm2ControlMessage) message);
         } else if (message instanceof CANMessageLighting16Rm2StatusMessage) {
             process((CANMessageLighting16Rm2StatusMessage) message);
         } else if (message instanceof CANMessageLighting17Rm2AddDevice) {
             process((CANMessageLighting17Rm2AddDevice) message);
+        } else if (message instanceof CANMessageLighting1dRm2ControlMessage) {
+            process((CANMessageLighting1dRm2ControlMessage) message);
         } else if (message instanceof CANMessageLighting) {
             processLighting((CANMessageLighting) message);
         }
@@ -150,6 +156,46 @@ public class HandlerLighting extends Handler {
                 " state - " + lightState + 
                 " brightness - " + brightnessLevel);
     }
+
+    private void process(CANMessageLighting14DmControlMessage msg) {
+        String uid = preProcess(msg);
+        if (uid == null) return;
+
+        int roomNumber = msg.roomNumber;
+        if (roomNumber < 1 || roomNumber > 6) {
+            LOG.debug("Rejected DM control message - invalid room number: " + roomNumber);
+            return;
+        }
+
+        String lightId = uid + String.format("%02d", roomNumber);
+        DataLight light = getOrCreateLight(lightId);
+        light.state = msg.lightState ? LightState.on : LightState.off;
+        light.value = Math.min(100, Math.max(0, msg.dimLevel));
+        light.moduleType = "DM";
+        light.deviceType = "dimmer";
+        boolean isRF = isRFModule(msg.getSystemType());
+        light.nextPollTime = System.currentTimeMillis() +
+            ((isRF ? RF_EXPIRY_TIME_SECONDS : NON_RF_EXPIRY_TIME_SECONDS) * 1000);
+    }
+
+    private void process(CANMessageLighting1dRm2ControlMessage msg) {
+        String uid = preProcess(msg);
+        if (uid == null) return;
+
+        int roomNumber = msg.roomNumber;
+        if (roomNumber < 1 || roomNumber > 6) {
+            LOG.debug("Rejected RM2 brightness message - invalid room number: " + roomNumber);
+            return;
+        }
+
+        String lightId = uid + String.format("%02d", roomNumber);
+        DataLight light = getOrCreateLight(lightId);
+        light.value = Math.min(100, Math.max(0, msg.dimLevel));
+        light.state = light.value > 0 ? LightState.on : LightState.off;
+        light.moduleType = "RM2";
+        light.nextPollTime = System.currentTimeMillis() +
+            ((isRFModule(msg.getSystemType()) ? RF_EXPIRY_TIME_SECONDS : NON_RF_EXPIRY_TIME_SECONDS) * 1000);
+    }
     
     // JZ2 - LM Status Message (setup message with room configuration)
     private void process(CANMessageLighting02LmStatusMessage msg) {
@@ -161,6 +207,7 @@ public class HandlerLighting extends Handler {
             ((isRF ? RF_EXPIRY_TIME_SECONDS : NON_RF_EXPIRY_TIME_SECONDS) * 1000);
         
         int version = msg.getMajorFWVersion();
+        String moduleType = (msg.getInfoByte() & 0x80) != 0 ? "RM2" : "LM";
         
         LOG.debug("Valid LM setup message (JZ2). UID - " + uid + 
                 " version - " + version + "." + msg.getMinorFWVersion());
@@ -171,10 +218,11 @@ public class HandlerLighting extends Handler {
                 int roomNumber = i + 1;
                 String lightId = uid + String.format("%02d", roomNumber);
                 boolean isRelay = msg.getRelayRoom(i);
-                registerOrUpdateLight(myMasterData.getMasterData(), lightId, isRelay, "LM", isRF);
+                registerOrUpdateLight(myMasterData.getMasterData(), lightId, isRelay, moduleType, isRF);
                 // Optionally set deviceType and state/value as before
                 DataLight light = getOrCreateLight(lightId);
                 light.deviceType = isRelay ? "relay" : "dimmer";
+                light.moduleType = moduleType;
                 light.nextPollTime = expiryTime;
                 if (light.state == null) {
                     light.state = LightState.off;
@@ -220,28 +268,29 @@ public class HandlerLighting extends Handler {
                 blind.deviceType = "blind";
                 switch (state) {
                     case 0:
-                        blind.state = "down";
+                        blind.state = LightState.off;
                         blind.value = 0;
                         break;
                     case 1:
-                        blind.state = "up";
+                        blind.state = LightState.on;
                         blind.value = 100;
                         break;
                     case 2:
-                        blind.state = "stop";
+                        // Keep the last known state and position.
                         break;
                     case 3:
-                        blind.state = "in-progress-down";
+                        blind.state = LightState.off;
                         blind.value = 25;
                         break;
                     case 4:
-                        blind.state = "in-progress-up";
+                        blind.state = LightState.on;
                         blind.value = 75;
                         break;
                     default:
-                        blind.state = "unknown";
+                        LOG.debug("Unknown RM2 blind state: " + state + " for UID " + uid + ", channel " + roomNumber);
                         break;
                 }
+                updateRm2Status(blind, msg);
                 LOG.debug("RM2 blind logic: UID=" + uid + ", channel=" + roomNumber + ", state=" + state);
                 break;
             case 5: // Light (dimmable)
@@ -256,6 +305,7 @@ public class HandlerLighting extends Handler {
                     light.value = 0;
                 }
                 light.dimOffset = dimOffset;
+                updateRm2Status(light, msg);
                 LOG.debug("RM2 dimmer logic: UID=" + uid + ", channel=" + roomNumber + ", state=" + state + ", dimLevel=" + dimLevel + ", dimOffset=" + dimOffset);
                 break;
             case 9: // Fan
@@ -266,6 +316,7 @@ public class HandlerLighting extends Handler {
                 fan.state = (state == 1) ? LightState.on : LightState.off;
                 fan.value = (state == 1) ? dimLevel : 0;
                 fan.dimOffset = dimOffset;
+                updateRm2Status(fan, msg);
                 LOG.debug("RM2 fan logic: UID=" + uid + ", channel=" + roomNumber + ", state=" + state + ", dimLevel=" + dimLevel + ", dimOffset=" + dimOffset);
                 break;
             case 10: // Generic thing (button, etc.)
@@ -287,6 +338,7 @@ public class HandlerLighting extends Handler {
                 } else {
                     LOG.debug("Unknown RM2 state: " + state + " for UID " + uid + ", channel " + roomNumber);
                 }
+                updateRm2Status(defLight, msg);
                 break;
         }
 
@@ -302,6 +354,12 @@ public class HandlerLighting extends Handler {
                 ", lowBattery: " + lowBattery +
                 ", isCalibrated: " + isCalibrated +
                 ", isPoll: " + isPoll);
+    }
+
+    private void updateRm2Status(DataLight light, CANMessageLighting15Rm2ControlMessage msg) {
+        light.lowBattery = msg.isLowBattery();
+        light.calibrated = msg.isCalibrated();
+        light.poll = msg.isPoll();
     }
     
     // JZ16 - RM2 Status Message (Module DIP configuration)
@@ -353,6 +411,13 @@ public class HandlerLighting extends Handler {
                 }
                 LOG.debug("Enabled RM2 channel " + roomNumber + " dipState: " + dipState + " deviceType: " + deviceType);
             } else {
+                DataLight light = MyMasterData.masterData.myLights.lights.get(lightId);
+                if (light != null) {
+                    light.deviceType = "disabled";
+                    light.moduleType = "RM2";
+                    light.thisIsRFDevice = isRF;
+                    light.nextPollTime = expiryTime;
+                }
                 LOG.debug("Disabled RM2 channel " + roomNumber + " dipState: " + dipState);
             }
         }
@@ -379,6 +444,15 @@ public class HandlerLighting extends Handler {
             moduleType = "GDM"; // Bit 4 set = Garage Door Module
         } else {
             moduleType = "RM2";
+        }
+
+        if (MyMasterData.masterData != null && MyMasterData.masterData.myLights != null &&
+            MyMasterData.masterData.myLights.lights != null) {
+            for (DataLight light : MyMasterData.masterData.myLights.lights.values()) {
+                if (light != null && light.id != null && light.id.startsWith(uid)) {
+                    light.moduleType = moduleType;
+                }
+            }
         }
         
         LOG.debug("Module type: " + moduleType + " firmware: " + majorVersion + "." + minorVersion);

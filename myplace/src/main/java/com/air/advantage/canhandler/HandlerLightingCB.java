@@ -106,11 +106,14 @@ public class HandlerLightingCB extends Handler {
                 } catch (Exception e) {
                     // fallback to 1 if parse fails
                 }
+                if (roomNumber < 1 || roomNumber > 6) continue;
+                int channelIndex = roomNumber - 1;
+                int channelMask = 1 << channelIndex;
 
                 // Compose status message for this light
-                int roomExists = 1;
-                int validRooms = 1;
-                int relayRooms = ("relay".equals(light.deviceType)) ? 1 : 0;
+                int roomExists = channelMask;
+                int validRooms = channelMask;
+                int relayRooms = ("relay".equals(light.deviceType)) ? channelMask : 0;
                 boolean isRM2 = "RM2".equals(light.moduleType) || "RM".equals(light.moduleType);
                 String moduleType = (light.moduleType != null) ? light.moduleType : "LM";
 
@@ -159,16 +162,16 @@ public class HandlerLightingCB extends Handler {
                     dipMsg.setUid(uid);
                     dipMsg.setDeviceType(DEVICE_TYPE);
                     dipMsg.setSystemType(SYSTEM_TYPE);
-                    int rm2InfoByte = 1; // Only this channel enabled
+                    int rm2InfoByte = channelMask;
                     int[] dipStates = new int[6];
                     for (int d = 0; d < 6; d++) dipStates[d] = 10; // default disabled
                     // Set DIP state for this channel
                     switch (light.deviceType) {
-                        case "blind": dipStates[0] = 1; break;
-                        case "relay": dipStates[0] = 8; break;
-                        case "dimmer": dipStates[0] = 9; break;
-                        case "disabled": dipStates[0] = 10; break;
-                        default: dipStates[0] = 8;
+                        case "blind": dipStates[channelIndex] = 1; break;
+                        case "relay": dipStates[channelIndex] = 8; break;
+                        case "dimmer": dipStates[channelIndex] = 9; break;
+                        case "disabled": dipStates[channelIndex] = 10; break;
+                        default: dipStates[channelIndex] = 8;
                     }
                     dipMsg.setDip1State(dipStates[0]);
                     dipMsg.setDip2State(dipStates[1]);
@@ -203,7 +206,7 @@ public class HandlerLightingCB extends Handler {
                     rm2ControlMsg.setDeviceType(DEVICE_TYPE);
                     rm2ControlMsg.setSystemType(SYSTEM_TYPE);
                     rm2ControlMsg.setRoomNumber(roomNumber);
-                    if ("on".equals(light.state)) {
+                    if (light.state == LightState.on) {
                         rm2ControlMsg.setLightState(1);
                     } else {
                         rm2ControlMsg.setLightState(0);
