@@ -7,6 +7,7 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
     public int validRooms;
     public int relayRooms;
     public int infoByte;
+    public Boolean isRM;
 
     public CANMessageLighting02LmStatusMessage() {
         super();
@@ -17,6 +18,7 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
         this.validRooms = 0;
         this.relayRooms = 0;
         this.infoByte = 0;
+        this.isRM = false;
     }
 
     public static CANMessage deserialize(byte[] data, int offset) {
@@ -29,6 +31,7 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
             msg.validRooms = ByteArray.parseHexValue(offset + 6, data);
             msg.relayRooms = ByteArray.parseHexValue(offset + 8, data);
             msg.infoByte = ByteArray.parseHexValue(offset + 10, data);
+            msg.isRM = (msg.infoByte & 0x01) == 1;
         }
         return msg;
     }
@@ -142,6 +145,18 @@ public class CANMessageLighting02LmStatusMessage extends CANMessageLighting {
     
     public void setInfoByte(int infoByte) {
         this.infoByte = infoByte;
+        this.isRM = (infoByte & 0x01) == 1;
+    }
+
+    public void setIsRM(Boolean isRM) {
+        this.isRM = isRM;
+        if (isRM != null) {
+            this.infoByte = (isRM ? (infoByte | 0x01) : (infoByte & ~0x01));
+        }
+    }
+
+    public Boolean getIsRM() {
+        return isRM;
     }
 
     @Override

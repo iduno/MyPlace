@@ -49,6 +49,10 @@ public class DataMyLights {
     @JsonView({JsonExporterViews.Export.class,JsonExporterViews.SaveThis.class})
     public ArrayList<DataMyLights.BackupLight> backupLights;
 
+    @JsonProperty("system")
+    @JsonView({JsonExporterViews.Export.class})
+    public DataLightsSystem system;
+
     public static final String DEFAULT_GROUP = "g0";
     public static final int MAX_NO_OF_ALARMS = 4;
 

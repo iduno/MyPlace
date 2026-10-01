@@ -62,33 +62,55 @@ public class WebServiceResource {
 
     @POST
     @Path("/changeName")
-    public Response changeNamePost(String body) {
-        return Response.ok("{\"ack\":true,\"request\":\"changeName\"}", MediaType.APPLICATION_JSON).build();
+    public Response changeNamePost(DataLight body) {
+        // HandlerJson routes changeName to the light/thing name handlers.
+        try {
+            airconUpdateService.applyLightUpdate(body);
+            return Response.ok("{\"ack\":true,\"request\":\"changeName\"}", MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"changeName\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
     @Path("/changeName")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response changeNameGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"changeName\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return changeNamePost(objectMapper.readValue(bodyJson, DataLight.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"changeName\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
     @Path("/setSystemData")
-    public Response setSystemDataPost(String body) {
-        return Response.ok("{\"ack\":true,\"request\":\"setSystemData\"}", MediaType.APPLICATION_JSON).build();
+    public Response setSystemDataPost(com.air.advantage.aaservice.data.DataSystem body) {
+        // The legacy endpoint is distinct from setMySystem; its command-specific
+        // HandlerAircon implementation is not present in the Quarkus port yet.
+        try {
+            return setMySystemPost(body);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setSystemData\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
     @Path("/setSystemData")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setSystemDataGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setSystemData\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return setSystemDataPost(objectMapper.readValue(bodyJson, com.air.advantage.aaservice.data.DataSystem.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setSystemData\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
     @Path("/setClock")
     public Response setClockPost(String body) {
+        // HandlerAircon.setClock is not available in the current port.
+        // HandlerJson forwards setClock to HandlerAircon; no clock model exists in this port yet.
         return Response.ok("{\"ack\":true,\"request\":\"setClock\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -96,12 +118,14 @@ public class WebServiceResource {
     @Path("/setClock")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setClockGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setClock\"}", MediaType.APPLICATION_JSON).build();
+        return setClockPost(bodyJson);
     }
 
     @POST
     @Path("/setZoneData")
     public Response setZoneDataPost(String body) {
+        // HandlerAircon.setZoneData is not available in the current port.
+        // HandlerJson forwards setZoneData to HandlerAircon; use setAircon for aggregate zone updates.
         return Response.ok("{\"ack\":true,\"request\":\"setZoneData\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -109,12 +133,14 @@ public class WebServiceResource {
     @Path("/setZoneData")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setZoneDataGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setZoneData\"}", MediaType.APPLICATION_JSON).build();
+        return setZoneDataPost(bodyJson);
     }
 
     @POST
     @Path("/setZoneTimer")
     public Response setZoneTimerPost(String body) {
+        // HandlerAircon.setZoneTimer is not available in the current port.
+        // HandlerJson forwards setZoneTimer to HandlerAircon; no timer model exists in this port yet.
         return Response.ok("{\"ack\":true,\"request\":\"setZoneTimer\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -122,12 +148,14 @@ public class WebServiceResource {
     @Path("/setZoneTimer")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setZoneTimerGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setZoneTimer\"}", MediaType.APPLICATION_JSON).build();
+        return setZoneTimerPost(bodyJson);
     }
 
     @POST
     @Path("/setScheduleData")
     public Response setScheduleDataPost(String body) {
+        // HandlerAircon.setScheduleData is not available in the current port.
+        // HandlerJson forwards setScheduleData to HandlerAircon; no schedule model exists in this port yet.
         return Response.ok("{\"ack\":true,\"request\":\"setScheduleData\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -135,7 +163,7 @@ public class WebServiceResource {
     @Path("/setScheduleData")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setScheduleDataGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setScheduleData\"}", MediaType.APPLICATION_JSON).build();
+        return setScheduleDataPost(bodyJson);
     }
 
     @POST
@@ -162,28 +190,49 @@ public class WebServiceResource {
 
     @POST
     @Path("/setLightName")
-    public Response setLightNamePost(String body) {
-        return Response.ok("{\"ack\":true,\"request\":\"setLightName\"}", MediaType.APPLICATION_JSON).build();
+    public Response setLightNamePost(DataLight body) {
+        // HandlerJson sends setLightName to HandlerLights; DataLight carries the same id/name mutation.
+        try {
+            airconUpdateService.applyLightUpdate(body);
+            return Response.ok("{\"ack\":true,\"request\":\"setLightName\"}", MediaType.APPLICATION_JSON).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setLightName\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
     @Path("/setLightName")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setLightNameGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setLightName\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return setLightNamePost(objectMapper.readValue(bodyJson, DataLight.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setLightName\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
     @Path("/setLightToGroup")
-    public Response setLightToGroupPost(String body) {
-        return Response.ok("{\"ack\":true,\"request\":\"setLightToGroup\"}", MediaType.APPLICATION_JSON).build();
+    public Response setLightToGroupPost(DataGroup body) {
+        // The legacy HandlerLights group-membership command has no Quarkus
+        // equivalent yet; retain the endpoint and document the missing operation.
+        // HandlerJson routes setLightToGroup to HandlerLights.
+        try {
+            return setLightGroupPost(body);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setLightToGroup\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
     @Path("/setLightToGroup")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setLightToGroupGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setLightToGroup\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return setLightToGroupPost(objectMapper.readValue(bodyJson, DataGroup.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setLightToGroup\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
@@ -232,6 +281,11 @@ public class WebServiceResource {
             // Update the scene in masterData.myLights.scenes
             if (scene != null && scene.id != null) {
                 MyMasterData.masterData.myLights.scenes.put(scene.id, scene);
+                if (scene.lights != null) {
+                    for (com.air.advantage.aaservice.data.DataLight light : scene.lights.values()) {
+                        airconUpdateService.applyLightUpdate(light);
+                    }
+                }
                 return Response.ok("{\"ack\":true,\"request\":\"runLightScene\"}", MediaType.APPLICATION_JSON).build();
             } else {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -265,15 +319,24 @@ public class WebServiceResource {
 
     @POST
     @Path("/setLightGroupName")
-    public Response setLightGroupNamePost(String body) {
-        return Response.ok("{\"ack\":true,\"request\":\"setLightGroupName\"}", MediaType.APPLICATION_JSON).build();
+    public Response setLightGroupNamePost(DataGroup body) {
+        // HandlerJson.setLightGroupName updates the group name through HandlerLights.
+        try {
+            return setLightGroupPost(body);
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setLightGroupName\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @GET
     @Path("/setLightGroupName")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setLightGroupNameGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setLightGroupName\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return setLightGroupNamePost(objectMapper.readValue(bodyJson, DataGroup.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setLightGroupName\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
@@ -333,6 +396,8 @@ public class WebServiceResource {
     @POST
     @Path("/setSnapShot")
     public Response setSnapShotPost(String body) {
+        // HandlerJson forwards setSnapShot to HandlerAircon. Snapshot persistence
+        // is not represented by a command service in the current port.
         return Response.ok("{\"ack\":true,\"request\":\"setSnapShot\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -340,7 +405,7 @@ public class WebServiceResource {
     @Path("/setSnapShot")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setSnapShotGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setSnapShot\"}", MediaType.APPLICATION_JSON).build();
+        return setSnapShotPost(bodyJson);
     }
 
     @POST
@@ -377,6 +442,8 @@ public class WebServiceResource {
     @POST
     @Path("/setThing")
     public Response setThingPost(String body) {
+        // HandlerJson delegates setThing to HandlerLights. Thing data is not
+        // present in the current MasterData model, so retain the endpoint ack.
         return Response.ok("{\"ack\":true,\"request\":\"setThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -384,12 +451,14 @@ public class WebServiceResource {
     @Path("/setThing")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setThingGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setThing\"}", MediaType.APPLICATION_JSON).build();
+        return setThingPost(bodyJson);
     }
 
     @POST
     @Path("/setGroupThing")
     public Response setGroupThingPost(String body) {
+        // HandlerJson delegates setGroupThing to HandlerLights; no thing-group
+        // model exists in the current port.
         return Response.ok("{\"ack\":true,\"request\":\"setGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -397,12 +466,13 @@ public class WebServiceResource {
     @Path("/setGroupThing")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setGroupThingGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setGroupThing\"}", MediaType.APPLICATION_JSON).build();
+        return setGroupThingPost(bodyJson);
     }
 
     @POST
     @Path("/setGroupThingName")
     public Response setGroupThingNamePost(String body) {
+        // HandlerJson delegates setGroupThingName to HandlerLights; no thing-group model exists in the current port.
         return Response.ok("{\"ack\":true,\"request\":\"setGroupThingName\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -410,12 +480,13 @@ public class WebServiceResource {
     @Path("/setGroupThingName")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setGroupThingNameGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setGroupThingName\"}", MediaType.APPLICATION_JSON).build();
+        return setGroupThingNamePost(bodyJson);
     }
 
     @POST
     @Path("/setNewGroupThingName")
     public Response setNewGroupThingNamePost(String body) {
+        // HandlerJson delegates setNewGroupThingName to HandlerLights; no thing-group model exists in the current port.
         return Response.ok("{\"ack\":true,\"request\":\"setNewGroupThingName\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -423,12 +494,13 @@ public class WebServiceResource {
     @Path("/setNewGroupThingName")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setNewGroupThingNameGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setNewGroupThingName\"}", MediaType.APPLICATION_JSON).build();
+        return setNewGroupThingNamePost(bodyJson);
     }
 
     @POST
     @Path("/setThingToGroupThing")
     public Response setThingToGroupThingPost(String body) {
+        // HandlerJson delegates setThingToGroupThing to HandlerLights; no thing model exists in the current port.
         return Response.ok("{\"ack\":true,\"request\":\"setThingToGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -436,12 +508,13 @@ public class WebServiceResource {
     @Path("/setThingToGroupThing")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setThingToGroupThingGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setThingToGroupThing\"}", MediaType.APPLICATION_JSON).build();
+        return setThingToGroupThingPost(bodyJson);
     }
 
     @POST
     @Path("/setThingToNewGroupThing")
     public Response setThingToNewGroupThingPost(String body) {
+        // HandlerJson delegates setThingToNewGroupThing to HandlerLights; no thing model exists in the current port.
         return Response.ok("{\"ack\":true,\"request\":\"setThingToNewGroupThing\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -449,12 +522,27 @@ public class WebServiceResource {
     @Path("/setThingToNewGroupThing")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setThingToNewGroupThingGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setThingToNewGroupThing\"}", MediaType.APPLICATION_JSON).build();
+        return setThingToNewGroupThingPost(bodyJson);
     }
 
     @POST
     @Path("/runScene")
-    public Response runScenePost(String body) {
+    public Response runScenePost(com.air.advantage.aaservice.data.DataScene body) {
+        // HandlerJson.runScene invokes HandlerLights. Store the supplied scene
+        // in the same scene collection used by setLightScene.
+        try {
+            com.air.advantage.aaservice.data.DataScene scene = body;
+            if (scene != null && scene.id != null) {
+                MyMasterData.masterData.myLights.scenes.put(scene.id, scene);
+                if (scene.lights != null) {
+                    for (com.air.advantage.aaservice.data.DataLight light : scene.lights.values()) {
+                        airconUpdateService.applyLightUpdate(light);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"runScene\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
         return Response.ok("{\"ack\":true,\"request\":\"runScene\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -462,12 +550,25 @@ public class WebServiceResource {
     @Path("/runScene")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response runSceneGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"runScene\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return runScenePost(objectMapper.readValue(bodyJson, com.air.advantage.aaservice.data.DataScene.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"runScene\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
     @Path("/setScene")
-    public Response setScenePost(String body) {
+    public Response setScenePost(com.air.advantage.aaservice.data.DataScene body) {
+        // HandlerJson.setScene persists the scene through HandlerLights.
+        try {
+            com.air.advantage.aaservice.data.DataScene scene = body;
+            if (scene != null && scene.id != null) {
+                MyMasterData.masterData.myLights.scenes.put(scene.id, scene);
+            }
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setScene\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
         return Response.ok("{\"ack\":true,\"request\":\"setScene\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -475,12 +576,18 @@ public class WebServiceResource {
     @Path("/setScene")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setSceneGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setScene\"}", MediaType.APPLICATION_JSON).build();
+        try {
+            return setScenePost(objectMapper.readValue(bodyJson, com.air.advantage.aaservice.data.DataScene.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("{\"ack\":false,\"request\":\"setScene\",\"error\":\"" + e.getMessage() + "\"}").type(MediaType.APPLICATION_JSON).build();
+        }
     }
 
     @POST
     @Path("/setSensor")
     public Response setSensorPost(String body) {
+        // HandlerJson parses DataSensor and delegates to HandlerHue. The
+        // current port has no DataSensor/HandlerHue equivalent.
         return Response.ok("{\"ack\":true,\"request\":\"setSensor\"}", MediaType.APPLICATION_JSON).build();
     }
 
@@ -488,14 +595,34 @@ public class WebServiceResource {
     @Path("/setSensor")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setSensorGet(@QueryParam("json") String bodyJson) {
-        return Response.ok("{\"ack\":true,\"request\":\"setSensor\"}", MediaType.APPLICATION_JSON).build();
+        return setSensorPost(bodyJson);
     }
 
     @POST
     @Path("/setBackupDataToRestore")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response setBackupDataToRestorePost(MasterData masterData) {
+        // HandlerJson validates and applies the restored master data. MasterData.copyFrom
+        // preserves the in-memory instance while retaining the injected save lifecycle.
+        if (masterData != null) {
+            MyMasterData.masterData.copyFrom(masterData);
+            myMasterData.scheduleSave();
+        }
         return Response.ok("{\"ack\":true,\"request\":\"setBackupDataToRestore\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/setBackupDataToRestore")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setBackupDataToRestoreGet(@QueryParam("json") String masterDataJson) {
+        try {
+            return setBackupDataToRestorePost(objectMapper.readValue(masterDataJson, MasterData.class));
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"ack\":false,\"request\":\"setBackupDataToRestore\",\"error\":\"" + e.getMessage() + "\"}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
     }
 
     /*
@@ -550,5 +677,12 @@ public class WebServiceResource {
 
 
         return Response.ok("{\"ack\":true,\"request\":\"sendRawMessage\"}", MediaType.APPLICATION_JSON).build();
+    }
+
+    @GET
+    @Path("/sendRawMessage")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response sendRawMessageGet(@QueryParam("json") String message) {
+        return sendRawMessagePost(message);
     }
 }

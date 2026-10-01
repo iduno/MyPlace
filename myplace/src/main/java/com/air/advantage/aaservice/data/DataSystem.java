@@ -254,6 +254,10 @@ public class DataSystem {
     @JsonView({JsonExporterViews.Export.class})
     public String tspModel;
 
+    @JsonProperty("versions")
+    @JsonView({JsonExporterViews.Export.class})
+    public HashMap<String, DataModuleInfoSource> versions;
+
     /* JADX DEBUG: Don't trust debug lines info. Lines numbers was adjusted: min line is 1 */
     DataSystem() {
         this.allTspErrorCodes = new HashMap<>();
@@ -465,6 +469,12 @@ public class DataSystem {
             this.tspModel = dataSystem.tspModel;
             changed = true;
         }
+        if (dataSystem.versions != null) {
+            if (this.versions == null || !this.versions.equals(dataSystem.versions)) {
+                this.versions = new HashMap<>(dataSystem.versions);
+                changed = true;
+            }
+        }
 
         return changed;
     }
@@ -526,5 +536,6 @@ public class DataSystem {
         if (other.suburbTemp != null) this.suburbTemp = other.suburbTemp;
         if (other.tspIp != null) this.tspIp = other.tspIp;
         if (other.tspModel != null) this.tspModel = other.tspModel;
+        if (other.versions != null) this.versions = new HashMap<>(other.versions);
     }
 }

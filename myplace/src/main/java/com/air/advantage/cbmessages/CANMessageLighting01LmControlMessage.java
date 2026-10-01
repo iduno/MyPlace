@@ -59,6 +59,7 @@ public class CANMessageLighting01LmControlMessage extends CANMessageLighting {
 
     public CANMessageLighting01LmControlMessage() {
         super();
+        this.messageType = MessageType.LM_CONTROL_MESSAGE;
         this.roomNumber = 0;
         this.lightState = null;
         this.brightnessLevel = 0;
