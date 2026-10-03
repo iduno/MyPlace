@@ -18,11 +18,11 @@ public class CANMessageLighting14DmControlMessage extends CANMessageLighting {
     public static CANMessage deserialize(byte[] data, int offset) {
         CANMessageLighting14DmControlMessage msg = new CANMessageLighting14DmControlMessage();
         
-        if (data.length >= offset + 2) {
+        if (data.length >= offset + 4) {
             msg.roomNumber = ByteArray.parseHexValue(offset, data);
-            offset += 2;
-            msg.infoByte = ByteArray.parseHexValue(offset, data);
-            offset += 2;
+            msg.infoByte = ByteArray.parseHexValue(offset + 2, data);
+            msg.lightState = (msg.infoByte & 0x80) != 0;
+            msg.dimLevel = msg.infoByte & 0x7F;
         }
         return msg;
     }

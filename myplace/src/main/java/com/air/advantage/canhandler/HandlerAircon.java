@@ -92,6 +92,7 @@ public class HandlerAircon extends Handler {
     private void process(CANMessageAircon01ZoneInformation msg) {
         // Use DataAircon as the top-level reference
         DataAircon dataAircon = getOrCreateDataAircon(msg.getUid());
+        if (dataAircon == null) return;
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         String error = validateZoneMessage(msg, dataAirconInfo);
         if (!error.isEmpty()) {
@@ -120,6 +121,15 @@ public class HandlerAircon extends Handler {
                     DataZone newZone = new DataZone();
                     newZone.number = i;
                     newZone.name = "Zone " + i;
+                    newZone.type = DataZone.SENSOR_TYPE_NO_SENSOR;
+                    newZone.state = ZoneState.close;
+                    newZone.measuredTemp = 0.0f;
+                    newZone.setTemp = DataZone.DEFAULT_SETTEMP;
+                    newZone.value = 100;
+                    newZone.minDamper = DataZone.DEFAULT_MINDAMPER;
+                    newZone.maxDamper = DataZone.DEFAULT_MAXDAMPER;
+                    newZone.motion = DataZone.MOTION_STATE_NO_SENSOR;
+                    newZone.motionConfig = DataZone.DEFAULT_SETMOTIONCFG;
                     dataAircon.getZones().put(zoneKey, newZone);
                 }
             }
@@ -191,6 +201,7 @@ public class HandlerAircon extends Handler {
             return;
         }
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo dataAirconInfo = dataAircon.airconInfo;
         // Map fields from msg to dataAirconInfo
         if (msg.getUnitType() != null && msg.getUnitType() != UnitType.UNKNOWN) {
@@ -233,6 +244,7 @@ public class HandlerAircon extends Handler {
         if (uid == null || uid.isEmpty()) return;
         
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
         
         // Update expiry time
@@ -305,6 +317,7 @@ public class HandlerAircon extends Handler {
         if (uid == null || uid.isEmpty()) return;
         
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
         
         // Update expiry time
@@ -353,38 +366,46 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
         // Map fields
-        switch (msg.getSystemState()) {
-            case OFF -> info.state = DataAircon.SystemState.off;
-            case ON -> info.state = DataAircon.SystemState.on;
+        if (msg.getSystemState() != null) {
+            switch (msg.getSystemState()) {
+                case OFF -> info.state = DataAircon.SystemState.off;
+                case ON -> info.state = DataAircon.SystemState.on;
+            }
         }
-        switch (msg.getSystemMode()) {
-            
-            case COOL -> info.mode = DataAircon.AirconMode.cool;
-            case HEAT -> info.mode = DataAircon.AirconMode.heat;
-            case VENT -> info.mode = DataAircon.AirconMode.vent;
-            case AUTO -> info.mode = DataAircon.AirconMode.auto;
-            case DRY -> info.mode = DataAircon.AirconMode.dry;
-            case MYAUTO -> info.mode = DataAircon.AirconMode.myauto;
+        if (msg.getSystemMode() != null) {
+            switch (msg.getSystemMode()) {
+                case COOL -> info.mode = DataAircon.AirconMode.cool;
+                case HEAT -> info.mode = DataAircon.AirconMode.heat;
+                case VENT -> info.mode = DataAircon.AirconMode.vent;
+                case AUTO -> info.mode = DataAircon.AirconMode.auto;
+                case DRY -> info.mode = DataAircon.AirconMode.dry;
+                case MYAUTO -> info.mode = DataAircon.AirconMode.myauto;
+            }
         }
 
-        switch (msg.getSystemFan()) {
-            case OFF -> info.fan = DataAircon.FanStatus.off;
-            case LOW -> info.fan = DataAircon.FanStatus.low;
-            case MEDIUM -> info.fan = DataAircon.FanStatus.medium;
-            case HIGH -> info.fan = DataAircon.FanStatus.high;
-            case AUTO -> info.fan = DataAircon.FanStatus.auto;
-            case AUTOAA -> info.fan = DataAircon.FanStatus.autoAA;
+        if (msg.getSystemFan() != null) {
+            switch (msg.getSystemFan()) {
+                case OFF -> info.fan = DataAircon.FanStatus.off;
+                case LOW -> info.fan = DataAircon.FanStatus.low;
+                case MEDIUM -> info.fan = DataAircon.FanStatus.medium;
+                case HIGH -> info.fan = DataAircon.FanStatus.high;
+                case AUTO -> info.fan = DataAircon.FanStatus.auto;
+                case AUTOAA -> info.fan = DataAircon.FanStatus.autoAA;
+            }
         }
 
         info.setTemp = msg.getSetTemp(); // If you have a setTemp field
         info.myZone = msg.getMyZoneId(); // If you have a myZoneId field
 
-        switch (msg.getFreshAirStatus()) {
-            case NONE -> info.freshAirStatus = DataAircon.FreshAirStatus.none;
-            case OFF -> info.freshAirStatus = DataAircon.FreshAirStatus.off;
-            case ON -> info.freshAirStatus = DataAircon.FreshAirStatus.on;
+        if (msg.getFreshAirStatus() != null) {
+            switch (msg.getFreshAirStatus()) {
+                case NONE -> info.freshAirStatus = DataAircon.FreshAirStatus.none;
+                case OFF -> info.freshAirStatus = DataAircon.FreshAirStatus.off;
+                case ON -> info.freshAirStatus = DataAircon.FreshAirStatus.on;
+            }
         }
 
         info.rfSysID = msg.getRfSysId();
@@ -406,6 +427,7 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
         if (msg.getCbFwMajor() != 0 || msg.getCbFwMinor() != 0) {
             info.cbFWRevMajor = msg.getCbFwMajor();
@@ -427,6 +449,7 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
         
         if (msg.getCbFwMajor() != 0 || msg.getCbFwMinor() != 0) {
@@ -450,6 +473,7 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
         
         info.airconErrorCode = msg.getErrorCode();
@@ -464,16 +488,19 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
-        // Map action to activationCode if the field exists
         if (msg.getAction() == 1) {
-            // info.activationCode = DataAircon.ActivationCode.setNewCode; // Uncomment if field exists
+            info.setActivationCode = DataAircon.ActivationCode.setNewCode;
+            info.setActivationTime = msg.getActivationTimeDays();
         } else if (msg.getAction() == 2) {
-            // info.activationCode = DataAircon.ActivationCode.unlock; // Uncomment if field exists
+            info.setActivationCode = DataAircon.ActivationCode.unlock;
         }
-        // Map unlockCode and activationTimeDays if fields exist
-        // info.unlockCode = msg.getUnlockCode(); // Uncomment if field exists
-        // info.activationTimeDays = msg.getActivationTimeDays(); // Uncomment if field exists
+        if (msg.getAction() == 1 || msg.getAction() == 2) {
+            info.unlockCode = Integer.toString(msg.getUnlockCode());
+            info.activationCodeStatus = DataAircon.CodeStatus.sending;
+            info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
+        }
         LOG.debug("Processed ActivationCodeInformation for UID " + uid +
             ", action=" + msg.getAction() +
             ", unlockCode=" + msg.getUnlockCode() +
@@ -484,7 +511,9 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         // info.mid = msg.getMid(); // Uncomment if field exists
         LOG.debug("Processed MidInformation for UID " + uid);
     }
@@ -493,12 +522,16 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
-        // You may need to determine the correct zone for this sensor
-        // For now, just print the sensor UID and infoByte
-        // DataZone zone = dataAircon.getZones().get(...); // Find by sensor UID if possible
-        // zone.sensorUID = msg.getSensorUID(); // Uncomment if field exists
-        // zone.infoByte = msg.getInfoByte(); // Uncomment if field exists
-        // zone.sensorMajorRev = msg.getSensorMajorRev(); // Uncomment if field exists
+        if (dataAircon == null) return;
+        int zoneNumber = msg.getInfoByte();
+        if (zoneNumber < 1 || zoneNumber > 10) return;
+        DataZone zone = dataAircon.getZones().get(String.format("z%02d", zoneNumber));
+        if (zone == null) return;
+        if (msg.getSensorUID() != null && !msg.getSensorUID().isBlank()) {
+            zone.sensorUid = msg.getSensorUID();
+        }
+        zone.sensorMajorRev = msg.getSensorMajorRev();
+        dataAircon.airconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         LOG.debug("Processed ZoneSensorPairing for UID " + uid + ", sensorUID=" + msg.getSensorUID() + ", infoByte=" + msg.getInfoByte() + ", sensorMajorRev=" + msg.getSensorMajorRev());
     }
 
@@ -506,28 +539,27 @@ public class HandlerAircon extends Handler {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
         DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
         DataAirconInfo info = dataAircon.airconInfo;
-        // info.infoByte = msg.getInfoByte(); // Uncomment if field exists
+        info.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         LOG.debug("Processed CBInfoByte for UID " + uid + ", infoByte=" + msg.getInfoByte());
     }
 
     private void process(CANMessageAircon26RfDevicePairing msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
-        // You may want to update pairing info in DataAircon or DataZone
-        // info.pairingControl = msg.getPairingControl(); // Uncomment if field exists
-        // info.rfDeviceType = msg.getRfDeviceType(); // Uncomment if field exists
-        // info.channelNo = msg.getChannelNo(); // Uncomment if field exists
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
+        dataAircon.airconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         LOG.debug("Processed RfDevicePairing for UID " + uid + ", pairingControl=" + msg.getPairingControl() + ", rfDeviceType=" + msg.getRfDeviceType() + ", channelNo=" + msg.getChannelNo());
     }
 
     private void process(CANMessageAircon27RfDeviceCalibration msg) {
         String uid = msg.getUid();
         if (uid == null || uid.isEmpty()) return;
-        // You may want to update calibration info in DataAircon or DataZone
-        // info.calibrationControl = msg.getCalibrationControl(); // Uncomment if field exists
-        // info.channelNo = msg.getChannelNo(); // Uncomment if field exists
-        // info.upDownPosition = msg.getUpDownPosition(); // Uncomment if field exists
+        DataAircon dataAircon = getOrCreateDataAircon(uid);
+        if (dataAircon == null) return;
+        dataAircon.airconInfo.expireTime = System.currentTimeMillis() + (EXPIRY_TIME_SECONDS * 1000);
         LOG.debug("Processed RfDeviceCalibration for UID " + uid + ", calibrationControl=" + msg.getCalibrationControl() + ", channelNo=" + msg.getChannelNo() + ", upDownPosition=" + msg.getUpDownPosition());
     }
 }

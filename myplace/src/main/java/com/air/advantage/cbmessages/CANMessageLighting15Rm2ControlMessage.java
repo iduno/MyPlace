@@ -40,7 +40,7 @@ public class CANMessageLighting15Rm2ControlMessage extends CANMessageLighting {
             msg.statusState = ByteArray.parseHexValue(offset + 12, data);
             msg.lowBattery = ((msg.statusState & 0x80) == 0x80);
             msg.isCalibrated = ((msg.statusState & 0x40) == 0x40);
-            msg.isPoll = ((msg.statusState & 0x20) == 0x20);
+            msg.isPoll = ((msg.statusState & 0x02) == 0x02);
         }
         return msg;
     }
@@ -115,7 +115,7 @@ public class CANMessageLighting15Rm2ControlMessage extends CANMessageLighting {
         this.statusState = statusState;
         this.lowBattery = ((statusState & 0x80) == 0x80);
         this.isCalibrated = ((statusState & 0x40) == 0x40);
-        this.isPoll = ((statusState & 0x20) == 0x20);
+        this.isPoll = ((statusState & 0x02) == 0x02);
     }
 
     public void setLowBattery(boolean lowBattery) {
@@ -139,9 +139,9 @@ public class CANMessageLighting15Rm2ControlMessage extends CANMessageLighting {
     public void setPoll(boolean isPoll) {
         this.isPoll = isPoll;
         if (isPoll) {
-            this.statusState |= 0x20;
+            this.statusState |= 0x02;
         } else {
-            this.statusState &= ~0x20;
+            this.statusState &= ~0x02;
         }
     }
     

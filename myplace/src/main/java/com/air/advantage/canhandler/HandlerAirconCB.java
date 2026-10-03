@@ -502,7 +502,7 @@ public class HandlerAirconCB extends Handler {
             zoneSensorPairing.setSystemType(CANMessage.SystemType.CAN_AIRCON);
             zoneSensorPairing.setSensorUID(zone.sensorUid);
             zoneSensorPairing.setInfoByte(zone.number);
-            zoneSensorPairing.setSensorMajorRev(0);
+            zoneSensorPairing.setSensorMajorRev(zone.sensorMajorRev != null ? zone.sensorMajorRev : 0);
             eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(zoneSensorPairing));
 
             CANMessageAircon03ZoneState zoneState = new CANMessageAircon03ZoneState();

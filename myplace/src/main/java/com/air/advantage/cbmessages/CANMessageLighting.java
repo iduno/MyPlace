@@ -5,8 +5,9 @@ public class CANMessageLighting extends CANMessage{
 
     public enum MessageType {
         LM_SETUP_OLD("00"),
-        LM_UPDATE_BRIGHTNESS_LEVEL("01"),
+        LM_CONTROL_MESSAGE("01"),
         LM_SETUP("02"),
+        LM_ACK("03"),
         DM_UPDATE_BRIGHTNESS_LEVEL("14"),
         RM2_THING_STATE("15"),
         RM2_DIP_THING("16"),
@@ -51,11 +52,14 @@ public class CANMessageLighting extends CANMessage{
             case LM_SETUP_OLD:
                 message = CANMessageLighting00LmStatusMessageOld.deserialize(data, offset);
                 break;
-            case LM_UPDATE_BRIGHTNESS_LEVEL:
+            case LM_CONTROL_MESSAGE:
                 message = CANMessageLighting01LmControlMessage.deserialize(data, offset);
                 break;
             case LM_SETUP:
                 message = CANMessageLighting02LmStatusMessage.deserialize(data, offset);
+                break;
+            case LM_ACK:
+                message = CANMessageLighting03LmAck.deserialize(data, offset);
                 break;
             case DM_UPDATE_BRIGHTNESS_LEVEL:
                 message = CANMessageLighting14DmControlMessage.deserialize(data, offset);

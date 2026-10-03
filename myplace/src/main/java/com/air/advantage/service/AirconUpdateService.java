@@ -18,7 +18,10 @@ import com.air.advantage.cbmessages.CANMessageAircon05AirconState;
 import com.air.advantage.cbmessages.CANMessageAircon06CBStatus;
 import com.air.advantage.cbmessages.CANMessageAircon0aMidInformation;
 import com.air.advantage.cbmessages.CANMessageLighting00LmStatusMessageOld;
+import com.air.advantage.cbmessages.CANMessageLighting01LmControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting02LmStatusMessage;
+import com.air.advantage.cbmessages.CANMessageLighting14DmControlMessage;
+import com.air.advantage.cbmessages.CANMessageLighting1dRm2ControlMessage;
 import com.air.advantage.config.MyPlaceConfig;
 
 import io.quarkus.runtime.ShutdownEvent;
@@ -72,14 +75,12 @@ public class AirconUpdateService {
             eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(airconStatus));
 
             CANMessageLighting00LmStatusMessageOld lightingStatusOld = new CANMessageLighting00LmStatusMessageOld();
-            populateHeader(lightingStatusOld, "00000");
-            lightingStatusOld.setSystemType(CANMessage.SystemType.LIGHTING);
+            populateLightingHeader(lightingStatusOld, "00000");
             lightingStatusOld.setRoomExists(36);
             eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(lightingStatusOld));
 
             CANMessageLighting02LmStatusMessage lightingStatus = new CANMessageLighting02LmStatusMessage();
-            populateHeader(lightingStatus, "00000");
-            lightingStatus.setSystemType(CANMessage.SystemType.LIGHTING);
+            populateLightingHeader(lightingStatus, "00000");
             lightingStatus.setMajorFWVersion(36);
             eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(lightingStatus));
         }
@@ -398,14 +399,33 @@ public class AirconUpdateService {
             targetGroup.state = valueOr(targetGroup.state, group.state);
             targetGroup.value = valueOr(targetGroup.value, group.value);
         }
+        if (group.state != null || group.value != null) {
+            for (String lightId : targetGroup.lightsOrder) {
+                com.air.advantage.aaservice.data.DataLight light = MyMasterData.masterData.myLights.lights.get(lightId);
+                if (light == null) continue;
+                com.air.advantage.aaservice.data.DataLight update = new com.air.advantage.aaservice.data.DataLight();
+                update.id = lightId;
+                update.state = group.state;
+                update.value = group.value;
+                applyLightUpdate(update, true);
+            }
+        }
+        myMasterData.scheduleSave();
     }
 
     public void applyLightUpdate(com.air.advantage.aaservice.data.DataLight dataLight) {
+        applyLightUpdate(dataLight, false);
+    }
+
+    private void applyLightUpdate(com.air.advantage.aaservice.data.DataLight dataLight, boolean forceCanMessage) {
         if (dataLight == null || dataLight.id == null || MyMasterData.masterData == null || MyMasterData.masterData.myLights == null) return;
         var lights = MyMasterData.masterData.myLights.lights;
         if (lights == null) return;
         var existing = lights.get(dataLight.id);
         if (existing == null) return;
+
+        boolean stateChanged = dataLight.state != null && dataLight.state != existing.state;
+        boolean valueChanged = dataLight.value != null && !Objects.equals(dataLight.value, existing.value);
 
         existing.name = valueOr(existing.name, dataLight.name);
         existing.value = valueOr(existing.value, dataLight.value);
@@ -414,6 +434,68 @@ public class AirconUpdateService {
         existing.reachable = valueOr(existing.reachable, dataLight.reachable);
         existing.relay = valueOr(existing.relay, dataLight.relay);
         existing.state = valueOr(existing.state, dataLight.state);
+
+        if (forceCanMessage || stateChanged || valueChanged) {
+            sendLightControl(existing);
+        }
+        myMasterData.scheduleSave();
+    }
+
+    /** Emits the legacy lighting control frame selected by the light module type. */
+    private void sendLightControl(com.air.advantage.aaservice.data.DataLight light) {
+        String lightId = light.id;
+        if (lightId == null || lightId.length() < 2) return;
+
+        String uid = lightId.length() >= 7 ? lightId.substring(0, 5) : lightId;
+        int roomNumber;
+        try {
+            roomNumber = Integer.parseInt(lightId.substring(lightId.length() - 2));
+        } catch (NumberFormatException ignored) {
+            roomNumber = 1;
+        }
+
+        int value = light.value == null ? 0 : Math.max(0, Math.min(100, light.value));
+        boolean on = light.state == com.air.advantage.aaservice.data.DataLight.LightState.on;
+        io.vertx.core.json.JsonObject message;
+        com.air.advantage.aaservice.data.DataLight.ModuleType moduleType = light.moduleType;
+
+        if (moduleType == com.air.advantage.aaservice.data.DataLight.ModuleType.DM ||
+                moduleType == com.air.advantage.aaservice.data.DataLight.ModuleType.GDM) {
+            CANMessageLighting14DmControlMessage dm = new CANMessageLighting14DmControlMessage();
+            populateLightingHeader(dm, uid);
+            dm.setRoomNumber(roomNumber);
+            dm.setDimLevel(value);
+            dm.infoByte = (on ? 0x80 : 0) | value;
+            message = io.vertx.core.json.JsonObject.mapFrom(dm);
+        } else if (moduleType == com.air.advantage.aaservice.data.DataLight.ModuleType.RM ||
+                moduleType == com.air.advantage.aaservice.data.DataLight.ModuleType.RM2) {
+            CANMessageLighting1dRm2ControlMessage rm2 = new CANMessageLighting1dRm2ControlMessage();
+            populateLightingHeader(rm2, uid);
+            rm2.setRoomNumber(roomNumber);
+            rm2.setDimLevel(on ? value : 0);
+            message = io.vertx.core.json.JsonObject.mapFrom(rm2);
+        } else {
+            CANMessageLighting01LmControlMessage lm = new CANMessageLighting01LmControlMessage();
+            populateLightingHeader(lm, uid);
+            lm.setRoomNumber(roomNumber);
+            lm.setLightState(on ? CANMessageLighting01LmControlMessage.LightState.ON :
+                    CANMessageLighting01LmControlMessage.LightState.OFF);
+            lm.setBrightnessLevel(value);
+            message = io.vertx.core.json.JsonObject.mapFrom(lm);
+        }
+        eventBus.publish("communication-send-can", message);
+    }
+
+    private void populateLightingHeader(CANMessage msg, String uid) {
+        msg.setUid(uid);
+        if (config.communication().runMode() == MyPlaceConfig.CommunicationConfig.RunMode.MYAIR) {
+            msg.setSystemType(CANMessage.SystemType.LIGHTING);
+            msg.setDeviceType(CANMessage.DeviceType.CONTROL_BOARD);
+        } else {
+            msg.setSystemType(CANMessage.SystemType.LIGHTING);
+            msg.setDeviceType(CANMessage.DeviceType.RF_CONTROLLER);
+        }
+        msg.setUid(uid);
     }
 
     public static void MyAutoUpdateHandler(DataAircon aircon) {

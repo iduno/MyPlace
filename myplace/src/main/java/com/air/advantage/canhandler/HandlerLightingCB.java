@@ -1,18 +1,24 @@
 package com.air.advantage.canhandler;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.jboss.logging.Logger;
 
 import com.air.advantage.aaservice.data.DataLight;
 import com.air.advantage.aaservice.data.DataLight.LightState;
+import com.air.advantage.aaservice.data.DataLight.ModuleType;
 import com.air.advantage.aaservice.data.MyMasterData;
 import com.air.advantage.cbmessages.CANMessage;
 import com.air.advantage.cbmessages.CANMessageLighting;
 import com.air.advantage.cbmessages.CANMessageLighting00LmStatusMessageOld;
 import com.air.advantage.cbmessages.CANMessageLighting01LmControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting02LmStatusMessage;
+import com.air.advantage.cbmessages.CANMessageLighting14DmControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting15Rm2ControlMessage;
 import com.air.advantage.cbmessages.CANMessageLighting16Rm2StatusMessage;
 import com.air.advantage.cbmessages.CANMessageLighting17Rm2AddDevice;
+import com.air.advantage.cbmessages.CANMessageLighting1dRm2ControlMessage;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
 
@@ -34,12 +40,16 @@ public class HandlerLightingCB extends Handler {
             process((CANMessageLighting01LmControlMessage) message);
         } else if (message instanceof CANMessageLighting02LmStatusMessage) {
             process((CANMessageLighting02LmStatusMessage) message);
+        } else if (message instanceof CANMessageLighting14DmControlMessage) {
+            process((CANMessageLighting14DmControlMessage) message);
         } else if (message instanceof CANMessageLighting15Rm2ControlMessage) {
             process((CANMessageLighting15Rm2ControlMessage) message);
         } else if (message instanceof CANMessageLighting16Rm2StatusMessage) {
             process((CANMessageLighting16Rm2StatusMessage) message);
         } else if (message instanceof CANMessageLighting17Rm2AddDevice) {
             process((CANMessageLighting17Rm2AddDevice) message);
+        } else if (message instanceof CANMessageLighting1dRm2ControlMessage) {
+            process((CANMessageLighting1dRm2ControlMessage) message);
         } else if (message instanceof CANMessageLighting) {
             processLighting((CANMessageLighting) message);
         }
@@ -72,7 +82,35 @@ public class HandlerLightingCB extends Handler {
         
         int roomNumber = msg.getRoomNumber();
         LOG.debug("CB: Received LM control message for UID " + uid + " room " + roomNumber);
-        // CB would apply control commands to lights - mock implementation
+        DataLight light = existingLight(uid, roomNumber);
+        if (light == null) return;
+        light.state = msg.getLightState() == CANMessageLighting01LmControlMessage.LightState.ON
+                ? LightState.on : LightState.off;
+        light.value = Math.max(0, Math.min(100, msg.getBrightnessLevel()));
+        light.moduleType = ModuleType.LM;
+        light.reachable = true;
+    }
+
+    private void process(CANMessageLighting14DmControlMessage msg) {
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataLight light = existingLight(uid, msg.roomNumber);
+        if (light == null) return;
+        light.state = msg.lightState ? LightState.on : LightState.off;
+        light.value = Math.max(0, Math.min(100, msg.dimLevel));
+        light.moduleType = ModuleType.DM;
+        light.reachable = true;
+    }
+
+    private void process(CANMessageLighting1dRm2ControlMessage msg) {
+        String uid = msg.getUid();
+        if (uid == null || uid.isEmpty()) return;
+        DataLight light = existingLight(uid, msg.getRoomNumber());
+        if (light == null) return;
+        light.value = Math.max(0, Math.min(100, msg.getDimLevel()));
+        light.state = light.value > 0 ? LightState.on : LightState.off;
+        light.moduleType = ModuleType.RM2;
+        light.reachable = true;
     }
     
     // JZ2 - LM Status Message (CB -> Controller - setup message with room configuration)
@@ -87,88 +125,103 @@ public class HandlerLightingCB extends Handler {
             return;
         }
 
+        TreeMap<String, CANMessageLighting02LmStatusMessage> lmStatusMessages = new TreeMap<>();
+
         // For each group in order
-        for (String groupId : MyMasterData.masterData.myLights.groupsOrder) {
-            var group = MyMasterData.masterData.myLights.groups.get(groupId);
-            if (group == null || group.lightsOrder == null) continue;
+        for (String lightId : MyMasterData.masterData.myLights.lights.keySet()) {
+            var light = MyMasterData.masterData.myLights.lights.get(lightId);
+            if (light == null) continue;
+            var uid = lightId.length() >= 7 ? lightId.substring(0, 5) : lightId;
+            CANMessageLighting02LmStatusMessage statusMsg = lmStatusMessages.get(uid);
 
-            // For each light in group order
-            for (int i = 0; i < group.lightsOrder.size(); i++) {
-                String lightId = group.lightsOrder.get(i);
-                DataLight light = MyMasterData.masterData.myLights.lights.get(lightId);
-                if (light == null) continue;
-
-                // Parse UID and light number from lightId
-                String uid = lightId.length() >= 7 ? lightId.substring(0, 5) : lightId;
-                int roomNumber = 1;
-                try {
-                    roomNumber = Integer.parseInt(lightId.substring(lightId.length() - 2));
-                } catch (Exception e) {
-                    // fallback to 1 if parse fails
-                }
-
-                // Compose status message for this light
-                int roomExists = 1;
-                int validRooms = 1;
-                int relayRooms = ("relay".equals(light.deviceType)) ? 1 : 0;
-                boolean isRM2 = "RM2".equals(light.moduleType) || "RM".equals(light.moduleType);
-                String moduleType = (light.moduleType != null) ? light.moduleType : "LM";
-
-                CANMessageLighting02LmStatusMessage statusMsg = new CANMessageLighting02LmStatusMessage();
+            if (statusMsg == null) {
+                statusMsg = new CANMessageLighting02LmStatusMessage();
                 statusMsg.setUid(uid);
                 statusMsg.setDeviceType(DEVICE_TYPE);
                 statusMsg.setSystemType(SYSTEM_TYPE);
                 statusMsg.setMajorFWVersion(2);
                 statusMsg.setMinorFWVersion(1);
-                statusMsg.setRoomExists(roomExists);
-                statusMsg.setValidRooms(validRooms);
-                statusMsg.setRelayRooms(relayRooms);
-                int infoByte = isRM2 ? 0x80 : 0x00;
-                statusMsg.setInfoByte(infoByte);
+                lmStatusMessages.put(uid, statusMsg);
+            }
 
-                LOG.debug("CB: Sending JZ2 status for group " + groupId + " light " + lightId +
-                        " - roomExists: 0x" + Integer.toHexString(roomExists) +
-                        " validRooms: 0x" + Integer.toHexString(validRooms) +
-                        " relayRooms: 0x" + Integer.toHexString(relayRooms) +
-                        " infoByte: 0x" + Integer.toHexString(infoByte));
-                eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(statusMsg));
+            int roomNumber = 1;
+            try {
+                roomNumber = lightId.length() >= 7 ? Integer.parseInt(lightId.substring(lightId.length() - 2)): 1;
+            } catch (Exception e) {
+            }
+            if (roomNumber < 1 || roomNumber > 6) continue;
+            int channelIndex = roomNumber - 1;
+            int channelMask = 1 << channelIndex;
 
-                // Send JZ1 (Control Message) for this light if LM
-                if ("LM".equals(moduleType)) {
-                    CANMessageLighting01LmControlMessage controlMsg = new CANMessageLighting01LmControlMessage();
-                    controlMsg.setUid(uid);
-                    controlMsg.setDeviceType(DEVICE_TYPE);
-                    controlMsg.setSystemType(SYSTEM_TYPE);
-                    controlMsg.setRoomNumber(roomNumber);
-                    if (light.state == LightState.on) {
-                        controlMsg.setLightState(CANMessageLighting01LmControlMessage.LightState.ON);
-                    } else {
-                        controlMsg.setLightState(CANMessageLighting01LmControlMessage.LightState.OFF);
-                    }
-                    int brightness = (light.value != null) ? light.value : 0;
-                    controlMsg.setBrightnessLevel(Math.min(100, Math.max(0, brightness)));
-                    LOG.debug("CB: Sending JZ1 control for group " + groupId + " light " + lightId +
-                            " state: " + light.state + " brightness: " + brightness);
-                    eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(controlMsg));
+            statusMsg.setRoomExists(channelIndex, true);
+            statusMsg.setValidRoom(channelIndex, true);
+            statusMsg.setRelayRoom(channelIndex, Boolean.TRUE.equals(light.relay));
+
+            statusMsg.setIsRM(Boolean.TRUE.equals(light.relay));
+        }
+        for (Map.Entry<String, CANMessageLighting02LmStatusMessage> entry : lmStatusMessages.entrySet()) {
+            String lightId = entry.getKey();
+            CANMessageLighting02LmStatusMessage statusMsg = entry.getValue();
+
+            LOG.debug("CB: Valid LM setup message JZ4 UID: " + lightId +
+                    " - roomExists: 0x" + Integer.toHexString(statusMsg.getRoomExists()) +
+                    " validRooms: 0x" + Integer.toHexString(statusMsg.getValidRooms()) +
+                    " relayRooms: 0x" + Integer.toHexString(statusMsg.getRelayRooms()) +
+                    " infoByte: 0x" + Integer.toHexString(statusMsg.getInfoByte()));
+            eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(statusMsg));
+        }
+
+
+        // For each group in order
+        for (String lightId : MyMasterData.masterData.myLights.lights.keySet()) {
+            var light = MyMasterData.masterData.myLights.lights.get(lightId);
+            if (light == null) continue;
+            var uid = lightId.length() >= 7 ? lightId.substring(0, 5) : lightId;
+            int roomNumber = 1;
+            try {
+                roomNumber = lightId.length() >= 7 ? Integer.parseInt(lightId.substring(lightId.length() - 2)): 1;
+            } catch (Exception e) {
+            }
+            if (roomNumber < 1 || roomNumber > 6) continue;
+            int channelIndex = roomNumber - 1;
+
+
+            // Send JZ1 (Control Message) for this light if LM
+            if (light.moduleType == ModuleType.LM) {
+                CANMessageLighting01LmControlMessage controlMsg = new CANMessageLighting01LmControlMessage();
+                controlMsg.setUid(uid);
+                controlMsg.setDeviceType(DEVICE_TYPE);
+                controlMsg.setSystemType(SYSTEM_TYPE);
+                controlMsg.setRoomNumber(roomNumber);
+                if (light.state == LightState.on) {
+                    controlMsg.setLightState(CANMessageLighting01LmControlMessage.LightState.ON);
+                } else {
+                    controlMsg.setLightState(CANMessageLighting01LmControlMessage.LightState.OFF);
                 }
+                int brightness = (light.value != null) ? light.value : 0;
+                controlMsg.setBrightnessLevel(Math.min(100, Math.max(0, brightness)));
+                LOG.debug("CB: Sending JZ1 control for light " + lightId +
+                        " state: " + light.state + " brightness: " + brightness);
+                eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(controlMsg));
+            }
 
                 // If RM2, send RM2-specific messages
-                if (isRM2) {
+                if (light.moduleType == ModuleType.RM2 || light.moduleType == ModuleType.RM) {
                     // JZ16 (RM2 DIP Configuration)
                     CANMessageLighting16Rm2StatusMessage dipMsg = new CANMessageLighting16Rm2StatusMessage();
                     dipMsg.setUid(uid);
                     dipMsg.setDeviceType(DEVICE_TYPE);
                     dipMsg.setSystemType(SYSTEM_TYPE);
-                    int rm2InfoByte = 1; // Only this channel enabled
+
                     int[] dipStates = new int[6];
                     for (int d = 0; d < 6; d++) dipStates[d] = 10; // default disabled
                     // Set DIP state for this channel
                     switch (light.deviceType) {
-                        case "blind": dipStates[0] = 1; break;
-                        case "relay": dipStates[0] = 8; break;
-                        case "dimmer": dipStates[0] = 9; break;
-                        case "disabled": dipStates[0] = 10; break;
-                        default: dipStates[0] = 8;
+                        case "blind": dipStates[channelIndex] = 1; break;
+                        case "relay": dipStates[channelIndex] = 8; break;
+                        case "dimmer": dipStates[channelIndex] = 9; break;
+                        case "disabled": dipStates[channelIndex] = 10; break;
+                        default: dipStates[channelIndex] = 8;
                     }
                     dipMsg.setDip1State(dipStates[0]);
                     dipMsg.setDip2State(dipStates[1]);
@@ -176,8 +229,8 @@ public class HandlerLightingCB extends Handler {
                     dipMsg.setDip4State(dipStates[3]);
                     dipMsg.setDip5State(dipStates[4]);
                     dipMsg.setDip6State(dipStates[5]);
-                    dipMsg.setInfoByte(rm2InfoByte);
-                    LOG.debug("CB: Sending JZ16 RM2 DIP config for group " + groupId + " light " + lightId);
+                    dipMsg.setInfoByte(0);
+                    LOG.debug("CB: Sending JZ16 RM2 DIP config for light " + lightId);
                     eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(dipMsg));
 
                     // JZ17 (RM2 Add Device / Version Info)
@@ -188,13 +241,13 @@ public class HandlerLightingCB extends Handler {
                     addDeviceMsg.setMajorFWVersion(2);
                     addDeviceMsg.setMinorFWVersion(1);
                     int rm2AddDeviceInfo = 0;
-                    if ("DM".equals(moduleType)) {
+                    if (light.moduleType == ModuleType.DM) {
                         rm2AddDeviceInfo = 0x80;
-                    } else if ("GDM".equals(moduleType)) {
+                    } else if (light.moduleType == ModuleType.GDM) {
                         rm2AddDeviceInfo = 0x10;
                     }
                     addDeviceMsg.setInfoByte(rm2AddDeviceInfo);
-                    LOG.debug("CB: Sending JZ17 RM2 add device for group " + groupId + " light " + lightId);
+                    LOG.debug("CB: Sending JZ17 RM2 add device for light " + lightId);
                     eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(addDeviceMsg));
 
                     // JZ15 (RM2 Control Message)
@@ -203,7 +256,7 @@ public class HandlerLightingCB extends Handler {
                     rm2ControlMsg.setDeviceType(DEVICE_TYPE);
                     rm2ControlMsg.setSystemType(SYSTEM_TYPE);
                     rm2ControlMsg.setRoomNumber(roomNumber);
-                    if ("on".equals(light.state)) {
+                    if (light.state == LightState.on) {
                         rm2ControlMsg.setLightState(1);
                     } else {
                         rm2ControlMsg.setLightState(0);
@@ -214,10 +267,10 @@ public class HandlerLightingCB extends Handler {
                     rm2ControlMsg.setNodeDipState(0);
                     rm2ControlMsg.setDimOffset(0);
                     rm2ControlMsg.setStatusState(0);
-                    LOG.debug("CB: Sending JZ15 RM2 control for group " + groupId + " light " + lightId);
+                    LOG.debug("CB: Sending JZ15 RM2 control for light " + lightId);
                     eventBus.publish("communication-send-can", io.vertx.core.json.JsonObject.mapFrom(rm2ControlMsg));
                 }
-            }
+            
         }
     }
     
@@ -231,7 +284,17 @@ public class HandlerLightingCB extends Handler {
         
         int roomNumber = msg.getRoomNumber();
         LOG.debug("CB: Received RM2 control message for UID " + uid + " channel " + roomNumber);
-        // CB would apply control commands to RM2 devices - mock implementation
+        DataLight light = existingLight(uid, roomNumber);
+        if (light == null) return;
+        int state = msg.getLightState();
+        int dimLevel = Math.max(0, Math.min(100, msg.getDimLevel()));
+        light.state = state == 1 ? LightState.on : LightState.off;
+        light.value = state == 1 ? dimLevel : 0;
+        light.moduleType = ModuleType.RM2;
+        light.lowBattery = msg.isLowBattery();
+        light.calibrated = msg.isCalibrated();
+        light.poll = msg.isPoll();
+        light.reachable = true;
     }
     
     // JZ16 - RM2 Status Message (CB -> Controller - Module DIP configuration)
@@ -256,5 +319,13 @@ public class HandlerLightingCB extends Handler {
         
         LOG.debug("CB: Generating RM2 add device response for UID " + uid);
         // Generate add device response - mock implementation
+    }
+
+    private DataLight existingLight(String uid, int roomNumber) {
+        if (roomNumber < 1 || roomNumber > 6 || MyMasterData.masterData == null ||
+                MyMasterData.masterData.myLights == null || MyMasterData.masterData.myLights.lights == null) {
+            return null;
+        }
+        return MyMasterData.masterData.myLights.lights.get(uid + String.format("%02d", roomNumber));
     }
 }
